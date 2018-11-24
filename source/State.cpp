@@ -1,5 +1,5 @@
-#include "luacppb/LuaState.h"
-#include "luacppb/LuaReference.h"
+#include "luacppb/State.h"
+#include "luacppb/Reference.h"
 
 namespace LuaCppB {
 

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cstdlib>
-#include "luacppb/LuaState.h"
-#include "luacppb/LuaReference.h"
+#include "luacppb/State.h"
+#include "luacppb/Reference.h"
 #include "luacppb/Function.h"
 
 using namespace LuaCppB;
@@ -25,6 +25,7 @@ void print(std::string line, bool newline) {
 
 void populate(LuaReferenceHandle table) {
 	table["x"] = 15;
+	table["msg"] = "Hello, world!";
 }
 
 int main(int argc, char **argv) {
@@ -34,5 +35,6 @@ int main(int argc, char **argv) {
 	env["populate"] = populate;
 	env["_print"] = print;
 	env.load("test.lua");
+	std::cout << env["y"].get<std::string>() << std::endl;
 	return EXIT_SUCCESS;
 }

@@ -1,5 +1,5 @@
-#ifndef LUACPPB_LUASTATE_H_
-#define LUACPPB_LUASTATE_H_
+#ifndef LUACPPB_STATE_H_
+#define LUACPPB_STATE_H_
 
 #include "luacppb/Base.h"
 #include <string>

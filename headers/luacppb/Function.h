@@ -2,6 +2,7 @@
 #define LUACPPB_FUNCTION_H_
 
 #include "luacppb/Base.h"
+#include "luacppb/Value.h"
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -65,25 +66,12 @@ namespace LuaCppB {
 	};
 
 
-	template <typename T, typename E = void>
-	struct CFunctionResult {};
-
-
 	template <typename T>
-	struct CFunctionResult<T, typename std::enable_if<std::is_integral<T>::value>::type> {
+	struct CFunctionResult {
 		static void set(lua_State *state, T value) {
-			lua_pushinteger(state, static_cast<lua_Integer>(value));
+			LuaValue::create<T>(value).push(state);
 		}
-
 	};
-
-	template <typename T>
-	struct CFunctionResult<T, typename std::enable_if<std::is_floating_point<T>::value>::type> {
-		static void set(lua_State *state, T value) {
-			lua_pushnumber(state, static_cast<lua_Number>(value));
-		};
-	};
-
 	
 	template <std::size_t I, typename ... Ts>
 	struct FunctionArgumentsTuple_Impl {};
@@ -112,12 +100,12 @@ namespace LuaCppB {
 
 
 	template <typename R, typename ... A>
-	class CFunctionCall {
+	class CFunctionCall : public LuaPushable {
 		using F = R (*)(A...);
 	 public:
 		CFunctionCall(F fn) : function(fn) {}
 
-		void makeClosure(lua_State *state) {
+		void push(lua_State *state) const override {
 			lua_pushlightuserdata(state, reinterpret_cast<void *>(this->function));
 			lua_pushcclosure(state, CFunctionCall<R, A...>::function_closure, 1);
 		}
@@ -149,11 +137,11 @@ namespace LuaCppB {
 	};
 
 	template <typename C, typename R, typename ... A>
-	class CMethodCall {
+	class CMethodCall : public LuaPushable {
 		using M = R (C::*)(A...);
 	 public:
 		CMethodCall(C *obj, M met) : object(obj), method(met) {}
-		void makeClosure(lua_State *state) {
+		void push(lua_State *state) const override {
 			CMethodDescriptor<C, M> *descriptor = reinterpret_cast<CMethodDescriptor<C, M> *>(lua_newuserdata(state, sizeof(CMethodDescriptor<C, M>)));
 			descriptor->object = this->object;
 			descriptor->method = this->method;

@@ -3,6 +3,7 @@
 #include "luacppb/State.h"
 #include "luacppb/Reference.h"
 #include "luacppb/Function.h"
+#include "luacppb/Table.h"
 
 using namespace LuaCppB;
 
@@ -31,9 +32,10 @@ void populate(LuaReferenceHandle table) {
 int main(int argc, char **argv) {
 	LuaEnvironment env;
 	Sum sum(10);
-	env["add"] = CMethodCall(&sum, &Sum::add);
+	env["sum"] = LuaTable().put("inner", LuaTable().put("add", &sum, &Sum::add));
 	env["populate"] = populate;
 	env["_print"] = print;
+	env["test"] = LuaTable().put("x", 100).put("print", print);
 	env.load("test.lua");
 	std::cout << env["y"].get<std::string>() << std::endl;
 	return EXIT_SUCCESS;

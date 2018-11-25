@@ -3,6 +3,7 @@
 
 #include "luacppb/Base.h"
 #include "luacppb/Value.h"
+#include "luacppb/State.h"
 #include <string>
 #include <type_traits>
 #include <utility>

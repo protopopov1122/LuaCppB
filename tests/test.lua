@@ -1,4 +1,5 @@
 obj = {}
 populate(obj)
-_print(obj.msg .. add(obj.x), true)
+test.print(obj.msg .. sum.inner.add(obj.x), true)
 y = "object"
+print(test.x)

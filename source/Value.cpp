@@ -28,4 +28,20 @@ namespace LuaCppB {
         break;
     } 
   }
+
+  std::optional<LuaValue> LuaValue::peek(lua_State *state, lua_Integer index) {
+    std::optional<LuaValue> value;
+    if (lua_isinteger(state, index)) {
+      value = LuaValue::create<lua_Integer>(lua_tointeger(state, index));
+    } else if (lua_isnumber(state, index)) {
+      value = LuaValue::create<lua_Number>(lua_tonumber(state, index));
+    } else if (lua_isboolean(state, index)) {
+      value = LuaValue::create<bool>(lua_toboolean(state, index));
+    } else if (lua_isstring(state, index)) {
+      value = LuaValue::create<const char *>(lua_tostring(state, index));
+    } else if (lua_iscfunction(state, index)) {
+      value = LuaValue::create<LuaCFunction>(lua_tocfunction(state, index));
+    }
+    return value;
+  }
 }

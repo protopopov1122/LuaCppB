@@ -11,47 +11,14 @@
 namespace LuaCppB {
 	
 	template <std::size_t I, typename T, typename E = void>
-	struct CFunctionArgument {};
-
-	template <std::size_t I, typename T>
-	struct CFunctionArgument<I, T, typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, bool>::value>::type> {
+	struct CFunctionArgument {
 		static T get(lua_State *state) {
-			lua_Integer value = lua_tointeger(state, I);			
-			return static_cast<T>(value);
-		}
-
-	};
-
-	template <std::size_t I, typename T>
-	struct CFunctionArgument<I, T, typename std::enable_if<std::is_floating_point<T>::value>::type> {
-
-		static T get(lua_State *state) {
-			lua_Number value = lua_tonumber(state, I);
-			return static_cast<T>(value);
-		}
-	};
-
-	template <std::size_t I, typename T>
-	struct CFunctionArgument<I, T, typename std::enable_if<std::is_same<T, bool>::value>::type> {
-
-		static T get(lua_State *state) {
-			int value = lua_toboolean(state, I);
-			return static_cast<T>(value);
-		}
-	};
-
-	template <std::size_t I, typename T>
-	struct CFunctionArgument<I, T, typename std::enable_if<std::is_same<T, std::string>::value>::type> {
-
-		static T get(lua_State *state) {
-			const char *value = lua_tostring(state, I);
-			return std::string(value);
+			return LuaValue::peek(state, I).value_or(LuaValue()).get<T>();
 		}
 	};
 
 	template <std::size_t I, typename T>
 	struct CFunctionArgument<I, T, typename std::enable_if<std::is_same<T, LuaState>::value>::type> {
-		
 		static T get(lua_State *state) {
 			return LuaState(state);
 		}
@@ -59,12 +26,10 @@ namespace LuaCppB {
 
 	template <std::size_t I, typename T>
 	struct CFunctionArgument<I, T, typename std::enable_if<std::is_same<T, LuaReferenceHandle>::value>::type> {
-		
 		static T get(lua_State *state) {
 			return LuaState(state)[I];
 		}
 	};
-
 
 	template <typename T>
 	struct CFunctionResult {
@@ -100,7 +65,7 @@ namespace LuaCppB {
 
 
 	template <typename R, typename ... A>
-	class CFunctionCall : public LuaPushable {
+	class CFunctionCall : public LuaData {
 		using F = R (*)(A...);
 	 public:
 		CFunctionCall(F fn) : function(fn) {}
@@ -137,7 +102,7 @@ namespace LuaCppB {
 	};
 
 	template <typename C, typename R, typename ... A>
-	class CMethodCall : public LuaPushable {
+	class CMethodCall : public LuaData {
 		using M = R (C::*)(A...);
 	 public:
 		CMethodCall(C *obj, M met) : object(obj), method(met) {}

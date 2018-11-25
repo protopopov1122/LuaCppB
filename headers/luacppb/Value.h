@@ -5,6 +5,7 @@
 #include <variant>
 #include <type_traits>
 #include <iostream>
+#include <optional>
 
 namespace LuaCppB {
 
@@ -23,13 +24,13 @@ namespace LuaCppB {
 
 	typedef int (*LuaCFunction)(lua_State *);
 
-	class LuaPushable {
+	class LuaData {
 	 public:
-		virtual ~LuaPushable() = default;
+		virtual ~LuaData() = default;
 		virtual void push(lua_State *state) const = 0;
 	};
 
-	class LuaValue : public LuaPushable {
+	class LuaValue : public LuaData {
 	 public:
 		LuaValue() : type(LuaType::Nil) {}
 		LuaValue(lua_Integer i) : type(LuaType::Number), value(i) {}
@@ -40,6 +41,7 @@ namespace LuaCppB {
 
 		LuaType getType() const;
 		void push(lua_State *state) const override;
+		static std::optional<LuaValue> peek(lua_State *, lua_Integer = -1);
 
 		template <typename T>
 		typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, bool>::value, T>::type get(T defaultValue = 0) const {
@@ -115,7 +117,7 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
-		static typename std::enable_if<std::is_same<T, std::string>::value, LuaValue>::type create(T value) {
+		static typename std::enable_if<std::is_same<T, std::string>::value, LuaValue>::type create(const T &value) {
 			return LuaValue(value);
 		}
 

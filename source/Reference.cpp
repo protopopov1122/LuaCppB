@@ -2,7 +2,7 @@
 
 namespace LuaCppB {
 
-  bool LuaReference::set(LuaPushable &pushable) {
+  bool LuaReference::set(LuaData &pushable) {
     return this->setValue([&pushable](lua_State *state) {
       pushable.push(state);
     });
@@ -72,7 +72,7 @@ namespace LuaCppB {
     return type;
   }
 
-  LuaReferenceHandle & LuaReferenceHandle::operator=(LuaPushable &pushable) {
+  LuaReferenceHandle & LuaReferenceHandle::operator=(LuaData &pushable) {
     this->ref->set(pushable);
     return *this;
   }

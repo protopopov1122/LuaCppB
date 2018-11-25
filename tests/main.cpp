@@ -24,16 +24,14 @@ void print(std::string line, bool newline) {
 	}
 }
 
-void populate(LuaReferenceHandle table) {
-	table["x"] = 15;
-	table["msg"] = "Hello, world!";
-}
-
 int main(int argc, char **argv) {
 	LuaEnvironment env;
 	Sum sum(10);
 	env["sum"] = LuaTable().put("inner", LuaTable().put("add", &sum, &Sum::add));
-	env["populate"] = populate;
+	env["populate"] = CInvocableCall<std::function<void(LuaReferenceHandle)>, void, LuaReferenceHandle>([](LuaReferenceHandle table) {
+		table["x"] = 15;
+		table["msg"] = "Hello, world!";
+	});
 	env["_print"] = print;
 	env["test"] = LuaTable().put("x", 100).put("print", print);
 	env.load("test.lua");

@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <utility>
 #include <tuple>
+#include <functional>
 
 namespace LuaCppB {
 	
@@ -118,6 +119,9 @@ namespace LuaCppB {
 		static int call(C *object, M method, lua_State *state) {
 			std::tuple<A...> args = FunctionArgumentsTuple<A...>::value(state);
 			if constexpr (std::is_void<R>::value) {
+				std::apply([object, method](A... args) {	
+					return (object->*method)(args...);
+				}, args);
 				return 0;
 			} else {
 				R result = std::apply([object, method](A... args) {	
@@ -135,6 +139,44 @@ namespace LuaCppB {
 
 		C *object;
 		M method;
+	};
+
+	template <typename T>
+	class CInvocableDescriptor {
+	 public:
+	 	CInvocableDescriptor(T &value) :invocable(value) {}
+		T invocable;
+	};
+
+	template <typename T, typename R, typename ... A>
+	class CInvocableCall : public LuaData {
+	 public:
+	 	CInvocableCall(T inv) : invocable(inv) {}
+
+		void push(lua_State *state) const {
+			CInvocableDescriptor<T> *descriptor = reinterpret_cast<CInvocableDescriptor<T> *>(lua_newuserdata(state, sizeof(CInvocableDescriptor<T>)));
+			new(descriptor) CInvocableDescriptor(this->invocable);
+			lua_pushcclosure(state, &CInvocableCall<T, R, A...>::invocable_closure, 1);
+		}
+
+		static int call(T &invocable, lua_State *state) {
+			std::tuple<A...> args = FunctionArgumentsTuple<A...>::value(state);
+			if constexpr (std::is_void<R>::value) {
+				std::apply(invocable, args);
+				return 0;
+			} else {
+				R result = std::apply(invocable, args);
+				CFunctionResult<R>::set(state, result);
+				return 1;
+			}
+		}
+	 private:
+		static int invocable_closure(lua_State *state) {
+			CInvocableDescriptor<T> *descriptor = reinterpret_cast<CInvocableDescriptor<T> *>(lua_touserdata(state, lua_upvalueindex(1)));
+			return CInvocableCall<T, R, A...>::call(descriptor->invocable, state);
+		}
+
+		T invocable;
 	};
 }
 

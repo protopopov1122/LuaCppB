@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
 	LuaEnvironment env;
 	Sum sum(10);
 	env["sum"] = LuaTable().put("inner", LuaTable().put("add", &sum, &Sum::add));
-	env["populate"] = CInvocableCall<std::function<void(LuaReferenceHandle)>, void, LuaReferenceHandle>([](LuaReferenceHandle table) {
+	env["populate"] = CInvocableCall<std::function<void(LuaReferenceHandle)>, LuaReferenceHandle>([](LuaReferenceHandle table) {
 		table["x"] = 15;
 		table["msg"] = "Hello, world!";
 	});

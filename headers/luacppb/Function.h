@@ -148,15 +148,16 @@ namespace LuaCppB {
 		T invocable;
 	};
 
-	template <typename T, typename R, typename ... A>
+	template <typename T, typename ... A>
 	class CInvocableCall : public LuaData {
+		using R = typename std::invoke_result<T, A...>::type;
 	 public:
 	 	CInvocableCall(T inv) : invocable(inv) {}
 
 		void push(lua_State *state) const {
 			CInvocableDescriptor<T> *descriptor = reinterpret_cast<CInvocableDescriptor<T> *>(lua_newuserdata(state, sizeof(CInvocableDescriptor<T>)));
 			new(descriptor) CInvocableDescriptor(this->invocable);
-			lua_pushcclosure(state, &CInvocableCall<T, R, A...>::invocable_closure, 1);
+			lua_pushcclosure(state, &CInvocableCall<T, A...>::invocable_closure, 1);
 		}
 
 		static int call(T &invocable, lua_State *state) {
@@ -173,7 +174,7 @@ namespace LuaCppB {
 	 private:
 		static int invocable_closure(lua_State *state) {
 			CInvocableDescriptor<T> *descriptor = reinterpret_cast<CInvocableDescriptor<T> *>(lua_touserdata(state, lua_upvalueindex(1)));
-			return CInvocableCall<T, R, A...>::call(descriptor->invocable, state);
+			return CInvocableCall<T, A...>::call(descriptor->invocable, state);
 		}
 
 		T invocable;

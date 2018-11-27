@@ -2,6 +2,7 @@
 #define LUACPPB_VALUE_H_
 
 #include "luacppb/Base.h"
+#include <memory>
 #include <variant>
 #include <type_traits>
 #include <iostream>
@@ -28,100 +29,108 @@ namespace LuaCppB {
 		virtual void push(lua_State *state) const = 0;
 	};
 
-	class LuaNil : public LuaData {
-	 public:
-		void push(lua_State *state) const override {
-			lua_pushnil(state);
-		}
-
-		static LuaNil get(lua_State *state, int index = -1) {
-			return LuaNil();
-		}
+	class LuaValueBase : public LuaData {
 	};
 
-	class LuaInteger : public LuaData {
+	class LuaNil : public LuaValueBase {
 	 public:
-	 	LuaInteger() : integer(0) {}
-		LuaInteger(lua_Integer i) : integer(i) {}
+		void push(lua_State *) const override;
+		static LuaNil get(lua_State *, int = -1);
+	};
+
+	class LuaInteger : public LuaValueBase {
+	 public:
+	 	LuaInteger();
+		LuaInteger(lua_Integer);
+		void push(lua_State *) const override;
+		static LuaInteger get(lua_State *, int = -1);
+
 		operator lua_Integer() const {
 			return this->integer;
-		}
-		void push(lua_State *state) const override {
-			lua_pushinteger(state, this->integer);
-		}
-		static LuaInteger get(lua_State *state, int index = -1) {
-			return LuaInteger(lua_tointeger(state, index));
 		}
 	 private:
 		lua_Integer integer;
 	};
 
-	class LuaNumber : public LuaData {
+	class LuaNumber : public LuaValueBase {
 	 public:
-	 	LuaNumber() : number(0) {}
-	 	LuaNumber(lua_Number n) : number(n) {}
+	 	LuaNumber();
+	 	LuaNumber(lua_Number);
 		operator lua_Number() const {
 			return this->number;
 		}
-		void push(lua_State *state) const override {
-			lua_pushnumber(state, this->number);
-		}
-		static LuaNumber get(lua_State *state, int index = -1) {
-			return LuaNumber(lua_tonumber(state, index));
-		}
+		void push(lua_State *) const override;
+		static LuaNumber get(lua_State *, int = -1);
 	 private:
 		lua_Number number;
 	};
 
-	class LuaBoolean : public LuaData {
+	class LuaBoolean : public LuaValueBase {
 	 public:
-		LuaBoolean(bool b) : boolean(b) {}
+		LuaBoolean(bool);
 		operator bool() const {
 			return this->boolean;
 		}
-		void push(lua_State *state) const override {
-			lua_pushboolean(state, static_cast<int>(this->boolean));
-		}
-		static LuaBoolean get(lua_State *state, int index = -1) {
-			return LuaBoolean(static_cast<bool>(lua_toboolean(state, index)));
-		}
+		void push(lua_State *) const override;
+		static LuaBoolean get(lua_State *, int = -1);
 	 private:
 		bool boolean;
 	};
 
-	class LuaString : public LuaData {
+	class LuaString : public LuaValueBase {
 	 public:
-		LuaString(const std::string &str) : string(str) {}
-		LuaString(const char *str) : string(str) {}
+		LuaString(const std::string &);
+		LuaString(const char *);
 	 	operator const std::string &() const {
 			return this->string;
 		}
-		void push(lua_State *state) const override {
-			lua_pushstring(state, this->string.c_str());
-		}
-		static LuaString get(lua_State *state, int index = -1) {
-			return LuaString(lua_tostring(state, index));
-		}
+		void push(lua_State *) const override;
+		static LuaString get(lua_State *, int = -1);
 	 private:
 		std::string string;
 	};
 
 	typedef int (*LuaCFunction_ptr)(lua_State *);
 
-	class LuaCFunction : public LuaData {
+	class LuaCFunction : public LuaValueBase {
 	 public:
-		LuaCFunction(LuaCFunction_ptr fn) : function(fn) {}
+		LuaCFunction(LuaCFunction_ptr);
 		operator LuaCFunction_ptr() const {
 			return this->function;
 		}
-		void push(lua_State *state) const override {
-			lua_pushcfunction(state, this->function);
-		}
-		static LuaCFunction get(lua_State *state, int index = -1) {
-			return LuaCFunction(lua_tocfunction(state, index));
-		}
+		void push(lua_State *) const override;
+		static LuaCFunction get(lua_State *, int = -1);
 	 private:
 		LuaCFunction_ptr function;
+	};
+
+	template<typename T>
+	struct always_false : std::false_type {};
+
+	class LuaReferenceHandle;
+
+	class LuaTableBase : public LuaValueBase {
+	 public:
+	 	LuaTableBase();
+		LuaTableBase(lua_State *, int = -1);
+		void push(lua_State *) const override;
+		static LuaTableBase get(lua_State *, int = -1);
+
+		template <typename T>
+		operator T() {
+			return this->convert<T>();
+		}
+	 private:
+		template <typename T>
+		typename std::enable_if<!std::is_same<T, LuaReferenceHandle>::value, T>::type convert() {
+			static_assert(always_false<T>::value , "");
+		}
+
+		template <typename T>
+		typename std::enable_if<std::is_same<T, LuaReferenceHandle>::value, T>::type convert();
+
+	 	lua_State *state;
+		int ref;
 	};
 
 	class LuaValue : public LuaData {
@@ -132,6 +141,7 @@ namespace LuaCppB {
 		LuaValue(LuaBoolean b) : type(LuaType::Boolean), value(b) {}
 		LuaValue(const LuaString &s) : type(LuaType::String), value(s) {}
 		LuaValue(LuaCFunction f) : type(LuaType::Function), value(f) {}
+		LuaValue(LuaTableBase v) : type(LuaType::Table), value(v) {}
 
 		LuaType getType() const;
 		void push(lua_State *state) const override;
@@ -191,6 +201,15 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
+		typename std::enable_if<std::is_same<T, LuaTableBase>::value, T>::type get() const {
+			if (this->type == LuaType::Table) {
+				return std::get<LuaTableBase>(this->value);
+			} else {
+				return LuaTableBase();
+			}
+		}
+
+		template <typename T>
 		operator T () {
 			return this->get<T>();
 		}
@@ -226,7 +245,7 @@ namespace LuaCppB {
 		}
 	 private:
 		LuaType type;
-	 	std::variant<LuaInteger, LuaNumber, LuaBoolean, LuaString, LuaCFunction> value;
+	 	std::variant<LuaInteger, LuaNumber, LuaBoolean, LuaString, LuaCFunction, LuaTableBase> value;
 	};
 }
 

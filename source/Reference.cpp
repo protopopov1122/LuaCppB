@@ -2,42 +2,46 @@
 
 namespace LuaCppB {
 
-  bool LuaReference::set(LuaData &pushable) {
-    return this->setValue([&pushable](lua_State *state) {
-      pushable.push(state);
-    });
-    return false;
-  }
-
   void LuaGlobalVariable::putOnTop(std::function<void (lua_State *)> callback) {
-    this->scope.get(this->name, callback);
+    if (this->state) {
+      lua_getglobal(this->state, this->name.c_str());
+      callback(this->state);
+      lua_pop(this->state, 1);
+    }
   }
 
-  bool LuaGlobalVariable::setValue(std::function<void (lua_State *)> gen) {
-    this->scope.set(this->name, gen);
-    return true;
+  void LuaGlobalVariable::setValue(std::function<void (lua_State *)> gen) {
+    if (this->state) {
+      gen(this->state);
+      lua_setglobal(this->state, this->name.c_str());
+    }
   }
 
   void LuaStackReference::putOnTop(std::function<void (lua_State *)> callback) {
-    this->stack.move(this->index, -1);
-    this->stack.execute(callback);
-    this->stack.move(-1, this->index);
+    lua_pushvalue(this->state, this->index);
+    callback(this->state);
+    lua_pop(this->state, 1);
   }
 
-  bool LuaStackReference::setValue(std::function<void (lua_State *)> gen) {
-    return false;
+  void LuaStackReference::setValue(std::function<void (lua_State *)> gen) {
   }
 
-  LuaReference &LuaReferenceHandle::getReference() {
+  LuaReferenceHandle::LuaReferenceHandle(const LuaReferenceHandle &handle) : state(handle.state) {
+    handle.getReference().putOnTop([&](lua_State *state) {
+      this->ref = std::make_unique<LuaRegistryReference>(state, -1);
+    });
+  }
+
+  LuaReference &LuaReferenceHandle::getReference() const {
     return *this->ref;
   }
 
   LuaReferenceHandle LuaReferenceHandle::operator[](const std::string &name) {
-    return LuaReferenceHandle(std::make_shared<LuaTableField>(*this, name));
+    return LuaReferenceHandle(this->state, std::make_unique<LuaTableField>(*this, name));
   }
 
   LuaReferenceHandle LuaReferenceHandle::operator[](lua_Integer index) {
-    return LuaReferenceHandle(std::make_shared<LuaArrayField>(*this, index));
+    return LuaReferenceHandle(this->state, std::make_unique<LuaArrayField>(*this, index));
   }
 
   bool LuaReferenceHandle::exists() {
@@ -56,8 +60,15 @@ namespace LuaCppB {
     return type;
   }
 
-  LuaReferenceHandle & LuaReferenceHandle::operator=(LuaData &pushable) {
+  LuaReferenceHandle &LuaReferenceHandle::operator=(LuaData &pushable) {
     this->ref->set(pushable);
+    return *this;
+  }
+
+  LuaReferenceHandle &LuaReferenceHandle::operator=(const LuaReferenceHandle &handle) {
+    handle.getReference().putOnTop([&](lua_State *state) {
+      this->ref = std::make_unique<LuaRegistryReference>(state, -1);
+    });
     return *this;
   }
 
@@ -73,16 +84,13 @@ namespace LuaCppB {
     });
   }
 
-  bool LuaTableField::setValue(std::function<void (lua_State *)> gen) {
-    bool result = false;
+  void LuaTableField::setValue(std::function<void (lua_State *)> gen) {
     this->ref.getReference().putOnTop([&](lua_State *state) {
       if (lua_istable(state, -1)) {
         gen(state);
         lua_setfield(state, -2, this->name.c_str());
-        result = true;
       }
     });
-    return result;
   }
 
   void LuaArrayField::putOnTop(std::function<void (lua_State *)> callback) {
@@ -97,15 +105,33 @@ namespace LuaCppB {
     });
   }
 
-  bool LuaArrayField::setValue(std::function<void (lua_State *)> gen) {
-    bool result = false;
+  void LuaArrayField::setValue(std::function<void (lua_State *)> gen) {
     this->ref.getReference().putOnTop([&](lua_State *state) {
       if (lua_istable(state, -1)) {
         gen(state);
         lua_seti(state, -2, this->index);
-        result = true;
       }
     });
-    return result;
+  }
+
+  LuaRegistryReference::LuaRegistryReference(lua_State *state, int index) : state(state) {
+    lua_pushvalue(state, index);
+    this->ref = luaL_ref(state, LUA_REGISTRYINDEX);
+  }
+
+  LuaRegistryReference::~LuaRegistryReference() {
+    luaL_unref(this->state, LUA_REGISTRYINDEX, this->ref);
+  }
+
+  void LuaRegistryReference::putOnTop(std::function<void (lua_State *)> callback) {
+    lua_rawgeti(this->state, LUA_REGISTRYINDEX, this->ref);
+    callback(this->state);
+    lua_pop(this->state, 1);
+  }
+
+  void LuaRegistryReference::setValue(std::function<void (lua_State *)> gen) {
+    luaL_unref(this->state, LUA_REGISTRYINDEX, this->ref);
+    gen(this->state);
+    this->ref = luaL_ref(state, LUA_REGISTRYINDEX);
   }
 }

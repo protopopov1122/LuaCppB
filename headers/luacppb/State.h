@@ -2,8 +2,6 @@
 #define LUACPPB_STATE_H_
 
 #include "luacppb/Base.h"
-#include "luacppb/Global.h"
-#include "luacppb/Stack.h"
 #include <string>
 
 namespace LuaCppB {
@@ -20,8 +18,6 @@ namespace LuaCppB {
 		LuaReferenceHandle operator[](lua_Integer);
 	 protected:
 		lua_State *state;
-		LuaGlobalScope global;
-		LuaStack stack;
 	};
 
 	class LuaEnvironment : public LuaState {

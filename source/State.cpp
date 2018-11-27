@@ -4,19 +4,19 @@
 namespace LuaCppB {
 
 	LuaState::LuaState(lua_State *state)
-		: state(state), global(state), stack(state) {}
+		: state(state) {}
 
 	lua_State *LuaState::getState() const {
 		return this->state;
 	}
 
 	LuaReferenceHandle LuaState::operator[](const std::string &name) {
-		return this->global[name];
+		return LuaReferenceHandle(this->state, std::make_unique<LuaGlobalVariable>(this->state, name));
 	}
 
 
 	LuaReferenceHandle LuaState::operator[](lua_Integer index) {
-		return this->stack[index];
+		return LuaReferenceHandle(this->state, std::make_unique<LuaStackReference>(this->state, index));
 	}
 
 	LuaEnvironment::LuaEnvironment(bool openLibs)

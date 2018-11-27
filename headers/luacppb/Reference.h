@@ -2,8 +2,6 @@
 #define LUACPPB_REFERENCE_H_
 
 #include "luacppb/Base.h"
-#include "luacppb/Global.h"
-#include "luacppb/Stack.h"
 #include "luacppb/Value.h"
 #include "luacppb/Function.h"
 #include <type_traits>
@@ -19,10 +17,10 @@ namespace LuaCppB {
 	class LuaReference {
 	 public:
 		virtual ~LuaReference() = default;
-		bool set(LuaData &);
+		lua_State *getState();
 
 		virtual void putOnTop(std::function<void (lua_State *)>) = 0;
-		virtual bool setValue(std::function<void (lua_State *)>) = 0;
+		virtual void setValue(std::function<void (lua_State *)>) = 0;
 
 		template <typename T>
 		typename std::enable_if<std::is_same<T, LuaValue>::value, T>::type get() {
@@ -34,21 +32,27 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
-		typename std::enable_if<!std::is_same<T, LuaValue>::value, T>::type get() {
+		typename std::enable_if<std::is_convertible<LuaValue, T>::value && !std::is_same<T, LuaValue>::value, T>::type get() {
 			return this->get<LuaValue>().get<T>();
 		}
 
 		template <typename T>
-		typename std::enable_if<std::is_base_of<LuaData, T>::value, bool>::type set(T value) {
-			return this->setValue([&value](lua_State *state) {
+		typename std::enable_if<std::is_base_of<LuaData, T>::value>::type set(T value) {
+			this->setValue([&value](lua_State *state) {
+				value.push(state);
+			});
+		}
+
+		void set(LuaData &value) {
+			this->setValue([&value](lua_State *state) {
 				value.push(state);
 			});
 		}
 
 		template <typename T>
-		typename std::enable_if<!std::is_base_of<LuaData, T>::value, bool>::type set(T value) {
+		typename std::enable_if<!std::is_base_of<LuaData, T>::value>::type set(T value) {
 			LuaValue val = LuaValue::create<T>(value);
-			return this->setValue([&val](lua_State *state) {
+			this->setValue([&val](lua_State *state) {
 				val.push(state);
 			});
 		}
@@ -56,36 +60,38 @@ namespace LuaCppB {
 
 	class LuaGlobalVariable : public LuaReference {
 	 public:
-		LuaGlobalVariable(const LuaGlobalScope &scope, const std::string &name) : scope(scope), name(name) {}
+		LuaGlobalVariable(lua_State *state, const std::string &name) : state(state), name(name) {}
 	
 		void putOnTop(std::function<void (lua_State *)>) override;
-		bool setValue(std::function<void (lua_State *)>) override;
+		void setValue(std::function<void (lua_State *)>) override;
 	 private:
-		LuaGlobalScope scope;
+		lua_State *state;
 		std::string name;
 	};
 
 	class LuaStackReference : public LuaReference {
 	 public:
-		LuaStackReference(const LuaStack &stack, lua_Integer index) : stack(stack), index(index) {}
+		LuaStackReference(lua_State *state, int index) : state(state), index(index) {}
 
 		void putOnTop(std::function<void (lua_State *)>) override;
-		bool setValue(std::function<void (lua_State *)> gen) override;
+		void setValue(std::function<void (lua_State *)> gen) override;
 	 private:
-		LuaStack stack;
-		lua_Integer index;
+		lua_State *state;
+		int index;
 	};
 
 	class LuaReferenceHandle {
 	 public:
-		LuaReferenceHandle(std::shared_ptr<LuaReference> ref) : ref(ref) {}
+		LuaReferenceHandle(lua_State *state, std::unique_ptr<LuaReference> ref) : state(state), ref(std::move(ref)) {}
+		LuaReferenceHandle(const LuaReferenceHandle &);
 
-		LuaReference &getReference();
+		LuaReference &getReference() const;
 		bool exists();
 		LuaType getType();
 		LuaReferenceHandle operator[](const std::string &);
 		LuaReferenceHandle operator[](lua_Integer);
 		LuaReferenceHandle &operator=(LuaData &);
+		LuaReferenceHandle &operator=(const LuaReferenceHandle &);
 
 		template <typename R, typename ... A>
 		LuaReferenceHandle &operator=(R (*fn)(A...)) {
@@ -110,7 +116,20 @@ namespace LuaCppB {
 			return this->ref->get<T>();
 		}
 	 private:
-		std::shared_ptr<LuaReference> ref;
+	 	lua_State *state;
+		std::unique_ptr<LuaReference> ref;
+	};
+
+	class LuaRegistryReference : public LuaReference {
+	 public:
+		LuaRegistryReference(lua_State *, int = -1);
+		virtual ~LuaRegistryReference();
+
+		void putOnTop(std::function<void (lua_State *)>) override;
+		void setValue(std::function<void (lua_State *)>) override;
+	 private:
+		lua_State *state;
+		int ref;
 	};
 
 	class LuaTableField : public LuaReference {
@@ -118,7 +137,7 @@ namespace LuaCppB {
 		LuaTableField(LuaReferenceHandle ref, const std::string &name) : ref(ref), name(name) {}
 		
 		void putOnTop(std::function<void (lua_State *)>) override;
-		bool setValue(std::function<void (lua_State *)>) override;
+		void setValue(std::function<void (lua_State *)>) override;
 	 private:
 		LuaReferenceHandle ref;
 		std::string name;
@@ -129,7 +148,7 @@ namespace LuaCppB {
 		LuaArrayField(LuaReferenceHandle ref, lua_Integer index) : ref(ref), index(index) {}
 
 		void putOnTop(std::function<void (lua_State *)>) override;
-		bool setValue(std::function<void (lua_State *)>) override;
+		void setValue(std::function<void (lua_State *)>) override;
 	 private:
 		LuaReferenceHandle ref;
 		lua_Integer index;

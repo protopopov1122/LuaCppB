@@ -10,37 +10,21 @@ namespace LuaCppB {
   }
 
   void LuaGlobalVariable::putOnTop(std::function<void (lua_State *)> callback) {
-    lua_State *state = this->state.getState();
-    if (state) {
-      lua_getglobal(state, this->name.c_str());
-      if (!lua_isnone(state, -1)) {
-        callback(state);
-      }
-      lua_pop(state, -1);
-    }
+    this->scope.get(this->name, callback);
   }
 
   bool LuaGlobalVariable::setValue(std::function<void (lua_State *)> gen) {
-    lua_State *state = this->state.getState();
-    if (state) {
-      gen(state);
-      lua_setglobal(state, this->name.c_str());
-    }
-    return state != nullptr;
+    this->scope.set(this->name, gen);
+    return true;
   }
 
-  void LuaIndexReference::putOnTop(std::function<void (lua_State *)> callback) {
-    lua_State *state = this->state.getState();
-    if (state) {
-      lua_copy(state, this->index, -1);
-      if (!lua_isnone(state, -1)) {
-        callback(state);
-      }
-      lua_copy(state, -1, this->index);
-    }
+  void LuaStackReference::putOnTop(std::function<void (lua_State *)> callback) {
+    this->stack.move(this->index, -1);
+    this->stack.execute(callback);
+    this->stack.move(-1, this->index);
   }
 
-  bool LuaIndexReference::setValue(std::function<void (lua_State *)> gen) {
+  bool LuaStackReference::setValue(std::function<void (lua_State *)> gen) {
     return false;
   }
 

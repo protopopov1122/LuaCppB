@@ -10,19 +10,19 @@ namespace LuaCppB {
     switch (this->type) {
       case LuaType::Number:
         if (this->value.index() == 0) {
-          lua_pushinteger(state, std::get<lua_Integer>(this->value));
+          std::get<LuaInteger>(this->value).push(state);
         } else {
-          lua_pushnumber(state, std::get<lua_Number>(this->value));
+          std::get<LuaNumber>(this->value).push(state);
         }
         break;
       case LuaType::Boolean:
-        lua_pushboolean(state, static_cast<int>(std::get<bool>(this->value)));
+        std::get<LuaBoolean>(this->value).push(state);
         break;
       case LuaType::String:
-        lua_pushstring(state, std::get<std::string>(this->value).c_str());
+        std::get<LuaString>(this->value).push(state);
         break;
       case LuaType::Function:
-        lua_pushcfunction(state, std::get<LuaCFunction>(this->value));
+        std::get<LuaCFunction>(this->value).push(state);
         break;
       default:
         break;
@@ -40,7 +40,7 @@ namespace LuaCppB {
     } else if (lua_isstring(state, index)) {
       value = LuaValue::create<const char *>(lua_tostring(state, index));
     } else if (lua_iscfunction(state, index)) {
-      value = LuaValue::create<LuaCFunction>(lua_tocfunction(state, index));
+      value = LuaValue::create<LuaCFunction_ptr>(lua_tocfunction(state, index));
     }
     return value;
   }

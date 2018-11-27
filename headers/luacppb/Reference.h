@@ -2,7 +2,8 @@
 #define LUACPPB_REFERENCE_H_
 
 #include "luacppb/Base.h"
-#include "luacppb/State.h"
+#include "luacppb/Global.h"
+#include "luacppb/Stack.h"
 #include "luacppb/Value.h"
 #include "luacppb/Function.h"
 #include <type_traits>
@@ -55,23 +56,23 @@ namespace LuaCppB {
 
 	class LuaGlobalVariable : public LuaReference {
 	 public:
-		LuaGlobalVariable(LuaState &state, const std::string &name) : state(state), name(name) {}
+		LuaGlobalVariable(const LuaGlobalScope &scope, const std::string &name) : scope(scope), name(name) {}
 	
 		void putOnTop(std::function<void (lua_State *)>) override;
 		bool setValue(std::function<void (lua_State *)>) override;
 	 private:
-		LuaState &state;
+		LuaGlobalScope scope;
 		std::string name;
 	};
 
-	class LuaIndexReference : public LuaReference {
+	class LuaStackReference : public LuaReference {
 	 public:
-		LuaIndexReference(LuaState &state, lua_Integer index) : state(state), index(index) {}
+		LuaStackReference(const LuaStack &stack, lua_Integer index) : stack(stack), index(index) {}
 
 		void putOnTop(std::function<void (lua_State *)>) override;
 		bool setValue(std::function<void (lua_State *)> gen) override;
 	 private:
-		LuaState state;
+		LuaStack stack;
 		lua_Integer index;
 	};
 
@@ -87,20 +88,8 @@ namespace LuaCppB {
 		LuaReferenceHandle &operator=(LuaData &);
 
 		template <typename R, typename ... A>
-		LuaReferenceHandle &operator=(CFunctionCall<R, A...> fn) {
-			this->ref->set(fn);
-			return *this;
-		}
-
-		template <typename R, typename ... A>
 		LuaReferenceHandle &operator=(R (*fn)(A...)) {
 			CFunctionCall call(fn);
-			this->ref->set(call);
-			return *this;
-		}
-
-		template <typename C, typename R, typename ... A>
-		LuaReferenceHandle &operator=(CMethodCall<C, R, A...> call) {
 			this->ref->set(call);
 			return *this;
 		}

@@ -10,12 +10,38 @@
 
 namespace LuaCppB {
 
+  class LuaTable;
+
+  class LuaTableReference {
+   public:
+    LuaTableReference(std::map<std::string, std::shared_ptr<LuaData>> &, const std::string &);
+
+    LuaTableReference &operator=(const LuaTable &);
+    LuaTableReference &operator=(const LuaValue &);
+
+    template <typename R, typename ... A>
+    LuaTableReference &operator=(R (*function)(A...)) {
+      this->table[this->key] = std::make_shared<decltype(CFunctionCall(function))>(function);
+      return *this;
+    }
+
+    template <typename T>
+    LuaTableReference &operator=(T value) {
+      this->table[this->key] = std::make_shared<LuaValue>(LuaValue::create(value));
+      return *this;
+    }
+   private:
+    std::map<std::string, std::shared_ptr<LuaData>> &table;
+    std::string key;
+  };
+
   class LuaTable : public LuaData {
    public:
     void push(lua_State *) const override;
     LuaTable &put(const std::string &, LuaValue);
-    LuaTable &put(const std::string &, LuaTable &);
+    LuaTable &put(const std::string &, const LuaTable &);
     LuaTable &put(const std::string &, LuaTable &&);
+    LuaTableReference operator[](const std::string &);
 
     template <typename R, typename ... A>
     LuaTable &put(const std::string &key, R (*function)(A...)) {

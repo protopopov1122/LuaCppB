@@ -27,12 +27,15 @@ void print(std::string line, bool newline) {
 int main(int argc, char **argv) {
 	LuaEnvironment env;
 	Sum sum(10);
-	env["sum"] = LuaTable().put("inner", LuaTable().put("add", &sum, &Sum::add));
+	auto table = LuaTable();
+	table["inner"] = LuaTable().put("add", &sum, &Sum::add);
+	env["sum"] = table;
+	env["test"] = CMethodCall(&sum, &Sum::add);
 	env["populate"] = CInvocableCall<std::function<void(LuaReferenceHandle)>, LuaReferenceHandle>([](LuaReferenceHandle table) {
 		table["x"] = 15;
 		table["msg"] = "Hello, world!";
 	});
-	env["_print"] = print;
+	env["_print"] = CFunctionCall(print);
 	env["test"] = LuaTable().put("x", 100).put("print", print);
 	env.load("test.lua");
 	std::cout << env["y"].get<std::string>() << std::endl;

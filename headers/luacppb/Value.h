@@ -113,8 +113,11 @@ namespace LuaCppB {
 	 public:
 	 	LuaTableBase();
 		LuaTableBase(lua_State *, int = -1);
+		LuaTableBase(const LuaTableBase &);
+		virtual ~LuaTableBase();
 		void push(lua_State *) const override;
 		static LuaTableBase get(lua_State *, int = -1);
+		static LuaTableBase create(lua_State *);
 
 		template <typename T>
 		operator T() {

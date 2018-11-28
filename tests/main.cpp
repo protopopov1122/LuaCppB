@@ -27,9 +27,10 @@ void print(std::string line, bool newline) {
 int main(int argc, char **argv) {
 	LuaEnvironment env;
 	Sum sum(10);
-	auto table = LuaTable();
+	auto table_tmp = LuaTableBase::create(env.getState());
+	LuaReferenceHandle table = table_tmp;
 	table["inner"] = LuaTable().put("add", &sum, &Sum::add);
-	env["sum"] = table;
+	env["sum"] = table.get<LuaValue>();
 	env["test"] = CMethodCall(&sum, &Sum::add);
 	env["populate"] = CInvocableCall<std::function<void(LuaTableBase)>, LuaTableBase>([](LuaTableBase tb) {
 		LuaReferenceHandle table = tb;

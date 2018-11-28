@@ -82,7 +82,8 @@ namespace LuaCppB {
 
 	class LuaReferenceHandle {
 	 public:
-		LuaReferenceHandle(lua_State *state, std::unique_ptr<LuaReference> ref) : state(state), ref(std::move(ref)) {}
+	 	LuaReferenceHandle() : state(nullptr), ref(nullptr) {}
+		LuaReferenceHandle(lua_State *state, std::unique_ptr<LuaReference> ref = nullptr) : state(state), ref(std::move(ref)) {}
 		LuaReferenceHandle(const LuaReferenceHandle &);
 
 		LuaReference &getReference() const;

@@ -25,6 +25,9 @@ namespace LuaCppB {
       case LuaType::Function:
         std::get<LuaCFunction>(this->value).push(state);
         break;
+      case LuaType::Table:
+        std::get<LuaTableBase>(this->value).push(state);
+        break;
       default:
         break;
     } 
@@ -117,7 +120,17 @@ namespace LuaCppB {
   LuaTableBase::LuaTableBase(lua_State *state, int index) : state(state) {
     lua_pushvalue(state, index);
     this->ref = luaL_ref(state, LUA_REGISTRYINDEX);
-    lua_pop(state, 1);
+  }
+
+  LuaTableBase::LuaTableBase(const LuaTableBase &base) : state(base.state) {
+    base.push(this->state);
+    this->ref = luaL_ref(state, LUA_REGISTRYINDEX);
+  }
+
+  LuaTableBase::~LuaTableBase() {
+    if (this->state) {
+      luaL_unref(this->state,  LUA_REGISTRYINDEX, this->ref);
+    }
   }
 
   void LuaTableBase::push(lua_State *state) const {
@@ -126,6 +139,13 @@ namespace LuaCppB {
 
   LuaTableBase LuaTableBase::get(lua_State *state, int index) {
     return LuaTableBase(state, index);
+  }
+
+  LuaTableBase LuaTableBase::create(lua_State *state) {
+    lua_newtable(state);
+    LuaTableBase table(state);
+    lua_pop(state, 1);
+    return table;
   }
 
   template <>

@@ -32,7 +32,9 @@ namespace LuaCppB {
 	}
 
 	void LuaEnvironment::load(const std::string &path) {
-		luaL_dofile(this->state, path.c_str());
+		if (luaL_dofile(this->state, path.c_str()) != LUA_OK) {
+			std::cout << lua_tostring(this->state, -1) << std::endl;
+		}
 	}
 
 	void LuaEnvironment::execute(const std::string &code) {

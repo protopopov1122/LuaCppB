@@ -2,6 +2,7 @@
 #define LUACPPB_STATE_H_
 
 #include "luacppb/Base.h"
+#include "luacppb/Status.h"
 #include <string>
 
 namespace LuaCppB {
@@ -20,12 +21,17 @@ namespace LuaCppB {
 		lua_State *state;
 	};
 
-	class LuaEnvironment : public LuaState {
+	class LuaStateUnique : public LuaState {
+	 public:
+		LuaStateUnique(lua_State * = nullptr);
+		virtual ~LuaStateUnique();
+	};
+
+	class LuaEnvironment : public LuaStateUnique {
 	 public:
 		LuaEnvironment(bool = true);
-		virtual ~LuaEnvironment();
-		void load(const std::string &);
-		void execute(const std::string &);
+		LuaStatusCode load(const std::string &);
+		LuaStatusCode execute(const std::string &);
 	};
 }
 

@@ -1,7 +1,7 @@
 CXX=g++
 CXXFLAGS=-std=c++17 -Wall -Wextra -pedantic -Wno-unused-parameter -ggdb -O0
 HEADERS=-Iheaders
-SOURCE=source/*.cpp tests/*.cpp
+SOURCE=source/*.cpp source/Reference/*.cpp source/Value/*.cpp tests/*.cpp
 LIBRARIES=-llua
 RESULT=tests/test
 

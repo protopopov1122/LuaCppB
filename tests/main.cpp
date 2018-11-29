@@ -1,9 +1,8 @@
 #include <iostream>
 #include <cstdlib>
 #include "luacppb/State.h"
-#include "luacppb/Reference.h"
+#include "luacppb/Reference/Reference.h"
 #include "luacppb/Function.h"
-#include "luacppb/Table.h"
 
 using namespace LuaCppB;
 
@@ -29,7 +28,9 @@ int main(int argc, char **argv) {
 	Sum sum(10);
 	auto table_tmp = LuaTableBase::create(env.getState());
 	LuaReferenceHandle table = table_tmp;
-	table["inner"] = LuaTable().put("add", &sum, &Sum::add);
+	table["inner"] = LuaTableBase::create(env.getState());
+	LuaReferenceHandle innerTable = table["inner"];
+	innerTable["add"] = CMethodCall(&sum, &Sum::add);
 	env["sum"] = table.get<LuaValue>();
 	env["test"] = CMethodCall(&sum, &Sum::add);
 	env["populate"] = CInvocableCall<std::function<void(LuaTableBase)>, LuaTableBase>([](LuaTableBase tb) {
@@ -38,8 +39,13 @@ int main(int argc, char **argv) {
 		table["msg"] = "Hello, world!";
 	});
 	env["_print"] = CFunctionCall(print);
-	env["test"] = LuaTable().put("x", 100).put("print", print);
-	env.load("test.lua");
+	LuaReferenceHandle test = LuaTableBase::create(env.getState());
+	test["print"] = print;
+	test["x"] = 100;
+	env["test"] = test.get<LuaValue>();
+	if (env.load("test.lua") != LuaStatusCode::Ok) {
+		std::cout << lua_tostring(env.getState(), -1) << std::endl;
+	}
 	std::cout << env["y"].get<std::string>() << std::endl;
 	return EXIT_SUCCESS;
 }

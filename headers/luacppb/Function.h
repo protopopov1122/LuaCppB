@@ -2,7 +2,7 @@
 #define LUACPPB_FUNCTION_H_
 
 #include "luacppb/Base.h"
-#include "luacppb/Value.h"
+#include "luacppb/Value/Value.h"
 #include "luacppb/State.h"
 #include <string>
 #include <type_traits>

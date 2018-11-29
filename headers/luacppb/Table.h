@@ -1,7 +1,7 @@
 #ifndef LUACPPB_TABLE_H_
 #define LUACPPB_TABLE_H_
 
-#include "luacppb/Value.h"
+#include "luacppb/Value/Value.h"
 #include "luacppb/Function.h"
 #include <map>
 #include <string>

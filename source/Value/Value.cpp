@@ -26,7 +26,7 @@ namespace LuaCppB {
         std::get<LuaCFunction>(this->value).push(state);
         break;
       case LuaType::Table:
-        std::get<LuaTableBase>(this->value).push(state);
+        std::get<LuaTable>(this->value).push(state);
         break;
       default:
         break;
@@ -46,7 +46,7 @@ namespace LuaCppB {
     } else if (lua_iscfunction(state, index)) {
       value = LuaValue::create<LuaCFunction_ptr>(lua_tocfunction(state, index));
     } else if (lua_istable(state, index)) {
-      value = LuaValue(LuaTableBase(state, index));
+      value = LuaValue(LuaTable(state, index));
     }
     return value;
   }

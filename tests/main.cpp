@@ -26,20 +26,20 @@ void print(std::string line, bool newline) {
 int main(int argc, char **argv) {
 	LuaEnvironment env;
 	Sum sum(10);
-	auto table_tmp = LuaTableBase::create(env.getState());
+	auto table_tmp = LuaTable::create(env.getState());
 	LuaReferenceHandle table = table_tmp;
-	table["inner"] = LuaTableBase::create(env.getState());
+	table["inner"] = LuaTable::create(env.getState());
 	LuaReferenceHandle innerTable = table["inner"];
 	innerTable["add"] = CMethodCall(&sum, &Sum::add);
 	env["sum"] = table.get<LuaValue>();
 	env["test"] = CMethodCall(&sum, &Sum::add);
-	env["populate"] = CInvocableCall<std::function<void(LuaTableBase)>, LuaTableBase>([](LuaTableBase tb) {
+	env["populate"] = CInvocableCall<std::function<void(LuaTable)>, LuaTable>([](LuaTable tb) {
 		LuaReferenceHandle table = tb;
 		table["x"] = 15;
 		table["msg"] = "Hello, world!";
 	});
 	env["_print"] = CFunctionCall(print);
-	LuaReferenceHandle test = LuaTableBase::create(env.getState());
+	LuaReferenceHandle test = LuaTable::create(env.getState());
 	test["print"] = print;
 	test["x"] = 100;
 	env["test"] = test.get<LuaValue>();

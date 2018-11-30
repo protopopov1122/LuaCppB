@@ -40,7 +40,7 @@ namespace LuaCppB {
 		void putOnTop(std::function<void (lua_State *)>) override;
 		void setValue(std::function<void (lua_State *)>) override;
 	 private:
-	 	LuaRegistryHandle handle;
+	 	LuaSharedRegistryHandle handle;
 	};
 }
 

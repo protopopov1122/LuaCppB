@@ -67,39 +67,39 @@ namespace LuaCppB {
     return LuaCFunction(lua_tocfunction(state, index));
   }
 
-  LuaTableBase::LuaTableBase()
+  LuaReferencedValue::LuaReferencedValue()
     : handle()  {}
 
-  LuaTableBase::LuaTableBase(lua_State *state, int index)
+  LuaReferencedValue::LuaReferencedValue(lua_State *state, int index)
     : handle(state, index) {}
 
-  LuaTableBase::LuaTableBase(const LuaTableBase &base)
+  LuaReferencedValue::LuaReferencedValue(const LuaReferencedValue &base)
     : handle(base.handle) {}
 
-  void LuaTableBase::push(lua_State *state) const {
+  void LuaReferencedValue::push(lua_State *state) const {
     handle.get([&](lua_State *handleState) {
       assert(state == handleState);
       lua_pushvalue(state, -1);
     });
   }
 
-  LuaTableBase LuaTableBase::get(lua_State *state, int index) {
-    return LuaTableBase(state, index);
-  }
-
-  LuaTableBase LuaTableBase::create(lua_State *state) {
-    lua_newtable(state);
-    LuaTableBase table(state);
-    lua_pop(state, 1);
-    return table;
-  }
-
   template <>
-  LuaReferenceHandle LuaTableBase::convert<LuaReferenceHandle>() {
+  LuaReferenceHandle LuaReferencedValue::convert<LuaReferenceHandle>() {
     LuaReferenceHandle handle;
     this->handle.get([&](lua_State *state) {
       handle = LuaReferenceHandle(state, std::make_unique<LuaRegistryReference>(state));
     });
     return handle;
+  }
+
+  LuaTable LuaTable::get(lua_State *state, int index) {
+    return LuaTable(state, index);
+  }
+
+  LuaTable LuaTable::create(lua_State *state) {
+    lua_newtable(state);
+    LuaTable table(state);
+    lua_pop(state, 1);
+    return table;
   }
 }

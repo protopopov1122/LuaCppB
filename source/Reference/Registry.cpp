@@ -3,10 +3,10 @@
 
 namespace LuaCppB {
 
-  LuaRegistryHandle::LuaRegistryHandle()
+  LuaUniqueRegistryHandle::LuaUniqueRegistryHandle()
     : state(nullptr), ref(0) {}
 
-  LuaRegistryHandle::LuaRegistryHandle(lua_State *state, int index)
+  LuaUniqueRegistryHandle::LuaUniqueRegistryHandle(lua_State *state, int index)
     : state(state) {
     if (state) {
       lua_pushvalue(state, index);
@@ -14,7 +14,7 @@ namespace LuaCppB {
     }
   }
 
-  LuaRegistryHandle::LuaRegistryHandle(const LuaRegistryHandle &handle)
+  LuaUniqueRegistryHandle::LuaUniqueRegistryHandle(const LuaUniqueRegistryHandle &handle)
     : state(handle.state), ref(0) {
     if (this->state) {
       lua_rawgeti(this->state, LUA_REGISTRYINDEX, handle.ref);
@@ -22,13 +22,17 @@ namespace LuaCppB {
     }
   }
 
-  LuaRegistryHandle::~LuaRegistryHandle() {
+  LuaUniqueRegistryHandle::~LuaUniqueRegistryHandle() {
     if (this->state) {
       luaL_unref(this->state, LUA_REGISTRYINDEX, this->ref);
     }
   }
 
-  void LuaRegistryHandle::get(std::function<void (lua_State *)> callback) const {
+  bool LuaUniqueRegistryHandle::isValid() const {
+    return this->state != nullptr;
+  }
+
+  void LuaUniqueRegistryHandle::get(std::function<void (lua_State *)> callback) const {
     if (this->state) {
       lua_rawgeti(this->state, LUA_REGISTRYINDEX, this->ref);
       callback(this->state);
@@ -36,11 +40,43 @@ namespace LuaCppB {
     }
   }
 
-  void LuaRegistryHandle::set(std::function<void (lua_State *)> gen) {
+  void LuaUniqueRegistryHandle::set(std::function<void (lua_State *)> gen) {
     if (this->state) {
       luaL_unref(this->state, LUA_REGISTRYINDEX, this->ref);
       gen(this->state);
       this->ref = luaL_ref(state, LUA_REGISTRYINDEX);
+    }
+  }
+
+  LuaSharedRegistryHandle::LuaSharedRegistryHandle()
+    : handle(nullptr) {}
+  
+  LuaSharedRegistryHandle::LuaSharedRegistryHandle(lua_State *state, int index) {
+    this->handle = std::make_shared<LuaUniqueRegistryHandle>(state, index);
+  }
+
+  LuaSharedRegistryHandle::LuaSharedRegistryHandle(const LuaSharedRegistryHandle &handle)
+    : handle(handle.handle) {}
+  
+  LuaSharedRegistryHandle::LuaSharedRegistryHandle(const LuaRegistryHandle &handle) {
+    handle.get([&](lua_State *state) {
+      this->handle = std::make_shared<LuaUniqueRegistryHandle>(state, -1);
+    });
+  }
+
+  bool LuaSharedRegistryHandle::isValid() const {
+    return this->handle != nullptr && this->handle->isValid();
+  }
+
+  void LuaSharedRegistryHandle::get(std::function<void (lua_State *)> callback) const {
+    if (this->handle) {
+      this->handle->get(callback);
+    }
+  }
+
+  void LuaSharedRegistryHandle::set(std::function<void (lua_State *)> gen) {
+    if (this->handle) {
+      this->handle->set(gen);
     }
   }
 }

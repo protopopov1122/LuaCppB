@@ -3,6 +3,7 @@
 
 #include "luacppb/Value/Base.h"
 #include "luacppb/Reference/Registry.h"
+#include "luacppb/Meta.h"
 #include <string>
 
 namespace LuaCppB {
@@ -17,12 +18,11 @@ namespace LuaCppB {
 	 public:
 	 	LuaInteger();
 		LuaInteger(lua_Integer);
-		void push(lua_State *) const override;
-		static LuaInteger get(lua_State *, int = -1);
-
 		operator lua_Integer() const {
 			return this->integer;
 		}
+		void push(lua_State *) const override;
+		static LuaInteger get(lua_State *, int = -1);
 	 private:
 		lua_Integer integer;
 	};
@@ -79,20 +79,15 @@ namespace LuaCppB {
 		LuaCFunction_ptr function;
 	};
 
-	template<typename T>
-	struct always_false : std::false_type {};
-
 	class LuaReferenceHandle;
 
-	class LuaTableBase : public LuaValueBase {
+	class LuaReferencedValue : public LuaValueBase {
 	 public:
-	 	LuaTableBase();
-		LuaTableBase(lua_State *, int = -1);
-		LuaTableBase(const LuaTableBase &);
+	 	LuaReferencedValue();
+		LuaReferencedValue(lua_State *, int = -1);
+		LuaReferencedValue(const LuaReferencedValue &);
 		
 		void push(lua_State *) const override;
-		static LuaTableBase get(lua_State *, int = -1);
-		static LuaTableBase create(lua_State *);
 
 		template <typename T>
 		operator T() {
@@ -107,7 +102,14 @@ namespace LuaCppB {
 		template <typename T>
 		typename std::enable_if<std::is_same<T, LuaReferenceHandle>::value, T>::type convert();
 
-	 	LuaRegistryHandle handle;
+	 	LuaSharedRegistryHandle handle;
+	};
+
+	class LuaTable : public LuaReferencedValue {
+	 public:
+	 	using LuaReferencedValue::LuaReferencedValue;
+		static LuaTable get(lua_State *, int = -1);
+		static LuaTable create(lua_State *);
 	};
 }
 

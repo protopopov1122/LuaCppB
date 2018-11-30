@@ -19,7 +19,7 @@ namespace LuaCppB {
 		LuaValue(LuaBoolean b) : type(LuaType::Boolean), value(b) {}
 		LuaValue(const LuaString &s) : type(LuaType::String), value(s) {}
 		LuaValue(LuaCFunction f) : type(LuaType::Function), value(f) {}
-		LuaValue(LuaTableBase v) : type(LuaType::Table), value(v) {}
+		LuaValue(LuaTable t) : type(LuaType::Table), value(t) {}
 
 		LuaType getType() const;
 		void push(lua_State *state) const override;
@@ -79,11 +79,11 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
-		typename std::enable_if<std::is_same<T, LuaTableBase>::value, T>::type get() const {
+		typename std::enable_if<std::is_same<T, LuaTable>::value, T>::type get() const {
 			if (this->type == LuaType::Table) {
-				return std::get<LuaTableBase>(this->value);
+				return std::get<LuaTable>(this->value);
 			} else {
-				return LuaTableBase();
+				return LuaTable();
 			}
 		}
 
@@ -123,7 +123,7 @@ namespace LuaCppB {
 		}
 	 private:
 		LuaType type;
-	 	std::variant<LuaInteger, LuaNumber, LuaBoolean, LuaString, LuaCFunction, LuaTableBase> value;
+	 	std::variant<LuaInteger, LuaNumber, LuaBoolean, LuaString, LuaCFunction, LuaTable> value;
 	};
 }
 

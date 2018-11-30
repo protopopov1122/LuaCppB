@@ -6,7 +6,6 @@
 #include <optional>
 #include <type_traits>
 #include <functional>
-#include <iostream>
 
 namespace LuaCppB {
 

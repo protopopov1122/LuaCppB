@@ -4,7 +4,6 @@
 #include "luacppb/Reference/Base.h"
 #include "luacppb/Function.h"
 #include <memory>
-#include <iostream>
 
 namespace LuaCppB {
 

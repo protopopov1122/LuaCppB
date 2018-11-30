@@ -1,10 +1,15 @@
 #include "luacppb/Value/Value.h"
 #include "luacppb/Reference/Reference.h"
+#include "luacppb/Error.h"
 
 namespace LuaCppB {
 
   void LuaNil::push(lua_State *state) const {
-    lua_pushnil(state);
+    if (state != nullptr) {
+      lua_pushnil(state);
+    } else {
+      throw LuaCppBError("Lua state can't be null", LuaCppBErrorCode::InvalidState);
+    }
   }
 
   LuaNil LuaNil::get(lua_State *state, int index) {
@@ -16,7 +21,11 @@ namespace LuaCppB {
   LuaInteger::LuaInteger(lua_Integer i) : integer(i) {}
 
   void LuaInteger::push(lua_State *state) const {
-    lua_pushinteger(state, this->integer);
+    if (state != nullptr) {
+      lua_pushinteger(state, this->integer);
+    } else {
+      throw LuaCppBError("Lua state can't be null", LuaCppBErrorCode::InvalidState);
+    }
   }
 
   LuaInteger LuaInteger::get(lua_State *state, int index) {
@@ -28,7 +37,11 @@ namespace LuaCppB {
   LuaNumber::LuaNumber(lua_Number n) : number(n) {}
   
   void LuaNumber::push(lua_State *state) const {
-    lua_pushnumber(state, this->number);
+    if (state != nullptr) {
+      lua_pushnumber(state, this->number);
+    } else {
+      throw LuaCppBError("Lua state can't be null", LuaCppBErrorCode::InvalidState);
+    }
   }
 
   LuaNumber LuaNumber::get(lua_State *state, int index) {
@@ -38,7 +51,11 @@ namespace LuaCppB {
   LuaBoolean::LuaBoolean(bool b) : boolean(b) {}
 
   void LuaBoolean::push(lua_State *state) const {
-    lua_pushboolean(state, static_cast<int>(this->boolean));
+    if (state != nullptr) {
+      lua_pushboolean(state, static_cast<int>(this->boolean));
+    } else {
+      throw LuaCppBError("Lua state can't be null", LuaCppBErrorCode::InvalidState);
+    }
   }
 
   LuaBoolean LuaBoolean::get(lua_State *state, int index) {
@@ -54,13 +71,21 @@ namespace LuaCppB {
   }
 
   LuaString LuaString::get(lua_State *state, int index) {
-    return LuaString(lua_tostring(state, index));
+    if (state != nullptr) {
+      return LuaString(lua_tostring(state, index));
+    } else {
+      throw LuaCppBError("Lua state can't be null", LuaCppBErrorCode::InvalidState);
+    }
   }
 
   LuaCFunction::LuaCFunction(LuaCFunction_ptr fn) : function(fn) {}
   
   void LuaCFunction::push(lua_State *state) const {
-    lua_pushcfunction(state, this->function);
+    if (state != nullptr) {
+      lua_pushcfunction(state, this->function);
+    } else {
+      throw LuaCppBError("Lua state can't be null", LuaCppBErrorCode::InvalidState);
+    }
   }
 
   LuaCFunction LuaCFunction::get(lua_State *state, int index) {
@@ -78,8 +103,11 @@ namespace LuaCppB {
 
   void LuaReferencedValue::push(lua_State *state) const {
     handle.get([&](lua_State *handleState) {
-      assert(state == handleState);
-      lua_pushvalue(state, -1);
+      if (state == handleState) {
+        lua_pushvalue(state, -1);
+      } else {
+        throw LuaCppBError("Reference handler state must match requested state", LuaCppBErrorCode::StateMismatch);
+      }
     });
   }
 

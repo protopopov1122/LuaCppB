@@ -24,8 +24,7 @@ namespace LuaCppB {
 		virtual void push(lua_State *state) const = 0;
 	};
 
-	class LuaValueBase : public LuaData {
-	};
+	class LuaValueBase : public LuaData {};
 }
 
 #endif

@@ -21,13 +21,13 @@ namespace LuaCppB {
 		lua_State *state;
 	};
 
-	class LuaStateUnique : public LuaState {
+	class LuaUniqueState : public LuaState {
 	 public:
-		LuaStateUnique(lua_State * = nullptr);
-		virtual ~LuaStateUnique();
+		LuaUniqueState(lua_State * = nullptr);
+		virtual ~LuaUniqueState();
 	};
 
-	class LuaEnvironment : public LuaStateUnique {
+	class LuaEnvironment : public LuaUniqueState {
 	 public:
 		LuaEnvironment(bool = true);
 		LuaStatusCode load(const std::string &);

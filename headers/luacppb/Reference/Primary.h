@@ -3,14 +3,16 @@
 
 #include "luacppb/Reference/Base.h"
 #include "luacppb/Reference/Registry.h"
-#include <cassert>
+#include "luacppb/Error.h"
 
 namespace LuaCppB {
 
 	class LuaGlobalVariable : public LuaReference {
 	 public:
 		LuaGlobalVariable(lua_State *state, const std::string &name) : state(state), name(name) {
-			assert(state != nullptr);
+			if (state == nullptr) {
+				throw LuaCppBError("Lua state can't be null", LuaCppBErrorCode::InvalidState);
+			}
 		}
 	
 		void putOnTop(std::function<void (lua_State *)>) override;
@@ -23,7 +25,9 @@ namespace LuaCppB {
 	class LuaStackReference : public LuaReference {
 	 public:
 		LuaStackReference(lua_State *state, int index) : state(state), index(index) {
-			assert(state != nullptr);
+			if (state == nullptr) {
+				throw LuaCppBError("Lua state can't be null", LuaCppBErrorCode::InvalidState);
+			}
 		}
 
 		void putOnTop(std::function<void (lua_State *)>) override;

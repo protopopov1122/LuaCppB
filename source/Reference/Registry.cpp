@@ -1,5 +1,4 @@
 #include "luacppb/Reference/Registry.h"
-#include <iostream>
 
 namespace LuaCppB {
 

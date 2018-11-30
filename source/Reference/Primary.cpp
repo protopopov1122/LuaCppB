@@ -14,6 +14,9 @@ namespace LuaCppB {
   }
 
   void LuaStackReference::putOnTop(std::function<void (lua_State *)> callback) {
+    if (this->index > lua_gettop(this->state)) {
+      throw LuaCppBError("Lua stack overflow", LuaCppBErrorCode::StackOverflow);
+    }
     lua_pushvalue(this->state, this->index);
     callback(this->state);
     lua_pop(this->state, 1);
@@ -24,7 +27,9 @@ namespace LuaCppB {
 
   LuaRegistryReference::LuaRegistryReference(lua_State *state, int index)
     : handle(state, index) {
-    assert(state != nullptr);
+    if (state == nullptr) {
+      throw LuaCppBError("Lua state can't be null", LuaCppBErrorCode::InvalidState);
+    }
   }
 
   void LuaRegistryReference::putOnTop(std::function<void (lua_State *)> callback) {

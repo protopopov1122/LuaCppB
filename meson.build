@@ -9,6 +9,7 @@ LuaCppBLib = static_library('luacppb',
   'source/State.cpp', 'source/Value/Value.cpp', 'source/Value/Types.cpp',
   'source/Reference/Field.cpp', 'source/Reference/Handle.cpp',
   'source/Reference/Primary.cpp', 'source/Reference/Registry.cpp',
+  'source/Error.cpp',
   include_directories : headers)
 lua = dependency('lua')
 lcppbtest = executable('lcppbtest', 'tests/main.cpp', include_directories: headers, dependencies : lua, link_with : LuaCppBLib)

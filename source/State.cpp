@@ -22,15 +22,15 @@ namespace LuaCppB {
 		return LuaReferenceHandle(this->state, std::make_unique<LuaStackReference>(this->state, index));
 	}
 
-	LuaStateUnique::LuaStateUnique(lua_State *state)
+	LuaUniqueState::LuaUniqueState(lua_State *state)
 		: LuaState(state != nullptr ? state : luaL_newstate()) {}
 
-	LuaStateUnique::~LuaStateUnique() {
+	LuaUniqueState::~LuaUniqueState() {
 		lua_close(this->state);
 	}
 
 	LuaEnvironment::LuaEnvironment(bool openLibs)
-		: LuaStateUnique() {
+		: LuaUniqueState() {
 		if (openLibs) {
 			luaL_openlibs(this->state);
 		}

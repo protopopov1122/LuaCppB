@@ -1,5 +1,4 @@
 #include "luacppb/Reference/Reference.h"
-#include  <iostream>
 
 namespace LuaCppB {
 
@@ -45,9 +44,7 @@ namespace LuaCppB {
   LuaReferenceHandle &LuaReferenceHandle::operator=(const LuaReferenceHandle &handle) {
     this->state = handle.state;
     handle.getReference().putOnTop([&](lua_State *state) {
-      // std::cout << lua_gettop(state) << std::endl;
       this->ref = std::make_unique<LuaRegistryReference>(state, -1);
-      // std::cout << lua_gettop(state) << std::endl;
     });
     return *this;
   }

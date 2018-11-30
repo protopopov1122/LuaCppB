@@ -6,8 +6,8 @@
 #include <memory>
 #include <variant>
 #include <type_traits>
-#include <iostream>
 #include <optional>
+#include <cassert>
 
 namespace LuaCppB {
 
@@ -21,13 +21,14 @@ namespace LuaCppB {
 		LuaValue(LuaCFunction f) : type(LuaType::Function), value(f) {}
 		LuaValue(LuaTable t) : type(LuaType::Table), value(t) {}
 
-		LuaType getType() const;
+		LuaType getType() const noexcept;
 		void push(lua_State *state) const override;
 		static std::optional<LuaValue> peek(lua_State *, lua_Integer = -1);
 
 		template <typename T>
 		typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, bool>::value, T>::type get(T defaultValue = 0) const {
 			if (this->type == LuaType::Number) {
+				assert(this->value.index() == 0 || this->value.index() == 1);
 				if (this->value.index() == 0) {
 					return static_cast<T>(std::get<LuaInteger>(this->value));
 				} else {
@@ -41,6 +42,7 @@ namespace LuaCppB {
 		template <typename T>
 		typename std::enable_if<std::is_floating_point<T>::value, T>::type get(T defaultValue = 0.0f) const {
 			if (this->type == LuaType::Number) {
+				assert(this->value.index() == 0 || this->value.index() == 1);
 				if (this->value.index() == 0) {
 					return static_cast<T>(std::get<LuaInteger>(this->value));
 				} else {
@@ -54,6 +56,7 @@ namespace LuaCppB {
 		template <typename T>
 		typename std::enable_if<std::is_same<T, bool>::value, T>::type get(T defaultValue = false) const {
 			if (this->type == LuaType::Boolean) {
+				assert(this->value.index() == 2);
 				return static_cast<T>(std::get<LuaBoolean>(this->value));
 			} else {
 				return defaultValue;
@@ -63,6 +66,7 @@ namespace LuaCppB {
 		template <typename T>
 		typename std::enable_if<std::is_same<T, std::string>::value, T>::type get(const T &defaultValue = "") const {
 			if (this->type == LuaType::String) {
+				assert(this->value.index() == 3);
 				return static_cast<T>(std::get<LuaString>(this->value));
 			} else {
 				return defaultValue;
@@ -72,6 +76,7 @@ namespace LuaCppB {
 		template <typename T>
 		typename std::enable_if<std::is_same<T, LuaCFunction>::value, T>::type get(T defaultValue = nullptr) const {
 			if (this->type == LuaType::Function) {
+				assert(this->value.index() == 4);
 				return static_cast<T>(std::get<LuaCFunction>(this->value));
 			} else {
 				return defaultValue;
@@ -81,6 +86,7 @@ namespace LuaCppB {
 		template <typename T>
 		typename std::enable_if<std::is_same<T, LuaTable>::value, T>::type get() const {
 			if (this->type == LuaType::Table) {
+				assert(this->value.index() == 5);
 				return std::get<LuaTable>(this->value);
 			} else {
 				return LuaTable();

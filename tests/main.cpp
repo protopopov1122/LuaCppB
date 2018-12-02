@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
 	table["inner"] = LuaTable::create(env.getState());
 	LuaReferenceHandle innerTable = table["inner"];
 	innerTable["add"] = CMethodCall(&sum, &Sum::add);
-	env["sum"] = table.get<LuaValue>();
+	env["sum"] = *table;
 	env["test"] = CMethodCall(&sum, &Sum::add);
 	env["populate"] = CInvocableCall<std::function<void(LuaTable)>, LuaTable>([](LuaTable tb) {
 		LuaReferenceHandle table = tb;
@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
 	LuaReferenceHandle test = LuaTable::create(env.getState());
 	test["print"] = print;
 	test["x"] = 100;
-	env["test"] = test.get<LuaValue>();
+	env["test"] = *test;
 	if (env.load("test.lua") != LuaStatusCode::Ok) {
 		std::cout << lua_tostring(env.getState(), -1) << std::endl;
 	}

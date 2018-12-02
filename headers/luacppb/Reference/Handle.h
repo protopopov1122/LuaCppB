@@ -20,6 +20,7 @@ namespace LuaCppB {
 		LuaReferenceHandle operator[](lua_Integer);
 		LuaReferenceHandle &operator=(LuaData &);
 		LuaReferenceHandle &operator=(const LuaReferenceHandle &);
+		LuaValue operator*();
 
 		template <typename R, typename ... A>
 		LuaReferenceHandle &operator=(R (*fn)(A...)) {

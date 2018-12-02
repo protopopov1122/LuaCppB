@@ -20,6 +20,10 @@ namespace LuaCppB {
     return LuaReferenceHandle(this->state, std::make_unique<LuaArrayField>(*this, index));
   }
 
+  LuaValue LuaReferenceHandle::operator*() {
+    return this->get<LuaValue>();
+  }
+
   bool LuaReferenceHandle::exists() {
     bool exists = false;
     this->ref->putOnTop([&](lua_State *state) {

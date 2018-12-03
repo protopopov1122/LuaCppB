@@ -47,21 +47,6 @@ namespace LuaCppB {
 			return this->ref->get<T>();
 		}
 
-		template <typename R = void, typename ... A>
-		R call(A... args) {
-			if constexpr (!std::is_same<R, void>::value) {
-				R value;
-				this->ref->putOnTop([&](lua_State *state) {
-					value = LuaFunctionCall::call<R, A...>(state, -1, args...);
-				});
-				return value;
-			} else {
-				this->ref->putOnTop([&](lua_State *state) {
-					LuaFunctionCall::call<R, A...>(state, -1, args...);
-				});
-			}
-		}
-
 		template <typename ... A>
 		LuaFunctionCallResult operator()(A... args) {
 			std::vector<LuaValue> results;

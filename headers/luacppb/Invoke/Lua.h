@@ -36,25 +36,6 @@ namespace LuaCppB {
 
   class LuaFunctionCall {
    public:
-    template <typename R, typename ... A>
-    static R call(lua_State *state, int index, A... args) {
-      int top = lua_gettop(state);
-      lua_pushvalue(state, index);
-      LuaFunctionArgument<A...>::push(state, args...);
-      lua_pcall(state, sizeof...(args), LUA_MULTRET, 0);
-      int rets = lua_gettop(state) - top;
-      if constexpr (std::is_same<R, void>::value) {
-        lua_pop(state, rets);
-      } else if (rets == 1) {
-        R result = LuaValue::peek(state).value().get<R>();
-        lua_pop(state, rets);
-        return result;
-      } else {
-        // TODO Handle multiple return results
-        lua_pop(state, rets);
-      }
-    }
-
     template <typename ... A>
     static void call(lua_State *state, int index, std::vector<LuaValue> &result, A... args) {
       int top = lua_gettop(state);

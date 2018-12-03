@@ -14,8 +14,8 @@ namespace LuaCppB {
 		virtual ~LuaReference() = default;
 		lua_State *getState();
 
-		virtual void putOnTop(std::function<void (lua_State *)>) = 0;
-		virtual void setValue(std::function<void (lua_State *)>) = 0;
+		virtual bool putOnTop(std::function<void (lua_State *)>) = 0;
+		virtual bool setValue(std::function<void (lua_State *)>) = 0;
 
 		template <typename T>
 		typename std::enable_if<std::is_same<T, LuaValue>::value, T>::type get() {

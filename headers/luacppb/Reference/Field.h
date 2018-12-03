@@ -9,8 +9,8 @@ namespace LuaCppB {
 	 public:
 		LuaTableField(LuaReferenceHandle ref, const std::string &name) : ref(ref), name(name) {}
 		
-		void putOnTop(std::function<void (lua_State *)>) override;
-		void setValue(std::function<void (lua_State *)>) override;
+		bool putOnTop(std::function<void (lua_State *)>) override;
+		bool setValue(std::function<void (lua_State *)>) override;
 	 private:
 		LuaReferenceHandle ref;
 		std::string name;
@@ -20,8 +20,8 @@ namespace LuaCppB {
 	 public:
 		LuaArrayField(LuaReferenceHandle ref, lua_Integer index) : ref(ref), index(index) {}
 
-		void putOnTop(std::function<void (lua_State *)>) override;
-		void setValue(std::function<void (lua_State *)>) override;
+		bool putOnTop(std::function<void (lua_State *)>) override;
+		bool setValue(std::function<void (lua_State *)>) override;
 	 private:
 		LuaReferenceHandle ref;
 		lua_Integer index;

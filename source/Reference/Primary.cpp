@@ -1,28 +1,40 @@
 #include "luacppb/Reference/Reference.h"
+#include "luacppb/Core/StackGuard.h"
 
 namespace LuaCppB {
 
-  void LuaGlobalVariable::putOnTop(std::function<void (lua_State *)> callback) {
+  bool LuaGlobalVariable::putOnTop(std::function<void (lua_State *)> callback) {
+    LuaStackGuard guard(this->state);
     lua_getglobal(this->state, this->name.c_str());
+    auto canary = guard.canary();
     callback(this->state);
+    canary.assume(0);
     lua_pop(this->state, 1);
+    return true;
   }
 
-  void LuaGlobalVariable::setValue(std::function<void (lua_State *)> gen) {
+  bool LuaGlobalVariable::setValue(std::function<void (lua_State *)> gen) {
+    LuaStackGuard guard(this->state);
+    auto canary = guard.canary();
     gen(this->state);
+    canary.assume(1);
     lua_setglobal(this->state, this->name.c_str());
+    return true;
   }
 
-  void LuaStackReference::putOnTop(std::function<void (lua_State *)> callback) {
-    if (this->index > lua_gettop(this->state)) {
-      throw LuaCppBError("Lua stack overflow", LuaCppBErrorCode::StackOverflow);
-    }
+  bool LuaStackReference::putOnTop(std::function<void (lua_State *)> callback) {
+    LuaStackGuard guard(this->state);
+    guard.assumeIndex(this->index);
     lua_pushvalue(this->state, this->index);
+    auto canary = guard.canary();
     callback(this->state);
+    canary.assume();
     lua_pop(this->state, 1);
+    return true;
   }
 
-  void LuaStackReference::setValue(std::function<void (lua_State *)> gen) {
+  bool LuaStackReference::setValue(std::function<void (lua_State *)> gen) {
+    return false;
   }
 
   LuaRegistryReference::LuaRegistryReference(lua_State *state, int index)
@@ -32,11 +44,11 @@ namespace LuaCppB {
     }
   }
 
-  void LuaRegistryReference::putOnTop(std::function<void (lua_State *)> callback) {
-    this->handle.get(callback);
+  bool LuaRegistryReference::putOnTop(std::function<void (lua_State *)> callback) {
+    return this->handle.get(callback);
   }
 
-  void LuaRegistryReference::setValue(std::function<void (lua_State *)> gen) {
-    this->handle.set(gen);
+  bool LuaRegistryReference::setValue(std::function<void (lua_State *)> gen) {
+    return this->handle.set(gen);
   }
 }

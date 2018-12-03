@@ -102,13 +102,17 @@ namespace LuaCppB {
     : handle(base.handle) {}
 
   void LuaReferencedValue::push(lua_State *state) const {
+    int ref = -1;
     handle.get([&](lua_State *handleState) {
       if (state == handleState) {
         lua_pushvalue(state, -1);
+        ref = luaL_ref(state, LUA_REGISTRYINDEX);
       } else {
         throw LuaCppBError("Reference handler state must match requested state", LuaCppBErrorCode::StateMismatch);
       }
     });
+    lua_rawgeti(state, LUA_REGISTRYINDEX, ref);
+    luaL_unref(state, LUA_REGISTRYINDEX, ref);
   }
 
   template <>

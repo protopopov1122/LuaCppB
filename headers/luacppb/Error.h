@@ -11,7 +11,8 @@ namespace LuaCppB {
     NotSpecified,
     InvalidState,
     StateMismatch,
-    StackOverflow
+    StackOverflow,
+    StackSizeMismatch
   };
 
   class LuaCppBError : std::exception {

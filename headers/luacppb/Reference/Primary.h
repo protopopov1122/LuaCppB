@@ -15,8 +15,8 @@ namespace LuaCppB {
 			}
 		}
 	
-		void putOnTop(std::function<void (lua_State *)>) override;
-		void setValue(std::function<void (lua_State *)>) override;
+		bool putOnTop(std::function<void (lua_State *)>) override;
+		bool setValue(std::function<void (lua_State *)>) override;
 	 private:
 		lua_State *state;
 		std::string name;
@@ -30,8 +30,8 @@ namespace LuaCppB {
 			}
 		}
 
-		void putOnTop(std::function<void (lua_State *)>) override;
-		void setValue(std::function<void (lua_State *)> gen) override;
+		bool putOnTop(std::function<void (lua_State *)>) override;
+		bool setValue(std::function<void (lua_State *)> gen) override;
 	 private:
 		lua_State *state;
 		int index;
@@ -41,8 +41,8 @@ namespace LuaCppB {
 	 public:
 		LuaRegistryReference(lua_State *, int = -1);
 
-		void putOnTop(std::function<void (lua_State *)>) override;
-		void setValue(std::function<void (lua_State *)>) override;
+		bool putOnTop(std::function<void (lua_State *)>) override;
+		bool setValue(std::function<void (lua_State *)>) override;
 	 private:
 	 	LuaSharedRegistryHandle handle;
 	};

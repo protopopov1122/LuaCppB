@@ -11,8 +11,8 @@ namespace LuaCppB {
    public:
     virtual ~LuaRegistryHandle() = default;
     virtual bool isValid() const = 0;
-    virtual void get(std::function<void (lua_State *)>) const = 0;
-    virtual void set(std::function<void (lua_State *)>) = 0;
+    virtual bool get(std::function<void (lua_State *)>) const = 0;
+    virtual bool set(std::function<void (lua_State *)>) = 0;
   };
 
   class LuaUniqueRegistryHandle : public LuaRegistryHandle {
@@ -23,8 +23,8 @@ namespace LuaCppB {
     virtual ~LuaUniqueRegistryHandle();
 
     bool isValid() const override;
-    void get(std::function<void(lua_State *)>) const override;
-    void set(std::function<void(lua_State *)>) override;
+    bool get(std::function<void(lua_State *)>) const override;
+    bool set(std::function<void(lua_State *)>) override;
    private:
     lua_State *state;
     int ref;
@@ -38,8 +38,8 @@ namespace LuaCppB {
     LuaSharedRegistryHandle(const LuaRegistryHandle &);
 
     bool isValid() const override;
-    void get(std::function<void(lua_State *)>) const override;
-    void set(std::function<void(lua_State *)>) override;
+    bool get(std::function<void(lua_State *)>) const override;
+    bool set(std::function<void(lua_State *)>) override;
    private:
     std::shared_ptr<LuaUniqueRegistryHandle> handle;
   };

@@ -70,6 +70,49 @@ namespace LuaCppB {
     }
   };
 
+  template <std::size_t I, typename ... T>
+  struct LuaFunctionCallResultTuple_Impl {};
+
+  template <std::size_t I>
+  struct LuaFunctionCallResultTuple_Impl<I> {
+    static std::tuple<> get(std::vector<LuaValue> &results) {
+      return std::make_tuple();
+    }
+  };
+
+  template <std::size_t I, typename T, typename ... B>
+  struct LuaFunctionCallResultTuple_Impl<I, T, B...> {
+    static std::tuple<T, B...> get(std::vector<LuaValue> &results) {
+      std::tuple<T> begin = std::make_tuple((I < results.size() ? results.at(I) : LuaValue()).get<T>());
+      return std::tuple_cat(begin, LuaFunctionCallResultTuple_Impl<I + 1, B...>::get(results));
+    }
+  };
+
+  template <typename ... T>
+  struct LuaFunctionCallResultTuple {
+    static std::tuple<T...> get(std::vector<LuaValue> &results) {
+      return LuaFunctionCallResultTuple_Impl<0, T...>::get(results);
+    }
+  };
+
+  template <typename T>
+  struct LuaFunctionCallResultGetter {
+    static T get(std::vector<LuaValue> &result) {
+      LuaValue ret;
+      if (!result.empty()) {
+        ret = result.at(0);
+      }
+      return ret.get<T>();
+    }
+  };
+
+  template <typename ... T>
+  struct LuaFunctionCallResultGetter<std::tuple<T...>> {
+    static std::tuple<T...> get(std::vector<LuaValue> &result) {
+      return LuaFunctionCallResultTuple<T...>::get(result);
+    }
+  };
+
   class LuaFunctionCallResult {
    public:
     LuaFunctionCallResult(std::vector<LuaValue> &result)
@@ -79,12 +122,7 @@ namespace LuaCppB {
 
     template <typename T>
     T get() {
-      // TODO Handle multiple return results
-      LuaValue ret;
-      if (!result.empty()) {
-        ret = result.at(0);
-      }
-      return ret.get<T>();
+      return LuaFunctionCallResultGetter<T>::get(this->result);
     }
 
     template <typename T>
@@ -92,6 +130,7 @@ namespace LuaCppB {
       return this->get<T>();
     }
    private:
+
     std::vector<LuaValue> result;
   };
 }

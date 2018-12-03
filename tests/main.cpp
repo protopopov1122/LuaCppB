@@ -48,6 +48,7 @@ int main(int argc, char **argv) {
 	}
 	env["root"]();
 	int quad = env["quad"](16);
-	std::cout << quad << '\t' << env["y"].get<std::string>() << std::endl;
+	std::tuple<int, int> quadTuple = env["quad"](16);
+	std::cout << quad << '\t' << std::get<1>(quadTuple) << '\t' << env["y"].get<std::string>() << std::endl;
 	return EXIT_SUCCESS;
 }

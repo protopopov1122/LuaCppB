@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include "luacppb/State.h"
 #include "luacppb/Reference/Reference.h"
-#include "luacppb/Function.h"
+#include "luacppb/Invoke/Native.h"
 
 using namespace LuaCppB;
 
@@ -30,15 +30,15 @@ int main(int argc, char **argv) {
 	LuaReferenceHandle table = table_tmp;
 	table["inner"] = LuaTable::create(env.getState());
 	LuaReferenceHandle innerTable = table["inner"];
-	innerTable["add"] = CMethodCall(&sum, &Sum::add);
+	innerTable["add"] = NativeMethodCall(&sum, &Sum::add);
 	env["sum"] = *table;
-	env["test"] = CMethodCall(&sum, &Sum::add);
-	env["populate"] = CInvocableCall<std::function<void(LuaTable)>, LuaTable>([](LuaTable tb) {
+	env["test"] = NativeMethodCall(&sum, &Sum::add);
+	env["populate"] = NativeInvocableCall<std::function<void(LuaTable)>, LuaTable>([](LuaTable tb) {
 		LuaReferenceHandle table = tb;
 		table["x"] = 15;
 		table["msg"] = "Hello, world!";
 	});
-	env["_print"] = CFunctionCall(print);
+	env["_print"] = NativeFunctionCall(print);
 	LuaReferenceHandle test = LuaTable::create(env.getState());
 	test["print"] = print;
 	test["x"] = 100;

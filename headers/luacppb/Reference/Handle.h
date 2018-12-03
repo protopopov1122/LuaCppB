@@ -2,7 +2,7 @@
 #define LUACPPB_REFERENCE_HANDLE_H_
 
 #include "luacppb/Reference/Base.h"
-#include "luacppb/Function.h"
+#include "luacppb/Invoke/Native.h"
 #include <memory>
 
 namespace LuaCppB {
@@ -24,7 +24,7 @@ namespace LuaCppB {
 
 		template <typename R, typename ... A>
 		LuaReferenceHandle &operator=(R (*fn)(A...)) {
-			CFunctionCall call(fn);
+			NativeFunctionCall call(fn);
 			this->ref->set(call);
 			return *this;
 		}

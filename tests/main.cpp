@@ -46,6 +46,8 @@ int main(int argc, char **argv) {
 	if (env.load("test.lua") != LuaStatusCode::Ok) {
 		std::cout << lua_tostring(env.getState(), -1) << std::endl;
 	}
-	std::cout << env["y"].get<std::string>() << std::endl;
+	env["root"]();
+	int quad = env["quad"](16);
+	std::cout << quad << '\t' << env["y"].get<std::string>() << std::endl;
 	return EXIT_SUCCESS;
 }

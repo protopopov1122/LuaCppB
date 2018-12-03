@@ -3,7 +3,9 @@
 
 #include "luacppb/Reference/Base.h"
 #include "luacppb/Invoke/Native.h"
+#include "luacppb/Invoke/Lua.h"
 #include <memory>
+#include <type_traits>
 
 namespace LuaCppB {
 
@@ -43,6 +45,30 @@ namespace LuaCppB {
 		template <typename T>
 		T get() {
 			return this->ref->get<T>();
+		}
+
+		template <typename R = void, typename ... A>
+		R call(A... args) {
+			if constexpr (!std::is_same<R, void>::value) {
+				R value;
+				this->ref->putOnTop([&](lua_State *state) {
+					value = LuaFunctionCall::call<R, A...>(state, -1, args...);
+				});
+				return value;
+			} else {
+				this->ref->putOnTop([&](lua_State *state) {
+					LuaFunctionCall::call<R, A...>(state, -1, args...);
+				});
+			}
+		}
+
+		template <typename ... A>
+		LuaFunctionCallResult operator()(A... args) {
+			std::vector<LuaValue> results;
+			this->ref->putOnTop([&](lua_State *state) {
+				LuaFunctionCall::call<A...>(state, -1, results, args...);
+			});
+			return LuaFunctionCallResult(results);
 		}
 	 private:
 	 	lua_State *state;

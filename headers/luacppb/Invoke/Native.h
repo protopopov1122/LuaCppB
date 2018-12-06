@@ -58,10 +58,10 @@ namespace LuaCppB {
 	};
 
 	
-	template <typename ... A>
+	template <std::size_t S, typename ... A>
 	struct NativeFunctionArgumentsTuple {
 		static std::tuple<A...> value(lua_State *state) {
-			return NativeFunctionArgumentsTuple_Impl<1, A...>::value(state);
+			return NativeFunctionArgumentsTuple_Impl<S, A...>::value(state);
 		}
 	};
 
@@ -78,7 +78,7 @@ namespace LuaCppB {
 		}
 	 private:
 		static int call(F function, lua_State *state) {
-			std::tuple<A...> args = NativeFunctionArgumentsTuple<A...>::value(state);
+			std::tuple<A...> args = NativeFunctionArgumentsTuple<1, A...>::value(state);
 			if constexpr (std::is_void<R>::value) {
 				std::apply(function, args);
 				return 0;
@@ -116,7 +116,7 @@ namespace LuaCppB {
 		}
 	 private:
 	 	static int call(C *object, M method, lua_State *state) {
-			std::tuple<A...> args = NativeFunctionArgumentsTuple<A...>::value(state);
+			std::tuple<A...> args = NativeFunctionArgumentsTuple<1,A...>::value(state);
 			if constexpr (std::is_void<R>::value) {
 				std::apply([object, method](A... args) {	
 					return (object->*method)(args...);
@@ -160,7 +160,7 @@ namespace LuaCppB {
 		}
 	 private:
 		static int call(T &invocable, lua_State *state) {
-			std::tuple<A...> args = NativeFunctionArgumentsTuple<A...>::value(state);
+			std::tuple<A...> args = NativeFunctionArgumentsTuple<1, A...>::value(state);
 			if constexpr (std::is_void<R>::value) {
 				std::apply(invocable, args);
 				return 0;

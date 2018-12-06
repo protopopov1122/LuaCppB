@@ -3,6 +3,7 @@
 #include "luacppb/State.h"
 #include "luacppb/Reference/Reference.h"
 #include "luacppb/Invoke/Native.h"
+#include "luacppb/Object/Object.h"
 
 using namespace LuaCppB;
 
@@ -46,6 +47,9 @@ int main(int argc, char **argv) {
 	if (env.load("test.lua") != LuaStatusCode::Ok) {
 		std::cout << lua_tostring(env.getState(), -1) << std::endl;
 	}
+	LuaCppObject luaObj(sum);
+	luaObj.bind("add", &Sum::add);
+	env["sumObj"] = luaObj;
 	env["root"]();
 	int quad = env["quad"](16);
 	std::tuple<int, int> quadTuple = env["quad"](16);

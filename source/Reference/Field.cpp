@@ -1,5 +1,6 @@
 #include "luacppb/Reference/Reference.h"
 #include "luacppb/Core/StackGuard.h"
+#include <iostream>
 
 namespace LuaCppB {
 
@@ -48,7 +49,7 @@ namespace LuaCppB {
           canary.assume();
           result = true;
         }
-        lua_pop(state, -1);
+        lua_pop(state, 1);
       }
     });
     return result;

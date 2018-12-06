@@ -33,3 +33,4 @@
 
 # Project-related
 bin
+tests/catch.hpp

@@ -1,7 +1,6 @@
 #include "catch.hpp"
 #include "luacppb/State.h"
 #include "luacppb/Reference/Reference.h"
-#include <iostream>
 
 using namespace LuaCppB;
 

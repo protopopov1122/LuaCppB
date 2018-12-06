@@ -1,6 +1,5 @@
 #include "luacppb/Reference/Reference.h"
 #include "luacppb/Core/StackGuard.h"
-#include <iostream>
 
 namespace LuaCppB {
 

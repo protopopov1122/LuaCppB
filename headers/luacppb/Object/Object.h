@@ -4,7 +4,6 @@
 #include "luacppb/Base.h"
 #include "luacppb/Invoke/Native.h"
 #include <map>
-#include <iostream>
 
 namespace LuaCppB {
 

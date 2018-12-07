@@ -106,8 +106,14 @@ namespace LuaCppB {
 	template <typename C, typename R, typename ... A>
 	class NativeMethodCall : public LuaData {
 		using M = R (C::*)(A...);
+		using Mc = R (C::*)(A...) const;
 	 public:
 		NativeMethodCall(C *obj, M met) : object(obj), method(met) {}
+		NativeMethodCall(C &obj, M met) : object(&obj), method(met) {}
+		NativeMethodCall(const C *obj, Mc met)
+			: object(const_cast<C *>(obj)), method(reinterpret_cast<M>(met)) {}
+		NativeMethodCall(const C &obj, Mc met)
+			: object(const_cast<C *>(&obj)), method(reinterpret_cast<M>(met)) {}
 		void push(lua_State *state) const override {
 			NativeMethodDescriptor<C, M> *descriptor = reinterpret_cast<NativeMethodDescriptor<C, M> *>(lua_newuserdata(state, sizeof(NativeMethodDescriptor<C, M>)));
 			descriptor->object = this->object;

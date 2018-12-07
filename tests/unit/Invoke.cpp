@@ -21,7 +21,7 @@ class Factor {
     return (x + y) * factor;
   }
 
-  float get() {
+  float get() const {
     return this->factor;
   }
 
@@ -55,7 +55,7 @@ TEST_CASE("Native method call") {
   Factor factor(10);
   env["calc"] = NativeMethodCall<Factor, float, float, float>(&factor, &Factor::calc);
   env["get"] = NativeMethodCall<Factor, float>(&factor, &Factor::get);
-  env["set"] = NativeMethodCall<Factor, void, float>(&factor, &Factor::set); 
+  env["set"] = NativeMethodCall<Factor, void, float>(factor, &Factor::set); 
   REQUIRE((env["calc"].exists() && env["get"].exists() && env["set"].exists()));
   REQUIRE(env["calc"].getType() == LuaType::Function);
   REQUIRE(env["get"].getType() == LuaType::Function);

@@ -17,6 +17,8 @@ TEST_CASE("Stack guard") {
     REQUIRE_THROWS(guard.assumeIndex(2));
     REQUIRE(guard.checkCapacity(1));
     REQUIRE_NOTHROW(guard.assumeCapacity(1));
+    REQUIRE_FALSE(guard.checkCapacity(INT_MAX));
+    REQUIRE_THROWS(guard.assumeCapacity(INT_MAX));
   }
   SECTION("Stack canary") {
     auto canary = guard.canary();

@@ -12,7 +12,10 @@ LuaCppBLib = static_library('luacppb',
   'source/Error.cpp', 'source/Core/StackGuard.cpp',
   include_directories : headers)
 lua = dependency('lua')
-lcppbtest = executable('lcppbunit',
+
+lcppbunit = executable('lcppbunit',
   'tests/unit/main.cpp', 'tests/unit/Core.cpp', 'tests/unit/Reference.cpp',
-  'tests/unit/Value.cpp',
+  'tests/unit/Value.cpp', 'tests/unit/Invoke.cpp',
   include_directories: headers, dependencies : lua, link_with : LuaCppBLib)
+
+test('Unit tests', lcppbunit)

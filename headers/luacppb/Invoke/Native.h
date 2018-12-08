@@ -3,6 +3,7 @@
 
 #include "luacppb/Base.h"
 #include "luacppb/Value/Value.h"
+#include "luacppb/Invoke/Method.h"
 #include "luacppb/State.h"
 #include <string>
 #include <type_traits>
@@ -111,9 +112,9 @@ namespace LuaCppB {
 		NativeMethodCall(C *obj, M met) : object(obj), method(met) {}
 		NativeMethodCall(C &obj, M met) : object(&obj), method(met) {}
 		NativeMethodCall(const C *obj, Mc met)
-			: object(const_cast<C *>(obj)), method(reinterpret_cast<M>(met)) {}
+			: object(const_cast<C *>(obj)), method(NativeMethodWrapper(met).get()) {}
 		NativeMethodCall(const C &obj, Mc met)
-			: object(const_cast<C *>(&obj)), method(reinterpret_cast<M>(met)) {}
+			: object(const_cast<C *>(&obj)), method(NativeMethodWrapper(met).get()) {}
 		void push(lua_State *state) const override {
 			NativeMethodDescriptor<C, M> *descriptor = reinterpret_cast<NativeMethodDescriptor<C, M> *>(lua_newuserdata(state, sizeof(NativeMethodDescriptor<C, M>)));
 			descriptor->object = this->object;

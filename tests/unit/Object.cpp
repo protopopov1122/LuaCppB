@@ -36,7 +36,7 @@ TEST_CASE("Object binding") {
   aObj.bind("sub", &Arith::sub);
   env["arith"] = aObj;
   REQUIRE(env["arith"].exists());
-  REQUIRE(env["arith"].getType() == LuaType::LightUserData);
+  REQUIRE(env["arith"].getType() == LuaType::UserData);
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(env["result"][1].get<int>() == 60);
   REQUIRE(env["result"][2].get<int>() == -90);

@@ -10,7 +10,7 @@ namespace LuaCppB {
 
 	template <typename C, typename ... A>
 	class CppObjectInitializer : public LuaData {
-		using F = void (*)(C*, A...);
+		using F = void (*)(C *, A...);
 	 public:
 		CppObjectInitializer(const std::string &className, F fn) : className(className), function(fn) {}
 
@@ -22,8 +22,9 @@ namespace LuaCppB {
 	 private:
 		static int call(F function, const char *className, lua_State *state) {
 			std::tuple<A...> args = NativeFunctionArgumentsTuple<1, A...>::value(state);
-      C *object = reinterpret_cast<C *>(lua_newuserdata(state, sizeof(C)));
-      std::tuple<C *, A...> allArgs = std::tuple_cat(std::make_tuple(object), args);
+      CppObjectWrapper<C> *object = reinterpret_cast<CppObjectWrapper<C> *>(lua_newuserdata(state, sizeof(CppObjectWrapper<C>)));
+      new(object) CppObjectWrapper<C>();
+      std::tuple<C *, A...> allArgs = std::tuple_cat(std::make_tuple(object->get()), args);
       std::apply(function, allArgs);
       luaL_setmetatable(state, className);
       return 1;
@@ -84,8 +85,9 @@ namespace LuaCppB {
     static int newObject(lua_State *state) {
       if constexpr (std::is_default_constructible<C>::value) {
         const char *className = lua_tostring(state, lua_upvalueindex(1));
-        C *object = reinterpret_cast<C *>(lua_newuserdata(state, sizeof(C)));
-        new(object) C();
+        CppObjectWrapper<C> *object = reinterpret_cast<CppObjectWrapper<C> *>(lua_newuserdata(state, sizeof(CppObjectWrapper<C>)));
+        new(object) CppObjectWrapper<C>();
+        new(object->get()) C();
         luaL_setmetatable(state, className);
       } else {
         lua_pushnil(state);
@@ -94,8 +96,8 @@ namespace LuaCppB {
     }
 
     static int gcObject(lua_State *state) {
-      C *object = reinterpret_cast<C *>(lua_touserdata(state, 1));
-      object->~C();
+      CppObjectWrapper<C> *object = reinterpret_cast<CppObjectWrapper<C> *>(lua_touserdata(state, 1));
+      object->~CppObjectWrapper();
       ::operator delete(object, object);
       return 0;
     }

@@ -4,9 +4,40 @@
 #include "luacppb/Base.h"
 #include "luacppb/Object/Method.h"
 #include <map>
-#include <iostream>
+#include <type_traits>
 
 namespace LuaCppB {
+
+	template <typename C, typename ... A>
+	class CppObjectInitializer : public LuaData {
+		using F = void (*)(C*, A...);
+	 public:
+		CppObjectInitializer(const std::string &className, F fn) : className(className), function(fn) {}
+
+		void push(lua_State *state) const override {
+			lua_pushlightuserdata(state, reinterpret_cast<void *>(this->function));
+      lua_pushstring(state, this->className.c_str());
+			lua_pushcclosure(state, CppObjectInitializer<C, A...>::function_closure, 2);
+		}
+	 private:
+		static int call(F function, const char *className, lua_State *state) {
+			std::tuple<A...> args = NativeFunctionArgumentsTuple<1, A...>::value(state);
+      C *object = reinterpret_cast<C *>(lua_newuserdata(state, sizeof(C)));
+      std::tuple<C *, A...> allArgs = std::tuple_cat(std::make_tuple(object), args);
+      std::apply(function, allArgs);
+      luaL_setmetatable(state, className);
+      return 1;
+		};
+
+		static int function_closure(lua_State *state) {
+			const void *fn = lua_topointer(state, lua_upvalueindex(1));
+      const char *className = lua_tostring(state, lua_upvalueindex(2));
+			return CppObjectInitializer<C, A...>::call(reinterpret_cast<F>(fn), className, state);
+		};
+
+    std::string className;
+		F function;
+	};
 
   template <typename C>
   class LuaCppClass : public LuaData {
@@ -22,11 +53,17 @@ namespace LuaCppB {
         lua_setfield(state, -2, it->first.c_str());
       }
       lua_setfield(state, -2, "__index");
-      lua_pushstring(state, this->className.c_str());
-      lua_pushcclosure(state, &LuaCppClass<C>::newObject, 1);
-      lua_setfield(state, -2, "new");
+      if constexpr (std::is_default_constructible<C>::value) {
+        lua_pushstring(state, this->className.c_str());
+        lua_pushcclosure(state, &LuaCppClass<C>::newObject, 1);
+        lua_setfield(state, -2, "new");
+      }
       lua_pushcfunction(state, &LuaCppClass<C>::gcObject);
       lua_setfield(state, -2, "__gc");
+      for (auto it = this->initializers.begin(); it != this->initializers.end(); ++it) {
+        it->second->push(state);
+        lua_setfield(state, -2, it->first.c_str());
+      }
     }
 
     template <typename R, typename ... A>
@@ -38,12 +75,21 @@ namespace LuaCppB {
     void bind(const std::string &key, R (C::*method)(A...) const) {
       this->methods[key] = std::make_shared<CppObjectMethodCall<C, R, A...>>(NativeMethodWrapper(method).get());
     }
+
+    template <typename ... A>
+    void initializer(const std::string &key, void (*initializer)(C *, A...)) {
+      this->initializers[key] = std::make_shared<CppObjectInitializer<C, A...>>(this->className, initializer);
+    }
    private:
     static int newObject(lua_State *state) {
-      const char *className = lua_tostring(state, lua_upvalueindex(1));
-      C *object = reinterpret_cast<C *>(lua_newuserdata(state, sizeof(C)));
-      new(object) C();
-      luaL_setmetatable(state, className);
+      if constexpr (std::is_default_constructible<C>::value) {
+        const char *className = lua_tostring(state, lua_upvalueindex(1));
+        C *object = reinterpret_cast<C *>(lua_newuserdata(state, sizeof(C)));
+        new(object) C();
+        luaL_setmetatable(state, className);
+      } else {
+        lua_pushnil(state);
+      }
       return 1;
     }
 
@@ -56,6 +102,7 @@ namespace LuaCppB {
 
     std::string className;
     std::map<std::string, std::shared_ptr<LuaData>> methods;
+    std::map<std::string, std::shared_ptr<LuaData>> initializers;
   };
 }
 

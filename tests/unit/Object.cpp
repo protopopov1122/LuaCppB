@@ -19,6 +19,10 @@ class Arith {
   void set(int n) {
     this->n = n;
   }
+
+  static void build(Arith *arith, int n) {
+    new(arith) Arith(n);
+  }
  private:
   int n;
 };
@@ -39,13 +43,16 @@ TEST_CASE("Object binding") {
 }
 
 TEST_CASE("Class binding") {
-  const std::string &CODE = "a = Arith.new()\n"
-                            "a:set(50)\n"
-                            "result = { a:add(10), a:sub(20) }";
+  const std::string &CODE = "a = Arith.build(55)\n"
+                            "x = a:add(5)\n"
+                            "a2 = Arith.new()\n"
+                            "a2:set(50)\n"
+                            "result = { x, a2:sub(20) }";
   LuaCppClass<Arith> arith("Arith");
   arith.bind("add", &Arith::add);
   arith.bind("sub", &Arith::sub);
   arith.bind("set", &Arith::set);
+  arith.initializer("build", &Arith::build);
   LuaEnvironment env;
   env["Arith"] = arith;
   REQUIRE(env["Arith"].exists());

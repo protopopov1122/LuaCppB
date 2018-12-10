@@ -1,11 +1,12 @@
 #include "luacppb/State.h"
 #include "luacppb/Reference/Reference.h"
+#include "luacppb/Object/Registry.h"
 #include <cassert>
 
 namespace LuaCppB {
 
 	LuaState::LuaState(lua_State *state)
-		: state(state) {
+		: state(state), registry(std::make_unique<CppClassRegistry>(state)) {
 		assert(this->state != nullptr);
 	}
 
@@ -13,13 +14,17 @@ namespace LuaCppB {
 		return this->state;
 	}
 
+	CppClassRegistry &LuaState::getClassRegistry() {
+		return *this->registry;
+	}
+
 	LuaReferenceHandle LuaState::operator[](const std::string &name) {
-		return LuaReferenceHandle(this->state, std::make_unique<LuaGlobalVariable>(this->state, name));
+		return LuaReferenceHandle(this->state, std::make_unique<LuaGlobalVariable>(this->state, *this->registry, name));
 	}
 
 
 	LuaReferenceHandle LuaState::operator[](lua_Integer index) {
-		return LuaReferenceHandle(this->state, std::make_unique<LuaStackReference>(this->state, index));
+		return LuaReferenceHandle(this->state, std::make_unique<LuaStackReference>(this->state, *this->registry, index));
 	}
 
 	LuaUniqueState::LuaUniqueState(lua_State *state)

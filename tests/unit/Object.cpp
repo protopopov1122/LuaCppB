@@ -3,6 +3,7 @@
 #include "luacppb/Object/Object.h"
 #include "luacppb/Reference/Reference.h"
 #include "luacppb/Object/Class.h"
+#include "luacppb/Object/Registry.h"
 
 using namespace LuaCppB;
 
@@ -64,21 +65,17 @@ TEST_CASE("Class manual binding") {
   REQUIRE(env["result"][2].get<int>() == 30);
 }
 
-template <>
-class LuaCppB::CppClassBinding<Arith> : public CppClassBindingBase<Arith> {
- public:
-  CppClassBinding() : CppClassBindingBase<Arith>("Arith") {
-    this->luaClass.bind("add", &Arith::add);
-    this->luaClass.bind("sub", &Arith::sub);
-    this->luaClass.bind("set", &Arith::set);
-  }
-};
-
 TEST_CASE("Object opaque binding") {
   const std::string &CODE = "result = { arith:add(50), arith:sub(100) }";
   LuaEnvironment env;
+  LuaCppClass<Arith> arithCl("Arith");
+  arithCl.bind("add", &Arith::add);
+  arithCl.bind("sub", &Arith::sub);
+  arithCl.bind("set", &Arith::set);
+  arithCl.initializer("build", &Arith::build);
+  env.getClassRegistry().bind(arithCl);
   Arith arith(10);
-  env["arith"] = &arith;
+  env["arith"] = arith;
   REQUIRE(env["arith"].exists());
   REQUIRE(env["arith"].getType() == LuaType::UserData);
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);

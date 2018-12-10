@@ -16,6 +16,7 @@ namespace LuaCppB {
 		LuaReferenceHandle(const LuaReferenceHandle &);
 
 		LuaReference &getReference() const;
+		CppClassRegistry &getClassRegistry() const;
 		bool exists();
 		LuaType getType();
 		LuaReferenceHandle operator[](const std::string &);
@@ -32,14 +33,20 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
-		LuaReferenceHandle &operator=(T value) {
+		typename std::enable_if<std::is_base_of<LuaData, T>::value || LuaValue::is_constructible<T>(), LuaReferenceHandle>::type &operator=(T value) {
 			this->ref->set<T>(value);
 			return *this;
 		}
 
 		template <typename T>
-		LuaReferenceHandle &operator=(T *value) {
-			this->ref->set<T>(*value);
+		typename std::enable_if<!std::is_base_of<LuaData, T>::value && !LuaValue::is_constructible<T>(), LuaReferenceHandle>::type &operator=(T *value) {
+			this->ref->set<T>(value);
+			return *this;
+		}
+
+		template <typename T>
+		typename std::enable_if<!std::is_base_of<LuaData, T>::value && !LuaValue::is_constructible<T>(), LuaReferenceHandle>::type &operator=(T &value) {
+			this->ref->set<T>(value);
 			return *this;
 		}
 

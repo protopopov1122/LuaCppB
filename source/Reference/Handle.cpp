@@ -4,20 +4,24 @@ namespace LuaCppB {
 
   LuaReferenceHandle::LuaReferenceHandle(const LuaReferenceHandle &handle) : state(handle.state) {
     handle.getReference().putOnTop([&](lua_State *state) {
-      this->ref = std::make_unique<LuaRegistryReference>(state, -1);
+      this->ref = std::make_unique<LuaRegistryReference>(state, handle.getClassRegistry(), -1);
     });
   }
 
   LuaReference &LuaReferenceHandle::getReference() const {
     return *this->ref;
   }
-  
+
+  CppClassRegistry &LuaReferenceHandle::getClassRegistry() const {
+    return this->ref->getClassRegistry();
+  }
+
   LuaReferenceHandle LuaReferenceHandle::operator[](const std::string &name) {
-    return LuaReferenceHandle(this->state, std::make_unique<LuaTableField>(*this, name));
+    return LuaReferenceHandle(this->state, std::make_unique<LuaTableField>(*this, this->ref->getClassRegistry(), name));
   }
 
   LuaReferenceHandle LuaReferenceHandle::operator[](lua_Integer index) {
-    return LuaReferenceHandle(this->state, std::make_unique<LuaArrayField>(*this, index));
+    return LuaReferenceHandle(this->state, std::make_unique<LuaArrayField>(*this, this->ref->getClassRegistry(), index));
   }
 
   LuaValue LuaReferenceHandle::operator*() {
@@ -48,7 +52,7 @@ namespace LuaCppB {
   LuaReferenceHandle &LuaReferenceHandle::operator=(const LuaReferenceHandle &handle) {
     this->state = handle.state;
     handle.getReference().putOnTop([&](lua_State *state) {
-      this->ref = std::make_unique<LuaRegistryReference>(state, -1);
+      this->ref = std::make_unique<LuaRegistryReference>(state, handle.getClassRegistry(), -1);
     });
     return *this;
   }

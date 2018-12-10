@@ -3,7 +3,7 @@
 
 #include "luacppb/Base.h"
 #include "luacppb/Value/Value.h"
-#include "luacppb/Object/Class.h"
+#include "luacppb/Object/Registry.h"
 #include <optional>
 #include <type_traits>
 #include <functional>
@@ -12,8 +12,12 @@ namespace LuaCppB {
 
 	class LuaReference {
 	 public:
+	 	LuaReference(CppClassRegistry &registry) : registry(registry) {}
 		virtual ~LuaReference() = default;
 		lua_State *getState();
+		CppClassRegistry &getClassRegistry() {
+			return this->registry;
+		}
 
 		virtual bool putOnTop(std::function<void (lua_State *)>) = 0;
 		virtual bool setValue(std::function<void (lua_State *)>) = 0;
@@ -46,20 +50,28 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
-		typename std::enable_if<std::is_same<decltype(std::declval<CppClassBinding<T>>().push(std::declval<lua_State *>())), void>::value>::type set(T &value) {
-			CppClassBinding<T> binding;
+		typename std::enable_if<!std::is_base_of<LuaData, T>::value && !LuaValue::is_constructible<T>()>::type set(T *value) {
 			this->setValue([&](lua_State *state) {
-				binding.push(state, value);
+				this->registry.wrap(state, value);
 			});
 		}
 
 		template <typename T>
-		typename std::enable_if<std::is_same<decltype(LuaValue::create<T>(std::declval<T>())), LuaValue>::value>::type set(T value) {
+		typename std::enable_if<!std::is_base_of<LuaData, T>::value && !LuaValue::is_constructible<T>()>::type set(T &value) {
+			this->setValue([&](lua_State *state) {
+				this->registry.wrap(state, &value);
+			});
+		}
+
+		template <typename T>
+		typename std::enable_if<LuaValue::is_constructible<T>()>::type set(T value) {
 			LuaValue val = LuaValue::create<T>(value);
 			this->setValue([&val](lua_State *state) {
 				val.push(state);
 			});
 		}
+	 protected:
+		CppClassRegistry &registry;
 	};
 }
 

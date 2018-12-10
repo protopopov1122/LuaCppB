@@ -37,8 +37,8 @@ namespace LuaCppB {
     return false;
   }
 
-  LuaRegistryReference::LuaRegistryReference(lua_State *state, int index)
-    : handle(state, index) {
+  LuaRegistryReference::LuaRegistryReference(lua_State *state, CppClassRegistry &registry, int index)
+    : LuaReference(registry), handle(state, index) {
     if (state == nullptr) {
       throw LuaCppBError("Lua state can't be null", LuaCppBErrorCode::InvalidState);
     }

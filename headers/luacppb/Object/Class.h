@@ -45,6 +45,10 @@ namespace LuaCppB {
    public:
     LuaCppClass(const std::string &className)
       : className(className) {}
+
+    const std::string &getClassName() const {
+      return this->className;
+    }
     
     void push(lua_State *state) const override {
       if (luaL_newmetatable(state, this->className.c_str()) != 0) {
@@ -65,8 +69,6 @@ namespace LuaCppB {
           it->second->push(state);
           lua_setfield(state, -2, it->first.c_str());
         }
-      } else {
-        luaL_getmetatable(state, this->className.c_str());
       }
     }
 
@@ -109,33 +111,6 @@ namespace LuaCppB {
     std::map<std::string, std::shared_ptr<LuaData>> methods;
     std::map<std::string, std::shared_ptr<LuaData>> initializers;
   };
-
-  template <typename C>
-  class CppClassBindingBase {
-   public:
-    CppClassBindingBase(const std::string &className) : luaClass(className) {}
-    virtual ~CppClassBindingBase() = default;
-
-    void push(lua_State *state) {
-      this->luaClass.push(state);
-    }
-
-    void push(lua_State *state, C *object) {
-      CppObjectWrapper<C> *wrapper = reinterpret_cast<CppObjectWrapper<C> *>(lua_newuserdata(state, sizeof(CppObjectWrapper<C>)));
-      new(wrapper) CppObjectWrapper<C>(object);
-      this->luaClass.push(state);
-      lua_setmetatable(state, -2);
-    }
-
-    void push(lua_State *state, C &object) {
-      this->push(state, &object);
-    }
-   protected:
-    LuaCppClass<C> luaClass;
-  };
-
-  template <typename C>
-  class CppClassBinding {};
 }
 
 #endif

@@ -127,6 +127,16 @@ namespace LuaCppB {
 		static typename std::enable_if<std::is_same<T, const char *>::value, LuaValue>::type create(T s) {
 			return LuaValue(LuaString(s));
 		}
+
+		template <typename T>
+		static constexpr bool is_constructible() {
+			return std::is_integral<T>::value ||
+				std::is_floating_point<T>::value ||
+				std::is_same<T, bool>::value ||
+				std::is_same<T, std::string>::value ||
+				std::is_same<T, LuaCFunction_ptr>::value ||
+				std::is_same<T, const char *>::value;
+		}
 	 private:
 		LuaType type;
 	 	std::variant<LuaInteger, LuaNumber, LuaBoolean, LuaString, LuaCFunction, LuaTable> value;

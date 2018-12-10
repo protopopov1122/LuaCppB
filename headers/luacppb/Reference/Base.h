@@ -3,6 +3,7 @@
 
 #include "luacppb/Base.h"
 #include "luacppb/Value/Value.h"
+#include "luacppb/Object/Class.h"
 #include <optional>
 #include <type_traits>
 #include <functional>
@@ -45,7 +46,15 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
-		typename std::enable_if<!std::is_base_of<LuaData, T>::value>::type set(T value) {
+		typename std::enable_if<std::is_same<decltype(std::declval<CppClassBinding<T>>().push(std::declval<lua_State *>())), void>::value>::type set(T &value) {
+			CppClassBinding<T> binding;
+			this->setValue([&](lua_State *state) {
+				binding.push(state, value);
+			});
+		}
+
+		template <typename T>
+		typename std::enable_if<std::is_same<decltype(LuaValue::create<T>(std::declval<T>())), LuaValue>::value>::type set(T value) {
 			LuaValue val = LuaValue::create<T>(value);
 			this->setValue([&val](lua_State *state) {
 				val.push(state);

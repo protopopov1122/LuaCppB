@@ -47,23 +47,26 @@ namespace LuaCppB {
       : className(className) {}
     
     void push(lua_State *state) const override {
-      luaL_newmetatable(state, this->className.c_str());
-      lua_newtable(state);
-      for (auto it = this->methods.begin(); it != this->methods.end(); ++it) {
-        it->second->push(state);
-        lua_setfield(state, -2, it->first.c_str());
-      }
-      lua_setfield(state, -2, "__index");
-      if constexpr (std::is_default_constructible<C>::value) {
-        lua_pushstring(state, this->className.c_str());
-        lua_pushcclosure(state, &LuaCppClass<C>::newObject, 1);
-        lua_setfield(state, -2, "new");
-      }
-      lua_pushcfunction(state, &LuaCppClass<C>::gcObject);
-      lua_setfield(state, -2, "__gc");
-      for (auto it = this->initializers.begin(); it != this->initializers.end(); ++it) {
-        it->second->push(state);
-        lua_setfield(state, -2, it->first.c_str());
+      if (luaL_newmetatable(state, this->className.c_str()) != 0) {
+        lua_newtable(state);
+        for (auto it = this->methods.begin(); it != this->methods.end(); ++it) {
+          it->second->push(state);
+          lua_setfield(state, -2, it->first.c_str());
+        }
+        lua_setfield(state, -2, "__index");
+        if constexpr (std::is_default_constructible<C>::value) {
+          lua_pushstring(state, this->className.c_str());
+          lua_pushcclosure(state, &LuaCppClass<C>::newObject, 1);
+          lua_setfield(state, -2, "new");
+        }
+        lua_pushcfunction(state, &LuaCppClass<C>::gcObject);
+        lua_setfield(state, -2, "__gc");
+        for (auto it = this->initializers.begin(); it != this->initializers.end(); ++it) {
+          it->second->push(state);
+          lua_setfield(state, -2, it->first.c_str());
+        }
+      } else {
+        luaL_getmetatable(state, this->className.c_str());
       }
     }
 
@@ -106,6 +109,33 @@ namespace LuaCppB {
     std::map<std::string, std::shared_ptr<LuaData>> methods;
     std::map<std::string, std::shared_ptr<LuaData>> initializers;
   };
+
+  template <typename C>
+  class CppClassBindingBase {
+   public:
+    CppClassBindingBase(const std::string &className) : luaClass(className) {}
+    virtual ~CppClassBindingBase() = default;
+
+    void push(lua_State *state) {
+      this->luaClass.push(state);
+    }
+
+    void push(lua_State *state, C *object) {
+      CppObjectWrapper<C> *wrapper = reinterpret_cast<CppObjectWrapper<C> *>(lua_newuserdata(state, sizeof(CppObjectWrapper<C>)));
+      new(wrapper) CppObjectWrapper<C>(object);
+      this->luaClass.push(state);
+      lua_setmetatable(state, -2);
+    }
+
+    void push(lua_State *state, C &object) {
+      this->push(state, &object);
+    }
+   protected:
+    LuaCppClass<C> luaClass;
+  };
+
+  template <typename C>
+  class CppClassBinding {};
 }
 
 #endif

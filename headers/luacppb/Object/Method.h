@@ -4,30 +4,42 @@
 #include "luacppb/Base.h"
 #include "luacppb/Invoke/Native.h"
 #include "luacppb/Invoke/Method.h"
+#include <memory>
+#include <variant>
 
 namespace LuaCppB {
 
 	template <typename C>
 	class CppObjectWrapper {
+		using Raw = C *;
+		using Unique = std::unique_ptr<C>;
+		using Shared = std::shared_ptr<C>;
 	 public:
-	 	CppObjectWrapper(C *obj) : object(obj), owner(false) {}
-	 	CppObjectWrapper() : owner(true) {
-		  this->object = reinterpret_cast<C *>(::operator new(sizeof(C)));
+	 	CppObjectWrapper(Raw obj) : object(obj) {}
+		CppObjectWrapper(C &obj) : object(&obj) {}
+	 	CppObjectWrapper() {
+		  this->object = std::unique_ptr<C>(reinterpret_cast<C *>(::operator new(sizeof(C))));
 		}
+		CppObjectWrapper(Unique obj) : object(std::move(obj)) {}
+		CppObjectWrapper(Shared obj) : object(obj) {}
 		~CppObjectWrapper() {
-			if (this->owner) {
-				this->object->~C();
-				::operator delete(this->object);
-			}
 			this->object = nullptr;
 		}
 
 		C *get() {
-			return this->object;
+			switch (this->object.index()) {
+				case 0:
+				  return std::get<Raw>(object);
+				case 1:
+					return std::get<Unique>(object).get();
+				case 2:
+					return std::get<Shared>(object).get();
+				default:
+					return nullptr;
+			}
 		}
 	 private:
-		C *object;
-		bool owner;
+		std::variant<Raw, Unique, Shared> object;
 	};
 
 	template <typename C, typename R, typename ... A>

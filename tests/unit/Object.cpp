@@ -42,7 +42,7 @@ TEST_CASE("Object binding") {
   REQUIRE(env["result"][2].get<int>() == -90);
 }
 
-TEST_CASE("Class binding") {
+TEST_CASE("Class manual binding") {
   const std::string &CODE = "a = Arith.build(55)\n"
                             "x = a:add(5)\n"
                             "a2 = Arith.new()\n"
@@ -62,4 +62,26 @@ TEST_CASE("Class binding") {
   REQUIRE(env["a"].getType() == LuaType::UserData);
   REQUIRE(env["result"][1].get<int>() == 60);
   REQUIRE(env["result"][2].get<int>() == 30);
+}
+
+template <>
+class LuaCppB::CppClassBinding<Arith> : public CppClassBindingBase<Arith> {
+ public:
+  CppClassBinding() : CppClassBindingBase<Arith>("Arith") {
+    this->luaClass.bind("add", &Arith::add);
+    this->luaClass.bind("sub", &Arith::sub);
+    this->luaClass.bind("set", &Arith::set);
+  }
+};
+
+TEST_CASE("Object opaque binding") {
+  const std::string &CODE = "result = { arith:add(50), arith:sub(100) }";
+  LuaEnvironment env;
+  Arith arith(10);
+  env["arith"] = &arith;
+  REQUIRE(env["arith"].exists());
+  REQUIRE(env["arith"].getType() == LuaType::UserData);
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["result"][1].get<int>() == 60);
+  REQUIRE(env["result"][2].get<int>() == -90);
 }

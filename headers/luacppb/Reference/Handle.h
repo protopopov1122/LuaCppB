@@ -38,6 +38,12 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
+		LuaReferenceHandle &operator=(T *value) {
+			this->ref->set<T>(*value);
+			return *this;
+		}
+
+		template <typename T>
 		operator T () {
 			return this->ref->get<T>();
 		}

@@ -16,7 +16,7 @@ namespace LuaCppB {
 		LuaReferenceHandle(const LuaReferenceHandle &);
 
 		LuaReference &getReference() const;
-		CppClassRegistry &getClassRegistry() const;
+		LuaCppClassRegistry &getClassRegistry() const;
 		bool exists();
 		LuaType getType();
 		LuaReferenceHandle operator[](const std::string &);

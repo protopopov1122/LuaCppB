@@ -17,17 +17,17 @@ namespace LuaCppB {
 
     template <typename R, typename ... A>
     void bind(const std::string &key, R (T::*method)(A...)) {
-      this->methods[key] = std::make_shared<CppObjectMethodCall<T, R, A...>>(NativeMethodWrapper(method).get());
+      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<T, R, A...>>(NativeMethodWrapper(method).get());
     }
 
     template <typename R, typename ... A>
     void bind(const std::string &key, R (T::*method)(A...) const) {
-      this->methods[key] = std::make_shared<CppObjectMethodCall<T, R, A...>>(NativeMethodWrapper(method).get());
+      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<T, R, A...>>(NativeMethodWrapper(method).get());
     }
 
     void push(lua_State *state) const override {
-      CppObjectWrapper<T> *object = reinterpret_cast<CppObjectWrapper<T> *>(lua_newuserdata(state, sizeof(CppObjectWrapper<T>)));
-      new(object) CppObjectWrapper<T>(this->object);
+      LuaCppObjectWrapper<T> *object = reinterpret_cast<LuaCppObjectWrapper<T> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<T>)));
+      new(object) LuaCppObjectWrapper<T>(this->object);
       lua_newtable(state);
       lua_newtable(state);
       for (auto it = this->methods.begin(); it != this->methods.end(); ++it) {
@@ -41,8 +41,8 @@ namespace LuaCppB {
     }
    private:
     static int gcObject(lua_State *state) {
-      CppObjectWrapper<T> *object = reinterpret_cast<CppObjectWrapper<T> *>(lua_touserdata(state, 1));
-      object->~CppObjectWrapper();
+      LuaCppObjectWrapper<T> *object = reinterpret_cast<LuaCppObjectWrapper<T> *>(lua_touserdata(state, 1));
+      object->~LuaCppObjectWrapper();
       ::operator delete(object, object);
       return 0;
     }

@@ -25,7 +25,7 @@ namespace LuaCppB {
   };
 
   template <typename M>
-  struct CppObjectMethodCallDescriptor {
+  struct LuaCppObjectMethodCallDescriptor {
     M method;
   };
 }

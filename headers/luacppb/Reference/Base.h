@@ -12,10 +12,10 @@ namespace LuaCppB {
 
 	class LuaReference {
 	 public:
-	 	LuaReference(CppClassRegistry &registry) : registry(registry) {}
+	 	LuaReference(LuaCppClassRegistry &registry) : registry(registry) {}
 		virtual ~LuaReference() = default;
 		lua_State *getState();
-		CppClassRegistry &getClassRegistry() {
+		LuaCppClassRegistry &getClassRegistry() {
 			return this->registry;
 		}
 
@@ -71,7 +71,7 @@ namespace LuaCppB {
 			});
 		}
 	 protected:
-		CppClassRegistry &registry;
+		LuaCppClassRegistry &registry;
 	};
 }
 

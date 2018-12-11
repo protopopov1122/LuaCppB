@@ -12,7 +12,7 @@ namespace LuaCppB {
     return *this->ref;
   }
 
-  CppClassRegistry &LuaReferenceHandle::getClassRegistry() const {
+  LuaCppClassRegistry &LuaReferenceHandle::getClassRegistry() const {
     return this->ref->getClassRegistry();
   }
 

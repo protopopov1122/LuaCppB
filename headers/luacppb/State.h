@@ -9,20 +9,20 @@
 namespace LuaCppB {
 
 	class LuaReferenceHandle;
-	class CppClassRegistry;
+	class LuaCppClassRegistry;
 
 	class LuaState {
 	 public:
 		LuaState(lua_State *);
 		virtual ~LuaState() = default;
 		lua_State *getState() const;
-		CppClassRegistry &getClassRegistry();
+		LuaCppClassRegistry &getClassRegistry();
 		
 		LuaReferenceHandle operator[](const std::string &);
 		LuaReferenceHandle operator[](lua_Integer);
 	 protected:
 		lua_State *state;
-		std::unique_ptr<CppClassRegistry> registry;
+		std::unique_ptr<LuaCppClassRegistry> registry;
 	};
 
 	class LuaUniqueState : public LuaState {

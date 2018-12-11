@@ -8,9 +8,9 @@
 
 namespace LuaCppB {
 
-  class CppClassRegistry {
+  class LuaCppClassRegistry {
    public:
-    CppClassRegistry(lua_State *state) : state(state) {}
+    LuaCppClassRegistry(lua_State *state) : state(state) {}
     template <typename T>
     void bind(LuaCppClass<T> &cl) {
       cl.push(this->state);
@@ -25,8 +25,8 @@ namespace LuaCppB {
 
     template <typename T>
     void wrap(lua_State *state, T *object) {
-      CppObjectWrapper<T> *wrapper = reinterpret_cast<CppObjectWrapper<T> *>(lua_newuserdata(state, sizeof(CppObjectWrapper<T>)));
-      new(wrapper) CppObjectWrapper<T>(object);
+      LuaCppObjectWrapper<T> *wrapper = reinterpret_cast<LuaCppObjectWrapper<T> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<T>)));
+      new(wrapper) LuaCppObjectWrapper<T>(object);
       luaL_setmetatable(state, this->registry[typeid(T)].c_str());
     }
    private:

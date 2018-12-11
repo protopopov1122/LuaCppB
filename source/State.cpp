@@ -6,7 +6,7 @@
 namespace LuaCppB {
 
 	LuaState::LuaState(lua_State *state)
-		: state(state), registry(std::make_unique<CppClassRegistry>(state)) {
+		: state(state), registry(std::make_unique<LuaCppClassRegistry>(state)) {
 		assert(this->state != nullptr);
 	}
 
@@ -14,7 +14,7 @@ namespace LuaCppB {
 		return this->state;
 	}
 
-	CppClassRegistry &LuaState::getClassRegistry() {
+	LuaCppClassRegistry &LuaState::getClassRegistry() {
 		return *this->registry;
 	}
 

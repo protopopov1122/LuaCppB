@@ -9,21 +9,21 @@
 namespace LuaCppB {
 
 	template <typename C, typename ... A>
-	class CppObjectInitializer : public LuaData {
+	class LuaCppObjectInitializer : public LuaData {
 		using F = void (*)(C *, A...);
 	 public:
-		CppObjectInitializer(const std::string &className, F fn) : className(className), function(fn) {}
+		LuaCppObjectInitializer(const std::string &className, F fn) : className(className), function(fn) {}
 
 		void push(lua_State *state) const override {
 			lua_pushlightuserdata(state, reinterpret_cast<void *>(this->function));
       lua_pushstring(state, this->className.c_str());
-			lua_pushcclosure(state, CppObjectInitializer<C, A...>::function_closure, 2);
+			lua_pushcclosure(state, LuaCppObjectInitializer<C, A...>::function_closure, 2);
 		}
 	 private:
 		static int call(F function, const char *className, lua_State *state) {
 			std::tuple<A...> args = NativeFunctionArgumentsTuple<1, A...>::value(state);
-      CppObjectWrapper<C> *object = reinterpret_cast<CppObjectWrapper<C> *>(lua_newuserdata(state, sizeof(CppObjectWrapper<C>)));
-      new(object) CppObjectWrapper<C>();
+      LuaCppObjectWrapper<C> *object = reinterpret_cast<LuaCppObjectWrapper<C> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<C>)));
+      new(object) LuaCppObjectWrapper<C>();
       std::tuple<C *, A...> allArgs = std::tuple_cat(std::make_tuple(object->get()), args);
       std::apply(function, allArgs);
       luaL_setmetatable(state, className);
@@ -33,7 +33,7 @@ namespace LuaCppB {
 		static int function_closure(lua_State *state) {
 			const void *fn = lua_topointer(state, lua_upvalueindex(1));
       const char *className = lua_tostring(state, lua_upvalueindex(2));
-			return CppObjectInitializer<C, A...>::call(reinterpret_cast<F>(fn), className, state);
+			return LuaCppObjectInitializer<C, A...>::call(reinterpret_cast<F>(fn), className, state);
 		};
 
     std::string className;
@@ -75,24 +75,24 @@ namespace LuaCppB {
 
     template <typename R, typename ... A>
     void bind(const std::string &key, R (C::*method)(A...)) {
-      this->methods[key] = std::make_shared<CppObjectMethodCall<C, R, A...>>(NativeMethodWrapper(method).get(), this->className);
+      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<C, R, A...>>(NativeMethodWrapper(method).get(), this->className);
     }
 
     template <typename R, typename ... A>
     void bind(const std::string &key, R (C::*method)(A...) const) {
-      this->methods[key] = std::make_shared<CppObjectMethodCall<C, R, A...>>(NativeMethodWrapper(method).get(), this->className);
+      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<C, R, A...>>(NativeMethodWrapper(method).get(), this->className);
     }
 
     template <typename ... A>
     void initializer(const std::string &key, void (*initializer)(C *, A...)) {
-      this->initializers[key] = std::make_shared<CppObjectInitializer<C, A...>>(this->className, initializer);
+      this->initializers[key] = std::make_shared<LuaCppObjectInitializer<C, A...>>(this->className, initializer);
     }
    private:
     static int newObject(lua_State *state) {
       if constexpr (std::is_default_constructible<C>::value) {
         const char *className = lua_tostring(state, lua_upvalueindex(1));
-        CppObjectWrapper<C> *object = reinterpret_cast<CppObjectWrapper<C> *>(lua_newuserdata(state, sizeof(CppObjectWrapper<C>)));
-        new(object) CppObjectWrapper<C>();
+        LuaCppObjectWrapper<C> *object = reinterpret_cast<LuaCppObjectWrapper<C> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<C>)));
+        new(object) LuaCppObjectWrapper<C>();
         new(object->get()) C();
         luaL_setmetatable(state, className);
       } else {
@@ -103,9 +103,9 @@ namespace LuaCppB {
 
     static int gcObject(lua_State *state) {
       const char *className = lua_tostring(state, lua_upvalueindex(1));
-      CppObjectWrapper<C> *object = reinterpret_cast<CppObjectWrapper<C> *>(luaL_checkudata(state, 1, className));
+      LuaCppObjectWrapper<C> *object = reinterpret_cast<LuaCppObjectWrapper<C> *>(luaL_checkudata(state, 1, className));
       if (object) {
-        object->~CppObjectWrapper();
+        object->~LuaCppObjectWrapper();
         ::operator delete(object, object);
       }
       return 0;

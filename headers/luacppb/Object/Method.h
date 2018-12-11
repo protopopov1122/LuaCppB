@@ -11,19 +11,19 @@
 namespace LuaCppB {
 
 	template <typename C>
-	class CppObjectWrapper {
+	class LuaCppObjectWrapper {
 		using Raw = C *;
 		using Unique = std::unique_ptr<C>;
 		using Shared = std::shared_ptr<C>;
 	 public:
-	 	CppObjectWrapper(Raw obj) : object(obj) {}
-		CppObjectWrapper(C &obj) : object(&obj) {}
-	 	CppObjectWrapper() {
+	 	LuaCppObjectWrapper(Raw obj) : object(obj) {}
+		LuaCppObjectWrapper(C &obj) : object(&obj) {}
+	 	LuaCppObjectWrapper() {
 		  this->object = std::unique_ptr<C>(reinterpret_cast<C *>(::operator new(sizeof(C))));
 		}
-		CppObjectWrapper(Unique obj) : object(std::move(obj)) {}
-		CppObjectWrapper(Shared obj) : object(obj) {}
-		~CppObjectWrapper() {
+		LuaCppObjectWrapper(Unique obj) : object(std::move(obj)) {}
+		LuaCppObjectWrapper(Shared obj) : object(obj) {}
+		~LuaCppObjectWrapper() {
 			this->object = nullptr;
 		}
 
@@ -44,21 +44,21 @@ namespace LuaCppB {
 	};
 
 	template <typename C, typename R, typename ... A>
-	class CppObjectMethodCall : public LuaData {
+	class LuaCppObjectMethodCall : public LuaData {
 		using M = R (C::*)(A...);
 	 public:
-		CppObjectMethodCall(M met) : method(met), className() {}
-		CppObjectMethodCall(M met, const std::string &cName) : method(met), className(cName) {}
+		LuaCppObjectMethodCall(M met) : method(met), className() {}
+		LuaCppObjectMethodCall(M met, const std::string &cName) : method(met), className(cName) {}
 
 		void push(lua_State *state) const override {
-			CppObjectMethodCallDescriptor<M> *descriptor = reinterpret_cast<CppObjectMethodCallDescriptor<M> *>(
-        lua_newuserdata(state, sizeof(CppObjectMethodCallDescriptor<M>)));
+			LuaCppObjectMethodCallDescriptor<M> *descriptor = reinterpret_cast<LuaCppObjectMethodCallDescriptor<M> *>(
+        lua_newuserdata(state, sizeof(LuaCppObjectMethodCallDescriptor<M>)));
 			descriptor->method = this->method;
 			if (this->className.has_value()) {
 				lua_pushstring(state, this->className.value().c_str());
-				lua_pushcclosure(state, &CppObjectMethodCall<C, R, A...>::class_method_closure, 2);
+				lua_pushcclosure(state, &LuaCppObjectMethodCall<C, R, A...>::class_method_closure, 2);
 			} else {
-				lua_pushcclosure(state, &CppObjectMethodCall<C, R, A...>::object_method_closure, 1);
+				lua_pushcclosure(state, &LuaCppObjectMethodCall<C, R, A...>::object_method_closure, 1);
 			}
 		}
 	 private:
@@ -79,17 +79,17 @@ namespace LuaCppB {
 		};
 
 		static int object_method_closure(lua_State *state) {
-			CppObjectMethodCallDescriptor<M> *descriptor = reinterpret_cast<CppObjectMethodCallDescriptor<M> *>(lua_touserdata(state, lua_upvalueindex(1)));
-			CppObjectWrapper<C> *object = reinterpret_cast<CppObjectWrapper<C> *>(const_cast<void *>(lua_topointer(state, 1)));
-			return CppObjectMethodCall<C, R, A...>::call(object->get(), descriptor->method, state);
+			LuaCppObjectMethodCallDescriptor<M> *descriptor = reinterpret_cast<LuaCppObjectMethodCallDescriptor<M> *>(lua_touserdata(state, lua_upvalueindex(1)));
+			LuaCppObjectWrapper<C> *object = reinterpret_cast<LuaCppObjectWrapper<C> *>(const_cast<void *>(lua_topointer(state, 1)));
+			return LuaCppObjectMethodCall<C, R, A...>::call(object->get(), descriptor->method, state);
 		};
 
 		static int class_method_closure(lua_State *state) {
-			CppObjectMethodCallDescriptor<M> *descriptor = reinterpret_cast<CppObjectMethodCallDescriptor<M> *>(lua_touserdata(state, lua_upvalueindex(1)));
+			LuaCppObjectMethodCallDescriptor<M> *descriptor = reinterpret_cast<LuaCppObjectMethodCallDescriptor<M> *>(lua_touserdata(state, lua_upvalueindex(1)));
 			const char *className = lua_tostring(state, lua_upvalueindex(2));
-			CppObjectWrapper<C> *object = reinterpret_cast<CppObjectWrapper<C> *>(const_cast<void *>(luaL_checkudata(state, 1, className)));
+			LuaCppObjectWrapper<C> *object = reinterpret_cast<LuaCppObjectWrapper<C> *>(const_cast<void *>(luaL_checkudata(state, 1, className)));
 			if (object) {
-				return CppObjectMethodCall<C, R, A...>::call(object->get(), descriptor->method, state);
+				return LuaCppObjectMethodCall<C, R, A...>::call(object->get(), descriptor->method, state);
 			} else {
 				return 0;
 			}

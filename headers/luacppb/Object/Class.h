@@ -63,7 +63,8 @@ namespace LuaCppB {
           lua_pushcclosure(state, &LuaCppClass<C>::newObject, 1);
           lua_setfield(state, -2, "new");
         }
-        lua_pushcfunction(state, &LuaCppClass<C>::gcObject);
+        lua_pushstring(state, this->className.c_str());
+        lua_pushcclosure(state, &LuaCppClass<C>::gcObject, 1);
         lua_setfield(state, -2, "__gc");
         for (auto it = this->initializers.begin(); it != this->initializers.end(); ++it) {
           it->second->push(state);
@@ -74,12 +75,12 @@ namespace LuaCppB {
 
     template <typename R, typename ... A>
     void bind(const std::string &key, R (C::*method)(A...)) {
-      this->methods[key] = std::make_shared<CppObjectMethodCall<C, R, A...>>(NativeMethodWrapper(method).get());
+      this->methods[key] = std::make_shared<CppObjectMethodCall<C, R, A...>>(NativeMethodWrapper(method).get(), this->className);
     }
 
     template <typename R, typename ... A>
     void bind(const std::string &key, R (C::*method)(A...) const) {
-      this->methods[key] = std::make_shared<CppObjectMethodCall<C, R, A...>>(NativeMethodWrapper(method).get());
+      this->methods[key] = std::make_shared<CppObjectMethodCall<C, R, A...>>(NativeMethodWrapper(method).get(), this->className);
     }
 
     template <typename ... A>
@@ -101,9 +102,12 @@ namespace LuaCppB {
     }
 
     static int gcObject(lua_State *state) {
-      CppObjectWrapper<C> *object = reinterpret_cast<CppObjectWrapper<C> *>(lua_touserdata(state, 1));
-      object->~CppObjectWrapper();
-      ::operator delete(object, object);
+      const char *className = lua_tostring(state, lua_upvalueindex(1));
+      CppObjectWrapper<C> *object = reinterpret_cast<CppObjectWrapper<C> *>(luaL_checkudata(state, 1, className));
+      if (object) {
+        object->~CppObjectWrapper();
+        ::operator delete(object, object);
+      }
       return 0;
     }
 

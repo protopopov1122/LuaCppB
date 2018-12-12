@@ -1,4 +1,4 @@
-#include "luacppb/Error.h"
+#include "luacppb/Core/Error.h"
 
 namespace LuaCppB {
 

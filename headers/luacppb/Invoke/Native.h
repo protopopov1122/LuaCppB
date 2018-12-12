@@ -4,7 +4,7 @@
 #include "luacppb/Base.h"
 #include "luacppb/Value/Value.h"
 #include "luacppb/Invoke/Method.h"
-#include "luacppb/State.h"
+#include "luacppb/Core/State.h"
 #include <string>
 #include <type_traits>
 #include <utility>

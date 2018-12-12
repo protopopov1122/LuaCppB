@@ -1,5 +1,5 @@
-#ifndef LUACPPB_ERROR_H_
-#define LUACPPB_ERROR_H_
+#ifndef LUACPPB_CORE_ERROR_H_
+#define LUACPPB_CORE_ERROR_H_
 
 #include "luacppb/Base.h"
 #include <exception>

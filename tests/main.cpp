@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cstdlib>
-#include "luacppb/State.h"
+#include "luacppb/Core/State.h"
 #include "luacppb/Reference/Reference.h"
 #include "luacppb/Invoke/Native.h"
 #include "luacppb/Object/Object.h"

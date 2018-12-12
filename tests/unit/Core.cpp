@@ -1,6 +1,7 @@
 #include "catch.hpp"
-#include "luacppb/State.h"
+#include "luacppb/Core/State.h"
 #include "luacppb/Core/StackGuard.h"
+#include "luacppb/Core/Stack.h"
 
 using namespace LuaCppB;
 
@@ -35,5 +36,111 @@ TEST_CASE("Stack guard") {
     REQUIRE_NOTHROW(canary2.assume(-1));
     REQUIRE_FALSE(canary2.check());
     REQUIRE_THROWS(canary2.assume());
+  }
+}
+
+int stack_test_fn(lua_State *stack) {
+  return 0;
+}
+
+TEST_CASE("Stack") {
+  LuaEnvironment env;
+  LuaStack stack(env.getState());
+
+  REQUIRE(stack.getTop() == 0);
+  SECTION("Value pushing") {
+    SECTION("Nil") {
+      stack.push();
+      REQUIRE(stack.getType() == LuaType::Nil);
+    }
+    SECTION("Integer") {
+      stack.push(100);
+      REQUIRE(stack.getTop() == 1);
+      REQUIRE(stack.getType() == LuaType::Number);
+      auto value = stack.get();
+      REQUIRE(value.has_value());
+      REQUIRE(value.value().getType() == stack.getType());
+      REQUIRE(value.value().get<int>() == 100);
+    }
+    SECTION("Float") {
+      stack.push(3.14);
+      REQUIRE(stack.getTop() == 1);
+      REQUIRE(stack.getType() == LuaType::Number);
+      auto value = stack.get();
+      REQUIRE(value.has_value());
+      REQUIRE(value.value().getType() == stack.getType());
+      REQUIRE(value.value().get<double>() == 3.14);
+    }
+    SECTION("Boolean") {
+      stack.push(true);
+      REQUIRE(stack.getTop() == 1);
+      REQUIRE(stack.getType() == LuaType::Boolean);
+      auto value = stack.get();
+      REQUIRE(value.has_value());
+      REQUIRE(value.value().getType() == stack.getType());
+      REQUIRE(value.value().get<bool>());
+    }
+    SECTION("String") {
+      const std::string &STR = "Hello, world!";
+      stack.push(STR);
+      REQUIRE(stack.getTop() == 1);
+      REQUIRE(stack.getType() == LuaType::String);
+      auto value = stack.get();
+      REQUIRE(value.has_value());
+      REQUIRE(value.value().getType() == stack.getType());
+      REQUIRE(STR.compare(value.value().get<std::string>()) == 0);
+    }
+    SECTION("Function") {
+      stack.push(stack_test_fn);
+      REQUIRE(stack.getTop() == 1);
+      REQUIRE(stack.getType() == LuaType::Function);
+      auto value = stack.get();
+      REQUIRE(value.has_value());
+      REQUIRE(value.value().getType() == stack.getType());
+      REQUIRE(value.value().get<LuaCFunction>() == stack_test_fn);
+    }
+    SECTION("Closure") {
+      stack.push(100);
+      stack.push(stack_test_fn, 1);
+      REQUIRE(stack.getTop() == 1);
+      REQUIRE(stack.getType() == LuaType::Function);
+      auto value = stack.get();
+      REQUIRE(value.has_value());
+      REQUIRE(value.value().getType() == stack.getType());
+      REQUIRE(value.value().get<LuaCFunction>() == stack_test_fn);
+    }
+    SECTION("Table") {
+      stack.pushTable();
+      REQUIRE(stack.getTop() == 1);
+      REQUIRE(stack.getType() == LuaType::Table);
+      auto value = stack.get();
+      REQUIRE(value.has_value());
+      REQUIRE(value.value().getType() == stack.getType());
+    }
+    SECTION("Light user data") {
+      int i = 100;
+      stack.push(&i);
+      REQUIRE(stack.getTop() == 1);
+      REQUIRE(stack.getType() == LuaType::LightUserData);
+    }
+    SECTION("User data") {
+      int *i = stack.push<int>();
+      REQUIRE(i != nullptr);
+      REQUIRE(stack.getTop() == 1);
+      REQUIRE(stack.getType() == LuaType::UserData);
+    }
+  }
+  SECTION("Stack operations") {
+    stack.push(100);
+    stack.push(3.14);
+    stack.push(true);
+    REQUIRE(stack.getTop() == 3);
+    stack.copy(-3);
+    REQUIRE(stack.getTop() == 4);
+    REQUIRE(stack.getType() == LuaType::Number);
+    stack.pop();
+    REQUIRE(stack.getTop() == 3);
+    stack.pop(3);
+    REQUIRE(stack.getTop() == 0);
   }
 }

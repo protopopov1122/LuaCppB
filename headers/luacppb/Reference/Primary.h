@@ -3,14 +3,15 @@
 
 #include "luacppb/Reference/Base.h"
 #include "luacppb/Reference/Registry.h"
-#include "luacppb/Error.h"
+#include "luacppb/Core/Error.h"
 
 namespace LuaCppB {
 
 	class LuaGlobalVariable : public LuaReference {
 	 public:
-		LuaGlobalVariable(lua_State *state, LuaCppClassRegistry &registry, const std::string &name) : LuaReference(registry), state(state), name(name) {
-			if (state == nullptr) {
+		LuaGlobalVariable(LuaState &state, const std::string &name)
+			: LuaReference(state.getClassRegistry()), state(state.getState()), name(name) {
+			if (this->state == nullptr) {
 				throw LuaCppBError("Lua state can't be null", LuaCppBErrorCode::InvalidState);
 			}
 		}
@@ -24,8 +25,8 @@ namespace LuaCppB {
 
 	class LuaStackReference : public LuaReference {
 	 public:
-		LuaStackReference(lua_State *state, LuaCppClassRegistry &registry, int index) : LuaReference(registry), state(state), index(index) {
-			if (state == nullptr) {
+		LuaStackReference(LuaState &state, int index) : LuaReference(state.getClassRegistry()), state(state.getState()), index(index) {
+			if (this->state == nullptr) {
 				throw LuaCppBError("Lua state can't be null", LuaCppBErrorCode::InvalidState);
 			}
 		}

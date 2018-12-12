@@ -1,8 +1,8 @@
-#ifndef LUACPPB_STATE_H_
-#define LUACPPB_STATE_H_
+#ifndef LUACPPB_CORE_STATE_H_
+#define LUACPPB_CORE_STATE_H_
 
 #include "luacppb/Base.h"
-#include "luacppb/Status.h"
+#include "luacppb/Core/Status.h"
 #include <string>
 #include <memory>
 

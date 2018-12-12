@@ -6,10 +6,11 @@ endif
 
 headers = include_directories('headers')
 LuaCppBLib = static_library('luacppb',
-  'source/State.cpp', 'source/Value/Value.cpp', 'source/Value/Types.cpp',
+  'source/Core/State.cpp', 'source/Value/Value.cpp', 'source/Value/Types.cpp',
   'source/Reference/Field.cpp', 'source/Reference/Handle.cpp',
   'source/Reference/Primary.cpp', 'source/Reference/Registry.cpp',
-  'source/Error.cpp', 'source/Core/StackGuard.cpp',
+  'source/Core/Error.cpp', 'source/Core/StackGuard.cpp',
+  'source/Core/Stack.cpp',
   include_directories : headers)
 lua = dependency('lua')
 

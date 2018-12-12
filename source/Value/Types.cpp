@@ -1,6 +1,6 @@
 #include "luacppb/Value/Value.h"
 #include "luacppb/Reference/Reference.h"
-#include "luacppb/Error.h"
+#include "luacppb/Core/Error.h"
 
 namespace LuaCppB {
 

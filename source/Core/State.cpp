@@ -1,4 +1,4 @@
-#include "luacppb/State.h"
+#include "luacppb/Core/State.h"
 #include "luacppb/Reference/Reference.h"
 #include "luacppb/Object/Registry.h"
 #include <cassert>
@@ -19,12 +19,12 @@ namespace LuaCppB {
 	}
 
 	LuaReferenceHandle LuaState::operator[](const std::string &name) {
-		return LuaReferenceHandle(this->state, std::make_unique<LuaGlobalVariable>(this->state, *this->registry, name));
+		return LuaReferenceHandle(this->state, std::make_unique<LuaGlobalVariable>(*this, name));
 	}
 
 
 	LuaReferenceHandle LuaState::operator[](lua_Integer index) {
-		return LuaReferenceHandle(this->state, std::make_unique<LuaStackReference>(this->state, *this->registry, index));
+		return LuaReferenceHandle(this->state, std::make_unique<LuaStackReference>(*this, index));
 	}
 
 	LuaUniqueState::LuaUniqueState(lua_State *state)

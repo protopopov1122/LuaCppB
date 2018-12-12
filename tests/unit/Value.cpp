@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include "luacppb/State.h"
+#include "luacppb/Core/State.h"
 #include "luacppb/Value/Value.h"
 #include "luacppb/Core/StackGuard.h"
 

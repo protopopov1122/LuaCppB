@@ -3,6 +3,7 @@
 
 #include "luacppb/Base.h"
 #include "luacppb/Object/Method.h"
+#include "luacppb/Core/Stack.h"
 #include <map>
 #include <type_traits>
 
@@ -20,20 +21,21 @@ namespace LuaCppB {
 			lua_pushcclosure(state, LuaCppObjectInitializer<C, A...>::function_closure, 2);
 		}
 	 private:
-		static int call(F function, const char *className, lua_State *state) {
+		static int call(F function, const std::string &className, lua_State *state) {
 			std::tuple<A...> args = NativeFunctionArgumentsTuple<1, A...>::value(state);
       LuaCppObjectWrapper<C> *object = reinterpret_cast<LuaCppObjectWrapper<C> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<C>)));
       new(object) LuaCppObjectWrapper<C>();
       std::tuple<C *, A...> allArgs = std::tuple_cat(std::make_tuple(object->get()), args);
       std::apply(function, allArgs);
-      luaL_setmetatable(state, className);
+      luaL_setmetatable(state, className.c_str());
       return 1;
 		};
 
 		static int function_closure(lua_State *state) {
-			const void *fn = lua_topointer(state, lua_upvalueindex(1));
-      const char *className = lua_tostring(state, lua_upvalueindex(2));
-			return LuaCppObjectInitializer<C, A...>::call(reinterpret_cast<F>(fn), className, state);
+      LuaStack stack(state);
+			F fn = stack.toPointer<F>(lua_upvalueindex(1));
+      std::string className = stack.toString(lua_upvalueindex(2));
+			return LuaCppObjectInitializer<C, A...>::call(fn, className, state);
 		};
 
     std::string className;
@@ -90,11 +92,12 @@ namespace LuaCppB {
    private:
     static int newObject(lua_State *state) {
       if constexpr (std::is_default_constructible<C>::value) {
-        const char *className = lua_tostring(state, lua_upvalueindex(1));
+        LuaStack stack(state);
+        std::string className = stack.toString(lua_upvalueindex(1));
         LuaCppObjectWrapper<C> *object = reinterpret_cast<LuaCppObjectWrapper<C> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<C>)));
         new(object) LuaCppObjectWrapper<C>();
         new(object->get()) C();
-        luaL_setmetatable(state, className);
+        luaL_setmetatable(state, className.c_str());
       } else {
         lua_pushnil(state);
       }
@@ -102,8 +105,9 @@ namespace LuaCppB {
     }
 
     static int gcObject(lua_State *state) {
-      const char *className = lua_tostring(state, lua_upvalueindex(1));
-      LuaCppObjectWrapper<C> *object = reinterpret_cast<LuaCppObjectWrapper<C> *>(luaL_checkudata(state, 1, className));
+      LuaStack stack(state);
+      std::string className = stack.toString(lua_upvalueindex(1));
+      LuaCppObjectWrapper<C> *object = reinterpret_cast<LuaCppObjectWrapper<C> *>(luaL_checkudata(state, 1, className.c_str()));
       if (object) {
         object->~LuaCppObjectWrapper();
         ::operator delete(object, object);

@@ -5,6 +5,7 @@
 #include "luacppb/Value/Value.h"
 #include "luacppb/Invoke/Method.h"
 #include "luacppb/Core/State.h"
+#include "luacppb/Core/Stack.h"
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -91,8 +92,9 @@ namespace LuaCppB {
 		};
 
 		static int function_closure(lua_State *state) {
-			const void *fn = lua_topointer(state, lua_upvalueindex(1));
-			return NativeFunctionCall<R, A...>::call(reinterpret_cast<F>(fn), state);
+			LuaStack stack(state);
+			F fn = stack.toPointer<F>(lua_upvalueindex(1));
+			return NativeFunctionCall<R, A...>::call(fn, state);
 		};
 
 		F function;
@@ -139,7 +141,8 @@ namespace LuaCppB {
 		};
 
 		static int method_closure(lua_State *state) {
-			NativeMethodDescriptor<C, M> *descriptor = reinterpret_cast<NativeMethodDescriptor<C, M> *>(lua_touserdata(state, lua_upvalueindex(1)));
+			LuaStack stack(state);
+			NativeMethodDescriptor<C, M> *descriptor = stack.toUserData<NativeMethodDescriptor<C, M> *>(lua_upvalueindex(1));
 			return NativeMethodCall<C, R, A...>::call(descriptor->object, descriptor->method, state);
 		};
 
@@ -179,7 +182,8 @@ namespace LuaCppB {
 		}
 
 		static int invocable_closure(lua_State *state) {
-			NativeInvocableDescriptor<T> *descriptor = reinterpret_cast<NativeInvocableDescriptor<T> *>(lua_touserdata(state, lua_upvalueindex(1)));
+			LuaStack stack(state);
+			NativeInvocableDescriptor<T> *descriptor = stack.toUserData<NativeInvocableDescriptor<T> *>(lua_upvalueindex(1));
 			return NativeInvocableCall<T, A...>::call(descriptor->invocable, state);
 		}
 

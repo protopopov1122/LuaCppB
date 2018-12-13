@@ -25,6 +25,22 @@ namespace LuaCppB {
     void push(int (*)(lua_State *), int = 0);
     void pushTable();
 
+    lua_Integer toInteger(int = -1);
+    lua_Number toNumber(int = -1);
+    bool toBoolean(int = -1);
+    std::string toString(int = -1);
+    LuaCFunction toCFunction(int = -1);
+
+    template <typename T>
+    T toPointer(int index = -1) {
+      return reinterpret_cast<T>(const_cast<void *>(lua_topointer(this->state, index)));
+    }
+
+    template <typename T>
+    T toUserData(int index = -1) {
+      return reinterpret_cast<T>(lua_touserdata(this->state, index));
+    }
+
     template <typename T>
     typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, bool>::value>::type push(T value) {
       lua_pushinteger(this->state, static_cast<lua_Integer>(value));

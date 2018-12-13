@@ -99,37 +99,37 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
-		static typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, bool>::value, LuaValue>::type create(T value) {
+		static typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, bool>::value, LuaValue>::type create(T value) noexcept {
 			return LuaValue(LuaInteger(static_cast<lua_Integer>(value)));
 		}
 
 		template <typename T>
-		static typename std::enable_if<std::is_floating_point<T>::value, LuaValue>::type create(T value) {
+		static typename std::enable_if<std::is_floating_point<T>::value, LuaValue>::type create(T value) noexcept {
 			return LuaValue(LuaNumber(static_cast<lua_Number>(value)));
 		}
 
 		template <typename T>
-		static typename std::enable_if<std::is_same<T, bool>::value, LuaValue>::type create(T value) {
+		static typename std::enable_if<std::is_same<T, bool>::value, LuaValue>::type create(T value) noexcept {
 			return LuaValue(LuaBoolean(static_cast<bool>(value)));
 		}
 
 		template <typename T>
-		static typename std::enable_if<std::is_same<T, std::string>::value, LuaValue>::type create(const T &value) {
+		static typename std::enable_if<std::is_same<T, std::string>::value, LuaValue>::type create(const T &value) noexcept {
 			return LuaValue(LuaString(value));
 		}
 
 		template <typename T>
-		static typename std::enable_if<std::is_same<T, LuaCFunction_ptr>::value, LuaValue>::type create(T value) {
+		static typename std::enable_if<std::is_same<T, LuaCFunction_ptr>::value, LuaValue>::type create(T value) noexcept {
 			return LuaValue(LuaCFunction(value));
 		}
 
 		template <typename T>
-		static typename std::enable_if<std::is_same<T, const char *>::value, LuaValue>::type create(T s) {
+		static typename std::enable_if<std::is_same<T, const char *>::value, LuaValue>::type create(T s) noexcept {
 			return LuaValue(LuaString(s));
 		}
 
 		template <typename T>
-		static constexpr bool is_constructible() {
+		static constexpr bool is_constructible() noexcept {
 			return std::is_integral<T>::value ||
 				std::is_floating_point<T>::value ||
 				std::is_same<T, bool>::value ||

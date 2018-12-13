@@ -2,6 +2,7 @@
 #include "luacppb/Core/State.h"
 #include "luacppb/Value/Value.h"
 #include "luacppb/Core/StackGuard.h"
+#include "luacppb/Core/Stack.h"
 
 using namespace LuaCppB;
 
@@ -95,6 +96,7 @@ TEST_CASE("Value peek method") {
 TEST_CASE("Value push method") {
   LuaEnvironment env;
   lua_State *state = env.getState();
+  LuaStack stack(state);
   SECTION("Nil") {
     LuaValue().push(state);
     REQUIRE(lua_isnil(state, -1));
@@ -102,29 +104,29 @@ TEST_CASE("Value push method") {
   SECTION("Integer") {
     LuaValue::create(100).push(state);
     REQUIRE(lua_isinteger(state, -1));
-    REQUIRE(lua_tointeger(state, -1) == 100);
+    REQUIRE(stack.toInteger() == 100);
   }
   SECTION("Number") {
     LuaValue::create(3.14).push(state);
     REQUIRE(lua_isnumber(state, -1));
-    REQUIRE(lua_tonumber(state, -1) == 3.14);
+    REQUIRE(stack.toNumber() == 3.14);
   }
   SECTION("Boolean") {
     LuaValue::create(true).push(state);
     REQUIRE(lua_isboolean(state, -1));
-    REQUIRE(lua_toboolean(state, -1));
+    REQUIRE(stack.toBoolean());
   }
   SECTION("String") {
     const std::string &str = "Hello, world!";
     LuaValue::create(str).push(state);
     REQUIRE(lua_isstring(state, -1));
-    REQUIRE(str.compare(lua_tostring(state, -1)) == 0);
+    REQUIRE(str.compare(stack.toString()) == 0);
   }
   SECTION("Function") {
     LuaCFunction_ptr fn = nullptr;
     LuaValue::create(fn).push(state);
     REQUIRE(lua_iscfunction(state, -1));
-    REQUIRE(lua_tocfunction(state, -1) == fn);
+    REQUIRE(stack.toCFunction() == fn);
   }
   SECTION("Table") {
     LuaValue(LuaTable::create(state)).push(state);

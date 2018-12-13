@@ -1,6 +1,7 @@
 #include "luacppb/Value/Value.h"
 #include "luacppb/Reference/Reference.h"
 #include "luacppb/Core/Error.h"
+#include "luacppb/Core/Stack.h"
 
 namespace LuaCppB {
 
@@ -40,23 +41,21 @@ namespace LuaCppB {
   }
 
   std::optional<LuaValue> LuaValue::peek(lua_State *state, lua_Integer index) {
-    if (state == nullptr) {
-      throw LuaCppBError("Lua state can't be null", LuaCppBErrorCode::InvalidState);
-    }
+    LuaStack stack(state);
     if (index > lua_gettop(state)) {
       throw LuaCppBError("Lua stack overflow", LuaCppBErrorCode::StackOverflow);
     }
     std::optional<LuaValue> value;
     if (lua_isinteger(state, index)) {
-      value = LuaValue::create<lua_Integer>(lua_tointeger(state, index));
+      value = LuaValue::create<lua_Integer>(stack.toInteger(index));
     } else if (lua_isnumber(state, index)) {
-      value = LuaValue::create<lua_Number>(lua_tonumber(state, index));
+      value = LuaValue::create<lua_Number>(stack.toNumber(index));
     } else if (lua_isboolean(state, index)) {
-      value = LuaValue::create<bool>(lua_toboolean(state, index));
+      value = LuaValue::create<bool>(stack.toBoolean(index));
     } else if (lua_isstring(state, index)) {
-      value = LuaValue::create<const char *>(lua_tostring(state, index));
+      value = LuaValue::create<std::string>(stack.toString(index));
     } else if (lua_iscfunction(state, index)) {
-      value = LuaValue::create<LuaCFunction_ptr>(lua_tocfunction(state, index));
+      value = LuaValue::create<LuaCFunction_ptr>(stack.toCFunction(index));
     } else if (lua_istable(state, index)) {
       value = LuaValue(LuaTable(state, index));
     }

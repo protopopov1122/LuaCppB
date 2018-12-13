@@ -57,6 +57,7 @@ TEST_CASE("Stack") {
       stack.push(100);
       REQUIRE(stack.getTop() == 1);
       REQUIRE(stack.getType() == LuaType::Number);
+      REQUIRE(stack.toInteger() == 100);
       auto value = stack.get();
       REQUIRE(value.has_value());
       REQUIRE(value.value().getType() == stack.getType());
@@ -66,6 +67,7 @@ TEST_CASE("Stack") {
       stack.push(3.14);
       REQUIRE(stack.getTop() == 1);
       REQUIRE(stack.getType() == LuaType::Number);
+      REQUIRE(stack.toNumber() == 3.14);
       auto value = stack.get();
       REQUIRE(value.has_value());
       REQUIRE(value.value().getType() == stack.getType());
@@ -75,6 +77,7 @@ TEST_CASE("Stack") {
       stack.push(true);
       REQUIRE(stack.getTop() == 1);
       REQUIRE(stack.getType() == LuaType::Boolean);
+      REQUIRE(stack.toBoolean());
       auto value = stack.get();
       REQUIRE(value.has_value());
       REQUIRE(value.value().getType() == stack.getType());
@@ -85,6 +88,7 @@ TEST_CASE("Stack") {
       stack.push(STR);
       REQUIRE(stack.getTop() == 1);
       REQUIRE(stack.getType() == LuaType::String);
+      REQUIRE(STR.compare(stack.toString()) == 0);
       auto value = stack.get();
       REQUIRE(value.has_value());
       REQUIRE(value.value().getType() == stack.getType());
@@ -94,6 +98,7 @@ TEST_CASE("Stack") {
       stack.push(stack_test_fn);
       REQUIRE(stack.getTop() == 1);
       REQUIRE(stack.getType() == LuaType::Function);
+      REQUIRE(stack.toCFunction() == stack_test_fn);
       auto value = stack.get();
       REQUIRE(value.has_value());
       REQUIRE(value.value().getType() == stack.getType());
@@ -104,6 +109,7 @@ TEST_CASE("Stack") {
       stack.push(stack_test_fn, 1);
       REQUIRE(stack.getTop() == 1);
       REQUIRE(stack.getType() == LuaType::Function);
+      REQUIRE(stack.toCFunction() == stack_test_fn);
       auto value = stack.get();
       REQUIRE(value.has_value());
       REQUIRE(value.value().getType() == stack.getType());
@@ -122,12 +128,14 @@ TEST_CASE("Stack") {
       stack.push(&i);
       REQUIRE(stack.getTop() == 1);
       REQUIRE(stack.getType() == LuaType::LightUserData);
+      REQUIRE(stack.toPointer<int *>() == &i);
     }
     SECTION("User data") {
       int *i = stack.push<int>();
       REQUIRE(i != nullptr);
       REQUIRE(stack.getTop() == 1);
       REQUIRE(stack.getType() == LuaType::UserData);
+      REQUIRE(stack.toUserData<int *>() == i);
     }
   }
   SECTION("Stack operations") {

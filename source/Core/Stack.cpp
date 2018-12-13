@@ -53,4 +53,24 @@ namespace LuaCppB {
   void LuaStack::pushTable() {
     lua_newtable(this->state);
   }
+
+  lua_Integer LuaStack::toInteger(int index) {
+    return lua_tointeger(this->state, index);
+  }
+
+  lua_Number LuaStack::toNumber(int index) {
+    return lua_tonumber(this->state, index);
+  }
+  
+  bool LuaStack::toBoolean(int index) {
+    return static_cast<bool>(lua_toboolean(this->state, index));
+  }
+
+  std::string LuaStack::toString(int index) {
+    return std::string(lua_tostring(this->state, index));
+  }
+
+  LuaCFunction LuaStack::toCFunction(int index) {
+    return lua_tocfunction(this->state, index);
+  }
 }

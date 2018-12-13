@@ -3,6 +3,7 @@
 
 #include "luacppb/Base.h"
 #include "luacppb/Object/Method.h"
+#include "luacppb/Core/Stack.h"
 #include <map>
 
 namespace LuaCppB {
@@ -41,7 +42,8 @@ namespace LuaCppB {
     }
    private:
     static int gcObject(lua_State *state) {
-      LuaCppObjectWrapper<T> *object = reinterpret_cast<LuaCppObjectWrapper<T> *>(lua_touserdata(state, 1));
+      LuaStack stack(state);
+      LuaCppObjectWrapper<T> *object = stack.toUserData<LuaCppObjectWrapper<T> *>(1);
       object->~LuaCppObjectWrapper();
       ::operator delete(object, object);
       return 0;

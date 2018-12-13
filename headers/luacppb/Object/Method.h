@@ -4,6 +4,7 @@
 #include "luacppb/Base.h"
 #include "luacppb/Invoke/Native.h"
 #include "luacppb/Invoke/Method.h"
+#include "luacppb/Core/Stack.h"
 #include <memory>
 #include <variant>
 #include <optional>
@@ -79,15 +80,17 @@ namespace LuaCppB {
 		};
 
 		static int object_method_closure(lua_State *state) {
-			LuaCppObjectMethodCallDescriptor<M> *descriptor = reinterpret_cast<LuaCppObjectMethodCallDescriptor<M> *>(lua_touserdata(state, lua_upvalueindex(1)));
-			LuaCppObjectWrapper<C> *object = reinterpret_cast<LuaCppObjectWrapper<C> *>(const_cast<void *>(lua_topointer(state, 1)));
+			LuaStack stack(state);
+			LuaCppObjectMethodCallDescriptor<M> *descriptor = stack.toUserData<LuaCppObjectMethodCallDescriptor<M> *>(lua_upvalueindex(1));
+			LuaCppObjectWrapper<C> *object = stack.toPointer<LuaCppObjectWrapper<C> *>(1);
 			return LuaCppObjectMethodCall<C, R, A...>::call(object->get(), descriptor->method, state);
 		};
 
 		static int class_method_closure(lua_State *state) {
-			LuaCppObjectMethodCallDescriptor<M> *descriptor = reinterpret_cast<LuaCppObjectMethodCallDescriptor<M> *>(lua_touserdata(state, lua_upvalueindex(1)));
-			const char *className = lua_tostring(state, lua_upvalueindex(2));
-			LuaCppObjectWrapper<C> *object = reinterpret_cast<LuaCppObjectWrapper<C> *>(const_cast<void *>(luaL_checkudata(state, 1, className)));
+			LuaStack stack(state);
+			LuaCppObjectMethodCallDescriptor<M> *descriptor = stack.toUserData<LuaCppObjectMethodCallDescriptor<M> *>(lua_upvalueindex(1));
+			std::string className = stack.toString(lua_upvalueindex(2));
+			LuaCppObjectWrapper<C> *object = reinterpret_cast<LuaCppObjectWrapper<C> *>(const_cast<void *>(luaL_checkudata(state, 1, className.c_str())));
 			if (object) {
 				return LuaCppObjectMethodCall<C, R, A...>::call(object->get(), descriptor->method, state);
 			} else {

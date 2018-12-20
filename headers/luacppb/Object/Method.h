@@ -5,6 +5,7 @@
 #include "luacppb/Invoke/Native.h"
 #include "luacppb/Invoke/Method.h"
 #include "luacppb/Core/Stack.h"
+#include "luacppb/Object/Boxer.h"
 #include <memory>
 #include <variant>
 #include <optional>
@@ -48,22 +49,23 @@ namespace LuaCppB {
 	class LuaCppObjectMethodCall : public LuaData {
 		using M = R (C::*)(A...);
 	 public:
-		LuaCppObjectMethodCall(M met) : method(met), className() {}
-		LuaCppObjectMethodCall(M met, const std::string &cName) : method(met), className(cName) {}
+		LuaCppObjectMethodCall(M met, LuaCppObjectBoxerRegistry &boxer) : method(met), className(), boxer(boxer) {}
+		LuaCppObjectMethodCall(M met, const std::string &cName, LuaCppObjectBoxerRegistry &boxer) : method(met), className(cName), boxer(boxer) {}
 
 		void push(lua_State *state) const override {
 			LuaCppObjectMethodCallDescriptor<M> *descriptor = reinterpret_cast<LuaCppObjectMethodCallDescriptor<M> *>(
         lua_newuserdata(state, sizeof(LuaCppObjectMethodCallDescriptor<M>)));
 			descriptor->method = this->method;
+			lua_pushlightuserdata(state, reinterpret_cast<void *>(&this->boxer));
 			if (this->className.has_value()) {
 				lua_pushstring(state, this->className.value().c_str());
-				lua_pushcclosure(state, &LuaCppObjectMethodCall<C, R, A...>::class_method_closure, 2);
+				lua_pushcclosure(state, &LuaCppObjectMethodCall<C, R, A...>::class_method_closure, 3);
 			} else {
-				lua_pushcclosure(state, &LuaCppObjectMethodCall<C, R, A...>::object_method_closure, 1);
+				lua_pushcclosure(state, &LuaCppObjectMethodCall<C, R, A...>::object_method_closure, 2);
 			}
 		}
 	 private:
-	 	static int call(C *object, M method, lua_State *state) {
+	 	static int call(C *object, M method, LuaCppObjectBoxerRegistry &boxer, lua_State *state) {
 			std::tuple<A...> args = NativeFunctionArgumentsTuple<2, A...>::value(state);
 			if constexpr (std::is_void<R>::value) {
 				std::apply([object, method](A... args) {	
@@ -74,7 +76,7 @@ namespace LuaCppB {
 				R result = std::apply([object, method](A... args) {	
 					return (object->*method)(args...);
 				}, args);
-				NativeFunctionResult<R>::set(state, result);
+				NativeFunctionResult<R>::set(state, boxer, result);
 				return 1;
 			}
 		};
@@ -82,17 +84,19 @@ namespace LuaCppB {
 		static int object_method_closure(lua_State *state) {
 			LuaStack stack(state);
 			LuaCppObjectMethodCallDescriptor<M> *descriptor = stack.toUserData<LuaCppObjectMethodCallDescriptor<M> *>(lua_upvalueindex(1));
+			LuaCppObjectBoxerRegistry &boxer = *stack.toPointer<LuaCppObjectBoxerRegistry *>(lua_upvalueindex(2));
 			LuaCppObjectWrapper<C> *object = stack.toPointer<LuaCppObjectWrapper<C> *>(1);
-			return LuaCppObjectMethodCall<C, R, A...>::call(object->get(), descriptor->method, state);
+			return LuaCppObjectMethodCall<C, R, A...>::call(object->get(), descriptor->method, boxer, state);
 		};
 
 		static int class_method_closure(lua_State *state) {
 			LuaStack stack(state);
 			LuaCppObjectMethodCallDescriptor<M> *descriptor = stack.toUserData<LuaCppObjectMethodCallDescriptor<M> *>(lua_upvalueindex(1));
-			std::string className = stack.toString(lua_upvalueindex(2));
+			LuaCppObjectBoxerRegistry &boxer = *stack.toPointer<LuaCppObjectBoxerRegistry *>(lua_upvalueindex(2));
+			std::string className = stack.toString(lua_upvalueindex(3));
 			LuaCppObjectWrapper<C> *object = reinterpret_cast<LuaCppObjectWrapper<C> *>(const_cast<void *>(luaL_checkudata(state, 1, className.c_str())));
 			if (object) {
-				return LuaCppObjectMethodCall<C, R, A...>::call(object->get(), descriptor->method, state);
+				return LuaCppObjectMethodCall<C, R, A...>::call(object->get(), descriptor->method, boxer, state);
 			} else {
 				return 0;
 			}
@@ -100,6 +104,7 @@ namespace LuaCppB {
 
 		M method;
 		std::optional<std::string> className;
+		LuaCppObjectBoxerRegistry &boxer;
 	};
 }
 

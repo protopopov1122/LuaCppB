@@ -3,7 +3,7 @@
 
 #include "luacppb/Base.h"
 #include "luacppb/Value/Value.h"
-#include "luacppb/Object/Registry.h"
+#include "luacppb/Object/Boxer.h"
 #include <optional>
 #include <type_traits>
 #include <functional>
@@ -12,10 +12,10 @@ namespace LuaCppB {
 
 	class LuaReference {
 	 public:
-	 	LuaReference(LuaCppClassRegistry &registry) : registry(registry) {}
+	 	LuaReference(LuaCppObjectBoxerRegistry &registry) : registry(registry) {}
 		virtual ~LuaReference() = default;
 		lua_State *getState();
-		LuaCppClassRegistry &getClassRegistry() {
+		LuaCppObjectBoxerRegistry &getClassRegistry() {
 			return this->registry;
 		}
 
@@ -71,7 +71,7 @@ namespace LuaCppB {
 			});
 		}
 	 protected:
-		LuaCppClassRegistry &registry;
+		LuaCppObjectBoxerRegistry &registry;
 	};
 }
 

@@ -11,19 +11,19 @@ namespace LuaCppB {
   template <typename T>
   class LuaCppObject : public LuaData {
    public:
-    LuaCppObject(T *obj) : object(obj) {}
-    LuaCppObject(T &obj) : object(&obj) {}
-		LuaCppObject(const T *obj) : object(const_cast<T *>(obj)) {}
-		LuaCppObject(const T &obj) : object(const_cast<T *>(&obj)) {}
+    LuaCppObject(T *obj, LuaCppObjectBoxerRegistry &boxer) : object(obj), boxer(boxer) {}
+    LuaCppObject(T &obj, LuaCppObjectBoxerRegistry &boxer) : object(&obj), boxer(boxer) {}
+		LuaCppObject(const T *obj, LuaCppObjectBoxerRegistry &boxer) : object(const_cast<T *>(obj)), boxer(boxer) {}
+		LuaCppObject(const T &obj, LuaCppObjectBoxerRegistry &boxer) : object(const_cast<T *>(&obj)), boxer(boxer) {}
 
     template <typename R, typename ... A>
     void bind(const std::string &key, R (T::*method)(A...)) {
-      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<T, R, A...>>(NativeMethodWrapper(method).get());
+      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<T, R, A...>>(NativeMethodWrapper(method).get(), this->boxer);
     }
 
     template <typename R, typename ... A>
     void bind(const std::string &key, R (T::*method)(A...) const) {
-      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<T, R, A...>>(NativeMethodWrapper(method).get());
+      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<T, R, A...>>(NativeMethodWrapper(method).get(), this->boxer);
     }
 
     void push(lua_State *state) const override {
@@ -51,6 +51,7 @@ namespace LuaCppB {
 
     T *object;
     std::map<std::string, std::shared_ptr<LuaData>> methods;
+    LuaCppObjectBoxerRegistry &boxer;
   };
 }
 

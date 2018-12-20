@@ -24,15 +24,22 @@ class Arith {
   static void build(Arith *arith, int n) {
     new(arith) Arith(n);
   }
+
+  static Arith &getGlobal() {
+    return Arith::global;
+  }
  private:
+  static Arith global;
   int n;
 };
+
+Arith Arith::global(0);
 
 TEST_CASE("Object binding") {
   const std::string &CODE = "result = { arith:add(50), arith:sub(100) }";
   LuaEnvironment env;
   Arith arith(10);
-  LuaCppObject aObj(arith);
+  LuaCppObject aObj(arith, env.getClassRegistry());
   aObj.bind("add", &Arith::add);
   aObj.bind("sub", &Arith::sub);
   env["arith"] = aObj;
@@ -49,12 +56,12 @@ TEST_CASE("Class manual binding") {
                             "a2 = Arith.new()\n"
                             "a2:set(50)\n"
                             "result = { x, a2:sub(20) }";
-  LuaCppClass<Arith> arith("Arith");
+  LuaEnvironment env;
+  LuaCppClass<Arith> arith("Arith", env.getClassRegistry());
   arith.bind("add", &Arith::add);
   arith.bind("sub", &Arith::sub);
   arith.bind("set", &Arith::set);
   arith.initializer("build", &Arith::build);
-  LuaEnvironment env;
   env["Arith"] = arith;
   REQUIRE(env["Arith"].exists());
   REQUIRE(env["Arith"].getType() == LuaType::Table);
@@ -66,19 +73,32 @@ TEST_CASE("Class manual binding") {
 }
 
 TEST_CASE("Object opaque binding") {
-  const std::string &CODE = "result = { arith:add(50), arith:sub(100) }";
   LuaEnvironment env;
-  LuaCppClass<Arith> arithCl("Arith");
+  LuaCppClass<Arith> arithCl("Arith", env.getClassRegistry());
   arithCl.bind("add", &Arith::add);
   arithCl.bind("sub", &Arith::sub);
   arithCl.bind("set", &Arith::set);
   arithCl.initializer("build", &Arith::build);
   env.getClassRegistry().bind(arithCl);
-  Arith arith(10);
-  env["arith"] = arith;
-  REQUIRE(env["arith"].exists());
-  REQUIRE(env["arith"].getType() == LuaType::UserData);
-  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  REQUIRE(env["result"][1].get<int>() == 60);
-  REQUIRE(env["result"][2].get<int>() == -90);
+  SECTION("Assigning object") {
+    const std::string &CODE = "result = { arith:add(50), arith:sub(100) }";
+    Arith arith(10);
+    env["arith"] = arith;
+    REQUIRE(env["arith"].exists());
+    REQUIRE(env["arith"].getType() == LuaType::UserData);
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["result"][1].get<int>() == 60);
+    REQUIRE(env["result"][2].get<int>() == -90);
+  }
+  SECTION("Returning object from invocable") {
+    env["getArith"] = &Arith::getGlobal;
+    const std::string &CODE = "arith = getArith()\n"
+                              "result = { arith:add(50), arith:sub(100) }";
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["arith"].exists());
+    REQUIRE(env["arith"].getType() == LuaType::UserData);
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["result"][1].get<int>() == 50);
+    REQUIRE(env["result"][2].get<int>() == -100);
+  }
 }

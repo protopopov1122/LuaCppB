@@ -16,7 +16,7 @@ namespace LuaCppB {
 		LuaReferenceHandle(const LuaReferenceHandle &);
 
 		LuaReference &getReference() const;
-		LuaCppClassRegistry &getClassRegistry() const;
+		LuaCppObjectBoxerRegistry &getClassRegistry() const;
 		bool exists();
 		LuaType getType();
 		LuaReferenceHandle operator[](const std::string &);
@@ -27,7 +27,7 @@ namespace LuaCppB {
 
 		template <typename R, typename ... A>
 		LuaReferenceHandle &operator=(R (*fn)(A...)) {
-			NativeFunctionCall call(fn);
+			NativeFunctionCall call(fn, this->getClassRegistry());
 			this->ref->set(call);
 			return *this;
 		}

@@ -2,8 +2,9 @@
 #define LUACPPB_INVOKE_NATIVE_H_
 
 #include "luacppb/Base.h"
-#include "luacppb/Value/Value.h"
+#include "luacppb/Value/Native.h"
 #include "luacppb/Invoke/Method.h"
+#include "luacppb/Object/Boxer.h"
 #include "luacppb/Core/State.h"
 #include "luacppb/Core/Stack.h"
 #include <string>
@@ -37,8 +38,8 @@ namespace LuaCppB {
 
 	template <typename T>
 	struct NativeFunctionResult {
-		static void set(lua_State *state, T value) {
-			LuaValue::create<T>(value).push(state);
+		static void set(lua_State *state, LuaCppObjectBoxerRegistry &boxer, T value) {
+			LuaNativeValue::push<T>(state, boxer, value);
 		}
 	};
 	
@@ -58,7 +59,6 @@ namespace LuaCppB {
 			return std::tuple_cat(std::make_tuple(NativeFunctionArgument<I, T>::get(state)), NativeFunctionArgumentsTuple_Impl<I + 1, Ts...>::value(state));
 		};
 	};
-
 	
 	template <std::size_t S, typename ... A>
 	struct NativeFunctionArgumentsTuple {
@@ -67,26 +67,26 @@ namespace LuaCppB {
 		}
 	};
 
-
 	template <typename R, typename ... A>
 	class NativeFunctionCall : public LuaData {
 		using F = R (*)(A...);
 	 public:
-		NativeFunctionCall(F fn) : function(fn) {}
+		NativeFunctionCall(F fn, LuaCppObjectBoxerRegistry &boxer) : function(fn), boxer(boxer) {}
 
 		void push(lua_State *state) const override {
 			lua_pushlightuserdata(state, reinterpret_cast<void *>(this->function));
-			lua_pushcclosure(state, NativeFunctionCall<R, A...>::function_closure, 1);
+			lua_pushlightuserdata(state, reinterpret_cast<void *>(&this->boxer));
+			lua_pushcclosure(state, NativeFunctionCall<R, A...>::function_closure, 2);
 		}
 	 private:
-		static int call(F function, lua_State *state) {
+		static int call(F function, LuaCppObjectBoxerRegistry &boxer, lua_State *state) {
 			std::tuple<A...> args = NativeFunctionArgumentsTuple<1, A...>::value(state);
 			if constexpr (std::is_void<R>::value) {
 				std::apply(function, args);
 				return 0;
 			} else {				
 				R result = std::apply(function, args);
-				NativeFunctionResult<R>::set(state, result);
+				NativeFunctionResult<R>::set(state, boxer, result);
 				return 1;
 			}
 		};
@@ -94,10 +94,12 @@ namespace LuaCppB {
 		static int function_closure(lua_State *state) {
 			LuaStack stack(state);
 			F fn = stack.toPointer<F>(lua_upvalueindex(1));
-			return NativeFunctionCall<R, A...>::call(fn, state);
+			LuaCppObjectBoxerRegistry &boxer = *stack.toPointer<LuaCppObjectBoxerRegistry *>(lua_upvalueindex(2));
+			return NativeFunctionCall<R, A...>::call(fn, boxer, state);
 		};
 
 		F function;
+		LuaCppObjectBoxerRegistry &boxer;
 	};
 
 	template <typename C, typename M>
@@ -111,20 +113,22 @@ namespace LuaCppB {
 		using M = R (C::*)(A...);
 		using Mc = R (C::*)(A...) const;
 	 public:
-		NativeMethodCall(C *obj, M met) : object(obj), method(met) {}
-		NativeMethodCall(C &obj, M met) : object(&obj), method(met) {}
-		NativeMethodCall(const C *obj, Mc met)
-			: object(const_cast<C *>(obj)), method(NativeMethodWrapper(met).get()) {}
-		NativeMethodCall(const C &obj, Mc met)
-			: object(const_cast<C *>(&obj)), method(NativeMethodWrapper(met).get()) {}
+		NativeMethodCall(C *obj, M met, LuaCppObjectBoxerRegistry &boxer) : object(obj), method(met), boxer(boxer) {}
+		NativeMethodCall(C &obj, M met, LuaCppObjectBoxerRegistry &boxer) : object(&obj), method(met), boxer(boxer) {}
+		NativeMethodCall(const C *obj, Mc met, LuaCppObjectBoxerRegistry &boxer)
+			: object(const_cast<C *>(obj)), method(NativeMethodWrapper(met).get()), boxer(boxer) {}
+		NativeMethodCall(const C &obj, Mc met, LuaCppObjectBoxerRegistry &boxer)
+			: object(const_cast<C *>(&obj)), method(NativeMethodWrapper(met).get()), boxer(boxer) {}
+		
 		void push(lua_State *state) const override {
 			NativeMethodDescriptor<C, M> *descriptor = reinterpret_cast<NativeMethodDescriptor<C, M> *>(lua_newuserdata(state, sizeof(NativeMethodDescriptor<C, M>)));
 			descriptor->object = this->object;
 			descriptor->method = this->method;
-			lua_pushcclosure(state, &NativeMethodCall<C, R, A...>::method_closure, 1);	
+			lua_pushlightuserdata(state, reinterpret_cast<void *>(&this->boxer));
+			lua_pushcclosure(state, &NativeMethodCall<C, R, A...>::method_closure, 2);	
 		}
 	 private:
-	 	static int call(C *object, M method, lua_State *state) {
+	 	static int call(C *object, M method, LuaCppObjectBoxerRegistry &boxer, lua_State *state) {
 			std::tuple<A...> args = NativeFunctionArgumentsTuple<1,A...>::value(state);
 			if constexpr (std::is_void<R>::value) {
 				std::apply([object, method](A... args) {	
@@ -135,7 +139,7 @@ namespace LuaCppB {
 				R result = std::apply([object, method](A... args) {	
 					return (object->*method)(args...);
 				}, args);
-				NativeFunctionResult<R>::set(state, result);
+				NativeFunctionResult<R>::set(state, boxer, result);
 				return 1;
 			}
 		};
@@ -143,11 +147,13 @@ namespace LuaCppB {
 		static int method_closure(lua_State *state) {
 			LuaStack stack(state);
 			NativeMethodDescriptor<C, M> *descriptor = stack.toUserData<NativeMethodDescriptor<C, M> *>(lua_upvalueindex(1));
-			return NativeMethodCall<C, R, A...>::call(descriptor->object, descriptor->method, state);
+			LuaCppObjectBoxerRegistry &boxer = *stack.toPointer<LuaCppObjectBoxerRegistry *>(lua_upvalueindex(2));
+			return NativeMethodCall<C, R, A...>::call(descriptor->object, descriptor->method, boxer, state);
 		};
 
 		C *object;
 		M method;
+		LuaCppObjectBoxerRegistry &boxer;
 	};
 
 	template <typename T>
@@ -161,22 +167,23 @@ namespace LuaCppB {
 	class NativeInvocableCall : public LuaData {
 		using R = typename std::invoke_result<T, A...>::type;
 	 public:
-	 	NativeInvocableCall(T inv) : invocable(inv) {}
+	 	NativeInvocableCall(T inv, LuaCppObjectBoxerRegistry &boxer) : invocable(inv), boxer(boxer) {}
 
 		void push(lua_State *state) const {
 			NativeInvocableDescriptor<T> *descriptor = reinterpret_cast<NativeInvocableDescriptor<T> *>(lua_newuserdata(state, sizeof(NativeInvocableDescriptor<T>)));
 			new(descriptor) NativeInvocableDescriptor(this->invocable);
-			lua_pushcclosure(state, &NativeInvocableCall<T, A...>::invocable_closure, 1);
+			lua_pushlightuserdata(state, reinterpret_cast<void *>(&this->boxer));
+			lua_pushcclosure(state, &NativeInvocableCall<T, A...>::invocable_closure, 2);
 		}
 	 private:
-		static int call(T &invocable, lua_State *state) {
+		static int call(T &invocable, LuaCppObjectBoxerRegistry &boxer, lua_State *state) {
 			std::tuple<A...> args = NativeFunctionArgumentsTuple<1, A...>::value(state);
 			if constexpr (std::is_void<R>::value) {
 				std::apply(invocable, args);
 				return 0;
 			} else {
 				R result = std::apply(invocable, args);
-				NativeFunctionResult<R>::set(state, result);
+				NativeFunctionResult<R>::set(state, boxer, result);
 				return 1;
 			}
 		}
@@ -184,10 +191,12 @@ namespace LuaCppB {
 		static int invocable_closure(lua_State *state) {
 			LuaStack stack(state);
 			NativeInvocableDescriptor<T> *descriptor = stack.toUserData<NativeInvocableDescriptor<T> *>(lua_upvalueindex(1));
-			return NativeInvocableCall<T, A...>::call(descriptor->invocable, state);
+			LuaCppObjectBoxerRegistry &boxer = *stack.toPointer<LuaCppObjectBoxerRegistry *>(lua_upvalueindex(2));
+			return NativeInvocableCall<T, A...>::call(descriptor->invocable, boxer, state);
 		}
 
 		T invocable;
+		LuaCppObjectBoxerRegistry &boxer;
 	};
 }
 

@@ -2,7 +2,7 @@
 #define LUACPPB_REFERENCE_PRIMARY_H_
 
 #include "luacppb/Reference/Base.h"
-#include "luacppb/Reference/Registry.h"
+#include "luacppb/Object/Registry.h"
 #include "luacppb/Core/Error.h"
 
 namespace LuaCppB {
@@ -40,7 +40,7 @@ namespace LuaCppB {
 
 	class LuaRegistryReference : public LuaReference {
 	 public:
-		LuaRegistryReference(lua_State *, LuaCppClassRegistry &, int = -1);
+		LuaRegistryReference(lua_State *, LuaCppObjectBoxerRegistry &, int = -1);
 
 		bool putOnTop(std::function<void (lua_State *)>) override;
 		bool setValue(std::function<void (lua_State *)>) override;

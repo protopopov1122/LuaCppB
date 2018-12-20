@@ -15,6 +15,11 @@ namespace LuaCppB {
 
 	template<template<typename...> class U, typename... T>
 	struct is_instantiation<U, U<T...>> : public std::true_type {};
+
+	template <typename T>
+	struct is_smart_pointer {
+		static constexpr bool value = is_instantiation<std::unique_ptr, T>::value || is_instantiation<std::shared_ptr, T>::value;
+	};
 }
 
 #endif

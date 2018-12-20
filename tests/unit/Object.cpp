@@ -36,6 +36,10 @@ class Arith {
   static std::unique_ptr<Arith> newArith(int n) {
     return std::make_unique<Arith>(n);
   }
+
+  static std::shared_ptr<Arith> newSharedArith(int n) {
+    return std::make_shared<Arith>(n);
+  }
  private:
   static Arith global;
   int n;
@@ -108,6 +112,15 @@ TEST_CASE("Object opaque binding") {
       REQUIRE(env["result"][1].get<int>() == 60);
       REQUIRE(env["result"][2].get<int>() == -90);
     }
+    SECTION("Assigning object shared pointer") {
+      const std::string &CODE = "result = { arith:add(50), arith:sub(100) }";
+      env["arith"] = std::make_shared<Arith>(10);
+      REQUIRE(env["arith"].exists());
+      REQUIRE(env["arith"].getType() == LuaType::UserData);
+      REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+      REQUIRE(env["result"][1].get<int>() == 60);
+      REQUIRE(env["result"][2].get<int>() == -90);
+    }
   }
   SECTION("Returning object from invocable") {
     SECTION("Object pointer") {
@@ -134,6 +147,17 @@ TEST_CASE("Object opaque binding") {
     }
     SECTION("Object unique pointer") {
       env["getArith"] = &Arith::newArith;
+      const std::string &CODE = "arith = getArith(0)\n"
+                                "result = { arith:add(50), arith:sub(100) }";
+      REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+      REQUIRE(env["arith"].exists());
+      REQUIRE(env["arith"].getType() == LuaType::UserData);
+      REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+      REQUIRE(env["result"][1].get<int>() == 50);
+      REQUIRE(env["result"][2].get<int>() == -100);
+    }
+    SECTION("Object unique pointer") {
+      env["getArith"] = &Arith::newSharedArith;
       const std::string &CODE = "arith = getArith(0)\n"
                                 "result = { arith:add(50), arith:sub(100) }";
       REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);

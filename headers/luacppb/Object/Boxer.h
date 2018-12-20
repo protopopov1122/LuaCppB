@@ -14,6 +14,7 @@ namespace LuaCppB {
     virtual ~LuaCppObjectBoxer() = default;
     virtual void wrap(lua_State *, void *) = 0;
     virtual void wrapUnique(lua_State *, void *) = 0;
+    virtual void wrapShared(lua_State *, std::shared_ptr<void>) = 0;
   };
 
   class LuaCppObjectBoxerRegistry {
@@ -44,6 +45,16 @@ namespace LuaCppB {
       if (this->canWrap<T>()) {
         T *pointer = object.release();
         this->wrappers[typeid(T)]->wrapUnique(state, reinterpret_cast<void *>(pointer));
+      }
+    }
+
+    template <typename T>
+    void wrap(lua_State *state, std::shared_ptr<T> object) {
+      if (state != this->state) {
+        throw LuaCppBError("Lua state mismatch", LuaCppBErrorCode::StateMismatch);
+      }
+      if (this->canWrap<T>()) {
+        this->wrappers[typeid(T)]->wrapShared(state, std::reinterpret_pointer_cast<void >(object));
       }
     }
    protected:

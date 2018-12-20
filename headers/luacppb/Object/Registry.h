@@ -28,6 +28,13 @@ namespace LuaCppB {
       new(wrapper) LuaCppObjectWrapper<T>(std::move(object));
       luaL_setmetatable(state, this->className.c_str());
     }
+
+    void wrapShared(lua_State *state, std::shared_ptr<void> raw_object) override {
+      std::shared_ptr<T> object = std::reinterpret_pointer_cast<T>(raw_object);
+      LuaCppObjectWrapper<T> *wrapper = reinterpret_cast<LuaCppObjectWrapper<T> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<T>)));
+      new(wrapper) LuaCppObjectWrapper<T>(object);
+      luaL_setmetatable(state, this->className.c_str());
+    }
    private:
     std::string className;
   };

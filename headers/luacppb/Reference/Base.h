@@ -3,6 +3,7 @@
 
 #include "luacppb/Base.h"
 #include "luacppb/Value/Value.h"
+#include "luacppb/Value/Native.h"
 #include "luacppb/Core/Runtime.h"
 #include <optional>
 #include <type_traits>
@@ -50,16 +51,9 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
-		typename std::enable_if<!std::is_base_of<LuaData, T>::value && !LuaValue::is_constructible<T>()>::type set(T *value) {
-			this->setValue([&](lua_State *state) {
-				this->runtime.getObjectBoxerRegistry().wrap(state, value);
-			});
-		}
-
-		template <typename T>
 		typename std::enable_if<!std::is_base_of<LuaData, T>::value && !LuaValue::is_constructible<T>()>::type set(T &value) {
 			this->setValue([&](lua_State *state) {
-				this->runtime.getObjectBoxerRegistry().wrap(state, &value);
+				LuaNativeValue::push<T>(state, this->runtime, value);
 			});
 		}
 

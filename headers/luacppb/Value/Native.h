@@ -21,7 +21,7 @@ namespace LuaCppB {
     }
 
     template <typename T>
-    static typename std::enable_if<!LuaValue::is_constructible<T>()>::type push(lua_State *state, LuaCppRuntime &runtime, T &value) {
+    static typename std::enable_if<!LuaValue::is_constructible<T>() && !is_instantiation<std::unique_ptr, T>::value>::type push(lua_State *state, LuaCppRuntime &runtime, T &value) {
       LuaCppObjectBoxerRegistry &boxer = runtime.getObjectBoxerRegistry();
       if constexpr (std::is_pointer<T>()) {
         using P = typename std::remove_pointer<T>::type;
@@ -32,6 +32,16 @@ namespace LuaCppB {
         if (boxer.canWrap<T>()) {
           boxer.wrap(state, &value);
         }
+      }
+    }
+    
+    template <typename T>
+    static typename std::enable_if<!LuaValue::is_constructible<T>() && is_instantiation<std::unique_ptr, T>::value>::type
+      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
+      using V = typename T::element_type;
+      LuaCppObjectBoxerRegistry &boxer = runtime.getObjectBoxerRegistry();
+      if (boxer.canWrap<V>()) {
+        boxer.wrap(state, std::move(value));
       }
     }
   };

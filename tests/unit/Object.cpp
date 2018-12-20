@@ -28,6 +28,14 @@ class Arith {
   static Arith &getGlobal() {
     return Arith::global;
   }
+
+  static Arith *getGlobalPointer() {
+    return &Arith::global;
+  }
+
+  static std::unique_ptr<Arith> newArith(int n) {
+    return std::make_unique<Arith>(n);
+  }
  private:
   static Arith global;
   int n;
@@ -81,24 +89,59 @@ TEST_CASE("Object opaque binding") {
   arithCl.initializer("build", &Arith::build);
   env.getClassRegistry().bind(arithCl);
   SECTION("Assigning object") {
-    const std::string &CODE = "result = { arith:add(50), arith:sub(100) }";
-    Arith arith(10);
-    env["arith"] = arith;
-    REQUIRE(env["arith"].exists());
-    REQUIRE(env["arith"].getType() == LuaType::UserData);
-    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-    REQUIRE(env["result"][1].get<int>() == 60);
-    REQUIRE(env["result"][2].get<int>() == -90);
+    SECTION("Assigning object by reference") {
+      const std::string &CODE = "result = { arith:add(50), arith:sub(100) }";
+      Arith arith(10);
+      env["arith"] = arith;
+      REQUIRE(env["arith"].exists());
+      REQUIRE(env["arith"].getType() == LuaType::UserData);
+      REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+      REQUIRE(env["result"][1].get<int>() == 60);
+      REQUIRE(env["result"][2].get<int>() == -90);
+    }
+    SECTION("Assigning object unique pointer") {
+      const std::string &CODE = "result = { arith:add(50), arith:sub(100) }";
+      env["arith"] = std::make_unique<Arith>(10);
+      REQUIRE(env["arith"].exists());
+      REQUIRE(env["arith"].getType() == LuaType::UserData);
+      REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+      REQUIRE(env["result"][1].get<int>() == 60);
+      REQUIRE(env["result"][2].get<int>() == -90);
+    }
   }
   SECTION("Returning object from invocable") {
-    env["getArith"] = &Arith::getGlobal;
-    const std::string &CODE = "arith = getArith()\n"
-                              "result = { arith:add(50), arith:sub(100) }";
-    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-    REQUIRE(env["arith"].exists());
-    REQUIRE(env["arith"].getType() == LuaType::UserData);
-    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-    REQUIRE(env["result"][1].get<int>() == 50);
-    REQUIRE(env["result"][2].get<int>() == -100);
+    SECTION("Object pointer") {
+      env["getArith"] = &Arith::getGlobal;
+      const std::string &CODE = "arith = getArith()\n"
+                                "result = { arith:add(50), arith:sub(100) }";
+      REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+      REQUIRE(env["arith"].exists());
+      REQUIRE(env["arith"].getType() == LuaType::UserData);
+      REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+      REQUIRE(env["result"][1].get<int>() == 50);
+      REQUIRE(env["result"][2].get<int>() == -100);
+    }
+    SECTION("Object reference") {
+      env["getArith"] = &Arith::getGlobalPointer;
+      const std::string &CODE = "arith = getArith()\n"
+                                "result = { arith:add(50), arith:sub(100) }";
+      REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+      REQUIRE(env["arith"].exists());
+      REQUIRE(env["arith"].getType() == LuaType::UserData);
+      REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+      REQUIRE(env["result"][1].get<int>() == 50);
+      REQUIRE(env["result"][2].get<int>() == -100);
+    }
+    SECTION("Object unique pointer") {
+      env["getArith"] = &Arith::newArith;
+      const std::string &CODE = "arith = getArith(0)\n"
+                                "result = { arith:add(50), arith:sub(100) }";
+      REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+      REQUIRE(env["arith"].exists());
+      REQUIRE(env["arith"].getType() == LuaType::UserData);
+      REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+      REQUIRE(env["result"][1].get<int>() == 50);
+      REQUIRE(env["result"][2].get<int>() == -100);
+    }
   }
 }

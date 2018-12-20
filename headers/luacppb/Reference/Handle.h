@@ -51,6 +51,12 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
+		typename std::enable_if<!std::is_base_of<LuaData, T>::value && !LuaValue::is_constructible<T>(), LuaReferenceHandle>::type &operator=(std::unique_ptr<T> value) {
+			this->ref->set<std::unique_ptr<T>>(value);
+			return *this;
+		}
+
+		template <typename T>
 		operator T () {
 			return this->ref->get<T>();
 		}

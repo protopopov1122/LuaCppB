@@ -13,6 +13,7 @@ namespace LuaCppB {
    public:
     virtual ~LuaCppObjectBoxer() = default;
     virtual void wrap(lua_State *, void *) = 0;
+    virtual void wrapUnique(lua_State *, void *) = 0;
   };
 
   class LuaCppObjectBoxerRegistry {
@@ -32,6 +33,17 @@ namespace LuaCppB {
       }
       if (this->canWrap<T>()) {
         this->wrappers[typeid(T)]->wrap(state, reinterpret_cast<void *>(object));
+      }
+    }
+
+    template <typename T>
+    void wrap(lua_State *state, std::unique_ptr<T> object) {
+      if (state != this->state) {
+        throw LuaCppBError("Lua state mismatch", LuaCppBErrorCode::StateMismatch);
+      }
+      if (this->canWrap<T>()) {
+        T *pointer = object.release();
+        this->wrappers[typeid(T)]->wrapUnique(state, reinterpret_cast<void *>(pointer));
       }
     }
    protected:

@@ -38,7 +38,7 @@ namespace LuaCppB {
 
 	template <typename T>
 	struct NativeFunctionResult {
-		static void set(lua_State *state, LuaCppRuntime &runtime, T value) {
+		static void set(lua_State *state, LuaCppRuntime &runtime, T &value) {
 			LuaNativeValue::push<T>(state, runtime, value);
 		}
 	};

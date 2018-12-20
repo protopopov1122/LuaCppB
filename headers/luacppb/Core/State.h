@@ -3,6 +3,7 @@
 
 #include "luacppb/Base.h"
 #include "luacppb/Core/Status.h"
+#include "luacppb/Core/Runtime.h"
 #include <string>
 #include <memory>
 
@@ -11,12 +12,13 @@ namespace LuaCppB {
 	class LuaReferenceHandle;
 	class LuaCppClassRegistry;
 
-	class LuaState {
+	class LuaState : public LuaCppRuntime {
 	 public:
 		LuaState(lua_State *);
 		virtual ~LuaState() = default;
-		lua_State *getState() const;
+		lua_State *getState() const override;
 		LuaCppClassRegistry &getClassRegistry();
+		LuaCppObjectBoxerRegistry &getObjectBoxerRegistry() override;
 		
 		LuaReferenceHandle operator[](const std::string &);
 		LuaReferenceHandle operator[](lua_Integer);

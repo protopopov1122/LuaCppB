@@ -7,7 +7,7 @@ namespace LuaCppB {
 
 	class LuaTableField : public LuaReference {
 	 public:
-		LuaTableField(LuaReferenceHandle ref, LuaCppObjectBoxerRegistry &registry, const std::string &name) : LuaReference(registry), ref(ref), name(name) {}
+		LuaTableField(LuaReferenceHandle ref, LuaCppRuntime &runtime, const std::string &name) : LuaReference(runtime), ref(ref), name(name) {}
 		
 		bool putOnTop(std::function<void (lua_State *)>) override;
 		bool setValue(std::function<void (lua_State *)>) override;
@@ -18,7 +18,7 @@ namespace LuaCppB {
 
 	class LuaArrayField : public LuaReference {
 	 public:
-		LuaArrayField(LuaReferenceHandle ref, LuaCppObjectBoxerRegistry &registry, lua_Integer index) : LuaReference(registry), ref(ref), index(index) {}
+		LuaArrayField(LuaReferenceHandle ref, LuaCppRuntime &runtime, lua_Integer index) : LuaReference(runtime), ref(ref), index(index) {}
 
 		bool putOnTop(std::function<void (lua_State *)>) override;
 		bool setValue(std::function<void (lua_State *)>) override;

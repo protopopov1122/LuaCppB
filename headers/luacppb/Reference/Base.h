@@ -3,7 +3,7 @@
 
 #include "luacppb/Base.h"
 #include "luacppb/Value/Value.h"
-#include "luacppb/Object/Boxer.h"
+#include "luacppb/Core/Runtime.h"
 #include <optional>
 #include <type_traits>
 #include <functional>
@@ -12,11 +12,11 @@ namespace LuaCppB {
 
 	class LuaReference {
 	 public:
-	 	LuaReference(LuaCppObjectBoxerRegistry &registry) : registry(registry) {}
+	 	LuaReference(LuaCppRuntime &runtime) : runtime(runtime) {}
 		virtual ~LuaReference() = default;
 		lua_State *getState();
-		LuaCppObjectBoxerRegistry &getClassRegistry() {
-			return this->registry;
+		LuaCppRuntime &getRuntime() {
+			return this->runtime;
 		}
 
 		virtual bool putOnTop(std::function<void (lua_State *)>) = 0;
@@ -52,14 +52,14 @@ namespace LuaCppB {
 		template <typename T>
 		typename std::enable_if<!std::is_base_of<LuaData, T>::value && !LuaValue::is_constructible<T>()>::type set(T *value) {
 			this->setValue([&](lua_State *state) {
-				this->registry.wrap(state, value);
+				this->runtime.getObjectBoxerRegistry().wrap(state, value);
 			});
 		}
 
 		template <typename T>
 		typename std::enable_if<!std::is_base_of<LuaData, T>::value && !LuaValue::is_constructible<T>()>::type set(T &value) {
 			this->setValue([&](lua_State *state) {
-				this->registry.wrap(state, &value);
+				this->runtime.getObjectBoxerRegistry().wrap(state, &value);
 			});
 		}
 
@@ -71,7 +71,7 @@ namespace LuaCppB {
 			});
 		}
 	 protected:
-		LuaCppObjectBoxerRegistry &registry;
+		LuaCppRuntime &runtime;
 	};
 }
 

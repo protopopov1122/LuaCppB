@@ -18,6 +18,10 @@ namespace LuaCppB {
 		return *this->registry;
 	}
 
+	LuaCppObjectBoxerRegistry &LuaState::getObjectBoxerRegistry() {
+		return *this->registry;
+	}
+
 	LuaReferenceHandle LuaState::operator[](const std::string &name) {
 		return LuaReferenceHandle(this->state, std::make_unique<LuaGlobalVariable>(*this, name));
 	}

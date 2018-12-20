@@ -39,7 +39,7 @@ TEST_CASE("Object binding") {
   const std::string &CODE = "result = { arith:add(50), arith:sub(100) }";
   LuaEnvironment env;
   Arith arith(10);
-  LuaCppObject aObj(arith, env.getClassRegistry());
+  LuaCppObject aObj(arith, env);
   aObj.bind("add", &Arith::add);
   aObj.bind("sub", &Arith::sub);
   env["arith"] = aObj;
@@ -57,7 +57,7 @@ TEST_CASE("Class manual binding") {
                             "a2:set(50)\n"
                             "result = { x, a2:sub(20) }";
   LuaEnvironment env;
-  LuaCppClass<Arith> arith("Arith", env.getClassRegistry());
+  LuaCppClass<Arith> arith("Arith", env);
   arith.bind("add", &Arith::add);
   arith.bind("sub", &Arith::sub);
   arith.bind("set", &Arith::set);
@@ -74,7 +74,7 @@ TEST_CASE("Class manual binding") {
 
 TEST_CASE("Object opaque binding") {
   LuaEnvironment env;
-  LuaCppClass<Arith> arithCl("Arith", env.getClassRegistry());
+  LuaCppClass<Arith> arithCl("Arith", env);
   arithCl.bind("add", &Arith::add);
   arithCl.bind("sub", &Arith::sub);
   arithCl.bind("set", &Arith::set);

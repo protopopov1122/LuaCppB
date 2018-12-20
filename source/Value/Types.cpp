@@ -107,7 +107,7 @@ namespace LuaCppB {
   LuaReferenceHandle LuaReferencedValue::convert<LuaReferenceHandle>() {
     LuaReferenceHandle handle;
     this->handle.get([&](lua_State *state) {
-      handle = LuaReferenceHandle(state, std::make_unique<LuaRegistryReference>(state, handle.getClassRegistry()));
+      handle = LuaReferenceHandle(state, std::make_unique<LuaRegistryReference>(state, handle.getRuntime()));
     });
     return handle;
   }

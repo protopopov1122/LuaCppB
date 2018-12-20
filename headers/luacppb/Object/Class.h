@@ -45,8 +45,8 @@ namespace LuaCppB {
   template <typename C>
   class LuaCppClass : public LuaData {
    public:
-    LuaCppClass(const std::string &className, LuaCppObjectBoxerRegistry &boxer)
-      : className(className), boxer(boxer) {}
+    LuaCppClass(const std::string &className, LuaCppRuntime &runtime)
+      : className(className), runtime(runtime) {}
 
     const std::string &getClassName() const {
       return this->className;
@@ -77,12 +77,12 @@ namespace LuaCppB {
 
     template <typename R, typename ... A>
     void bind(const std::string &key, R (C::*method)(A...)) {
-      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<C, R, A...>>(NativeMethodWrapper(method).get(), this->className, boxer);
+      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<C, R, A...>>(NativeMethodWrapper(method).get(), this->className, this->runtime);
     }
 
     template <typename R, typename ... A>
     void bind(const std::string &key, R (C::*method)(A...) const) {
-      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<C, R, A...>>(NativeMethodWrapper(method).get(), this->className, boxer);
+      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<C, R, A...>>(NativeMethodWrapper(method).get(), this->className, this->runtime);
     }
 
     template <typename ... A>
@@ -118,7 +118,7 @@ namespace LuaCppB {
     std::string className;
     std::map<std::string, std::shared_ptr<LuaData>> methods;
     std::map<std::string, std::shared_ptr<LuaData>> initializers;
-    LuaCppObjectBoxerRegistry &boxer;
+    LuaCppRuntime &runtime;
   };
 }
 

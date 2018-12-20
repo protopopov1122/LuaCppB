@@ -56,7 +56,7 @@ namespace LuaCppB {
 	template <std::size_t I, typename T, typename ... Ts>
 	struct NativeFunctionArgumentsTuple_Impl<I, T, Ts...> {
 		static std::tuple<T, Ts...> value(lua_State *state) {
-			return std::tuple_cat(std::make_tuple(NativeFunctionArgument<I, T>::get(state)), NativeFunctionArgumentsTuple_Impl<I + 1, Ts...>::value(state));
+			return std::tuple_cat(std::forward_as_tuple(NativeFunctionArgument<I, T>::get(state)), NativeFunctionArgumentsTuple_Impl<I + 1, Ts...>::value(state));
 		};
 	};
 	

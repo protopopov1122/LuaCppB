@@ -2,48 +2,14 @@
 #define LUACPPB_OBJECT_METHOD_H_
 
 #include "luacppb/Base.h"
+#include "luacppb/Object/Wrapper.h"
 #include "luacppb/Invoke/Native.h"
 #include "luacppb/Invoke/Method.h"
 #include "luacppb/Core/Stack.h"
 #include "luacppb/Core/Runtime.h"
-#include <memory>
-#include <variant>
 #include <optional>
 
 namespace LuaCppB {
-
-	template <typename C>
-	class LuaCppObjectWrapper {
-		using Raw = C *;
-		using Unique = std::unique_ptr<C>;
-		using Shared = std::shared_ptr<C>;
-	 public:
-	 	LuaCppObjectWrapper(Raw obj) : object(obj) {}
-		LuaCppObjectWrapper(C &obj) : object(&obj) {}
-	 	LuaCppObjectWrapper() {
-		  this->object = std::unique_ptr<C>(reinterpret_cast<C *>(::operator new(sizeof(C))));
-		}
-		LuaCppObjectWrapper(Unique obj) : object(std::move(obj)) {}
-		LuaCppObjectWrapper(Shared obj) : object(obj) {}
-		~LuaCppObjectWrapper() {
-			this->object = nullptr;
-		}
-
-		C *get() {
-			switch (this->object.index()) {
-				case 0:
-				  return std::get<Raw>(object);
-				case 1:
-					return std::get<Unique>(object).get();
-				case 2:
-					return std::get<Shared>(object).get();
-				default:
-					return nullptr;
-			}
-		}
-	 private:
-		std::variant<Raw, Unique, Shared> object;
-	};
 
 	template <typename C, typename R, typename ... A>
 	class LuaCppObjectMethodCall : public LuaData {

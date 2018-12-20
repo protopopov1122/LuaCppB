@@ -90,6 +90,16 @@ namespace LuaCppB {
 		void push(lua_State *) const override;
 
 		template <typename T>
+		T toPointer() const {
+			T res = nullptr;
+			handle.get([&](lua_State *state) {
+				const void *ptr = lua_topointer(state, -1);;
+				res = reinterpret_cast<T>(const_cast<void *>(ptr));
+			});
+			return res;
+		}
+
+		template <typename T>
 		operator T() {
 			return this->convert<T>();
 		}
@@ -110,6 +120,13 @@ namespace LuaCppB {
 	 	using LuaReferencedValue::LuaReferencedValue;
 		static LuaTable get(lua_State *, int = -1);
 		static LuaTable create(lua_State *);
+	};
+
+	class LuaUserData : public LuaReferencedValue {
+	 public:
+	 	using LuaReferencedValue::LuaReferencedValue;
+		static LuaUserData get(lua_State *, int = -1);
+		static LuaUserData create(lua_State *, std::size_t);
 	};
 }
 

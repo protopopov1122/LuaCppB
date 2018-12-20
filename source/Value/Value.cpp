@@ -35,6 +35,14 @@ namespace LuaCppB {
         assert(this->value.index() == 5);
         std::get<LuaTable>(this->value).push(state);
         break;
+      case LuaType::LightUserData:
+        assert(this->value.index() == 6);
+        lua_pushlightuserdata(state, std::get<void *>(this->value));
+        break;
+      case LuaType::UserData:
+        assert(this->value.index() == 7);
+        std::get<LuaUserData>(this->value).push(state);
+        break;
       default:
         break;
     } 
@@ -58,6 +66,10 @@ namespace LuaCppB {
       value = LuaValue::create<LuaCFunction_ptr>(stack.toCFunction(index));
     } else if (lua_istable(state, index)) {
       value = LuaValue(LuaTable(state, index));
+    } else if (lua_islightuserdata(state, index)) {
+      value = LuaValue(stack.toPointer<void *>(index));
+    } else if (lua_isuserdata(state, index)) {
+      value = LuaValue(LuaUserData(state, index));
     }
     return value;
   }

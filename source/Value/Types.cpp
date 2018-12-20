@@ -122,4 +122,15 @@ namespace LuaCppB {
     lua_pop(state, 1);
     return table;
   }
+
+  LuaUserData LuaUserData::get(lua_State *state, int index) {
+    return LuaUserData(state, index);
+  }
+
+  LuaUserData LuaUserData::create(lua_State *state, std::size_t sz) {
+    lua_newuserdata(state, sz);
+    LuaUserData data(state);
+    lua_pop(state, 1);
+    return data;
+  }
 }

@@ -2,7 +2,9 @@
 #define LUACPPB_VALUE_H_
 
 #include "luacppb/Base.h"
+#include "luacppb/Core/Error.h"
 #include "luacppb/Value/Types.h"
+#include "luacppb/Object/Wrapper.h"
 #include <memory>
 #include <variant>
 #include <type_traits>
@@ -20,6 +22,8 @@ namespace LuaCppB {
 		LuaValue(const LuaString &s) : type(LuaType::String), value(s) {}
 		LuaValue(LuaCFunction f) : type(LuaType::Function), value(f) {}
 		LuaValue(LuaTable t) : type(LuaType::Table), value(t) {}
+		LuaValue(void *ptr) : type(LuaType::LightUserData), value(ptr) {}
+		LuaValue(LuaUserData ud) : type(LuaType::UserData), value(ud) {}
 
 		LuaType getType() const noexcept;
 		void push(lua_State *state) const override;
@@ -94,6 +98,40 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
+		typename std::enable_if<std::is_same<T, LuaUserData>::value, T>::type get() const {
+			if (this->type == LuaType::UserData) {
+				assert(this->value.index() == 7);
+				return std::get<LuaUserData>(this->value);
+			} else {
+				return LuaUserData();
+			}
+		}
+
+		template <typename T>
+		typename std::enable_if<std::is_pointer<T>::value, T>::type get(T defaultValue = nullptr) const {
+			using V = typename std::remove_pointer<T>::type;
+			if (this->type == LuaType::UserData) {
+				assert(this->value.index() == 7);
+				LuaCppObjectWrapper<V> *ptr = std::get<LuaUserData>(this->value).toPointer<LuaCppObjectWrapper<V> *>();
+				return ptr->get();
+			} else {
+				return defaultValue;
+			}
+		}
+
+		template <typename T>
+		typename std::enable_if<std::is_reference<T>::value, T>::type get() const {
+			using V = typename std::remove_reference<T>::type;
+			if (this->type == LuaType::UserData) {
+				assert(this->value.index() == 7);
+				LuaCppObjectWrapper<V> *ptr = std::get<LuaUserData>(this->value).toPointer<LuaCppObjectWrapper<V> *>();
+				return *ptr->get();
+			} else {
+				throw LuaCppBError("Type error");
+			}
+		}
+
+		template <typename T>
 		operator T () {
 			return this->get<T>();
 		}
@@ -139,7 +177,7 @@ namespace LuaCppB {
 		}
 	 private:
 		LuaType type;
-	 	std::variant<LuaInteger, LuaNumber, LuaBoolean, LuaString, LuaCFunction, LuaTable> value;
+	 	std::variant<LuaInteger, LuaNumber, LuaBoolean, LuaString, LuaCFunction, LuaTable, void *, LuaUserData> value;
 	};
 }
 

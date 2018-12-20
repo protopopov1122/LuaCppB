@@ -17,7 +17,7 @@ class Factor {
  public:
   Factor(int factor) : factor(factor) {}
 
-  float calc(float x, float y) {
+  float calc(float x, float y) const {
     return (x + y) * factor;
   }
 
@@ -32,18 +32,40 @@ class Factor {
   int factor;
 };
 
+float test_factor(Factor *factor, float n) {
+  return factor->calc(n, n);
+}
+
+float test_factor_ref(const Factor &factor, float n) {
+  return factor.calc(n, n);
+}
+
 TEST_CASE("Native function call") {
-  const std::string &CODE = "results = { quad(16), invert(false) }";
   LuaEnvironment env;
-  env["quad"] = test_quad_fn;
-  env["invert"] = NativeFunctionCall(test_invert, env);
-  REQUIRE(env["quad"].exists());
-  REQUIRE(env["quad"].getType() == LuaType::Function);
-  REQUIRE(env["invert"].exists());
-  REQUIRE(env["invert"].getType() == LuaType::Function);
-  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  REQUIRE(env["results"][1].get<float>() == 256.0f);
-  REQUIRE(env["results"][2].get<bool>());
+  SECTION("Function call") {
+    const std::string &CODE = "results = { quad(16), invert(false) }";
+    env["quad"] = test_quad_fn;
+    env["invert"] = NativeFunctionCall(test_invert, env);
+    REQUIRE(env["quad"].exists());
+    REQUIRE(env["quad"].getType() == LuaType::Function);
+    REQUIRE(env["invert"].exists());
+    REQUIRE(env["invert"].getType() == LuaType::Function);
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["results"][1].get<float>() == 256.0f);
+    REQUIRE(env["results"][2].get<bool>());
+  }
+  SECTION("Passing C++ object as parameters") {
+    LuaCppClass<Factor> factorCl("Factor", env);
+    env.getClassRegistry().bind(factorCl);
+    Factor factor(10);
+    env["factor"] = factor;
+    env["callFactor"] = test_factor;
+    env["callFactorRef"] = test_factor_ref;
+    const std::string &CODE = "results = { callFactor(factor, 10), callFactorRef(factor, 20) }";
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["results"][1].get<float>() == 200.0f);
+    REQUIRE(env["results"][2].get<float>() == 400.0f);
+  }
 }
 
 TEST_CASE("Native method call") {

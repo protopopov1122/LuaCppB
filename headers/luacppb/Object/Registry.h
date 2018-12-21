@@ -45,8 +45,7 @@ namespace LuaCppB {
 
     template <typename T>
     void bind(LuaCppClass<T> &cl) {
-      cl.push(this->state);
-      lua_pop(this->state, 1);
+      cl.bind(this->state);
       this->addBoxer<T>(std::make_shared<LuaCppClassObjectBoxer<T>>(cl.getClassName()));
     }
   };

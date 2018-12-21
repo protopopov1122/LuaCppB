@@ -75,6 +75,11 @@ namespace LuaCppB {
       }
     }
 
+    void bind(lua_State *state) {
+      this->push(state);
+      lua_pop(state, 1);
+    }
+
     template <typename R, typename ... A>
     void bind(const std::string &key, R (C::*method)(A...)) {
       this->methods[key] = std::make_shared<LuaCppObjectMethodCall<C, R, A...>>(NativeMethodWrapper(method).get(), this->className, this->runtime);

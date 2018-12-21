@@ -10,7 +10,6 @@
 #include <type_traits>
 #include <optional>
 #include <cassert>
-#include <iostream>
 
 namespace LuaCppB {
 
@@ -126,9 +125,13 @@ namespace LuaCppB {
 			if (this->type == LuaType::UserData) {
 				assert(this->value.index() == 7);
 				LuaCppObjectWrapper<V> *ptr = std::get<LuaUserData>(this->value).toPointer<LuaCppObjectWrapper<V> *>();
-				return *ptr->get();
+				if (ptr != nullptr) {
+					return *ptr->get();
+				} else {
+					throw LuaCppBError("Null pointer can't be dereferenced", LuaCppBErrorCode::NullPointer);
+				}
 			} else {
-				throw LuaCppBError("Type error");
+				throw LuaCppBError("Type casting failed", LuaCppBErrorCode::TypeCast);
 			}
 		}
 

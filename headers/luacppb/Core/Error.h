@@ -12,7 +12,9 @@ namespace LuaCppB {
     InvalidState,
     StateMismatch,
     StackOverflow,
-    StackSizeMismatch
+    StackSizeMismatch,
+    NullPointer,
+    TypeCast
   };
 
   class LuaCppBError : std::exception {

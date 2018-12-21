@@ -135,5 +135,6 @@ TEST_CASE("Lua function call") {
     Factor *resFactor2 = env["test2"](factor);
     REQUIRE(&resFactor == &factor);
     REQUIRE(resFactor2 == &factor);
+    REQUIRE_THROWS(env["test2"](factor).get<LuaEnvironment *>() != nullptr);
   }
 }

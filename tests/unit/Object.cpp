@@ -94,11 +94,14 @@ TEST_CASE("Object opaque binding") {
   env.getClassRegistry().bind(arithCl);
   SECTION("Assigning object") {
     SECTION("Assigning object by reference") {
-      const std::string &CODE = "result = { arith:add(50), arith:sub(100) }";
+      const std::string &CODE = "result = { arith:add(50), arithRef:sub(100) }";
       Arith arith(10);
       env["arith"] = arith;
+      env["arithRef"] = std::ref(arith);
       REQUIRE(env["arith"].exists());
+      REQUIRE(env["arithRef"].exists());
       REQUIRE(env["arith"].getType() == LuaType::UserData);
+      REQUIRE(env["arithRef"].getType() == LuaType::UserData);
       REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
       REQUIRE(env["result"][1].get<int>() == 60);
       REQUIRE(env["result"][2].get<int>() == -90);

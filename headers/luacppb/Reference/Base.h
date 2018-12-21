@@ -58,7 +58,7 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
-		typename std::enable_if<LuaValue::is_constructible<T>()>::type set(T value) {
+		typename std::enable_if<LuaValue::is_constructible<T>()>::type set(T &value) {
 			LuaValue val = LuaValue::create<T>(value);
 			this->setValue([&val](lua_State *state) {
 				val.push(state);

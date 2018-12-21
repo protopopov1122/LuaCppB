@@ -5,8 +5,15 @@
 #include "luacppb/Value/Value.h"
 #include "luacppb/Core/Runtime.h"
 #include <type_traits>
+#include <functional>
 
 namespace LuaCppB {
+
+  template <typename T>
+  struct LuaNativeValueSpecialCase {
+    static constexpr bool value = is_smart_pointer<T>::value ||
+                                  is_instantiation<std::reference_wrapper, T>::value;
+  };
 
   class LuaNativeValue {
    public:
@@ -21,7 +28,8 @@ namespace LuaCppB {
     }
 
     template <typename T>
-    static typename std::enable_if<!LuaValue::is_constructible<T>() && !is_smart_pointer<T>::value>::type push(lua_State *state, LuaCppRuntime &runtime, T &value) {
+    static typename std::enable_if<!LuaValue::is_constructible<T>() && !LuaNativeValueSpecialCase<T>::value>::type
+      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
       LuaCppObjectBoxerRegistry &boxer = runtime.getObjectBoxerRegistry();
       if constexpr (std::is_pointer<T>()) {
         using P = typename std::remove_pointer<T>::type;
@@ -36,7 +44,7 @@ namespace LuaCppB {
     }
     
     template <typename T>
-    static typename std::enable_if<!LuaValue::is_constructible<T>() && is_instantiation<std::unique_ptr, T>::value>::type
+    static typename std::enable_if<is_instantiation<std::unique_ptr, T>::value>::type
       push(lua_State *state, LuaCppRuntime &runtime, T &value) {
       using V = typename T::element_type;
       LuaCppObjectBoxerRegistry &boxer = runtime.getObjectBoxerRegistry();
@@ -46,13 +54,19 @@ namespace LuaCppB {
     }
     
     template <typename T>
-    static typename std::enable_if<!LuaValue::is_constructible<T>() && is_instantiation<std::shared_ptr, T>::value>::type
+    static typename std::enable_if<is_instantiation<std::shared_ptr, T>::value>::type
       push(lua_State *state, LuaCppRuntime &runtime, T &value) {
       using V = typename T::element_type;
       LuaCppObjectBoxerRegistry &boxer = runtime.getObjectBoxerRegistry();
       if (boxer.canWrap<V>()) {
         boxer.wrap(state, value);
       }
+    }
+
+    template <typename T>
+    static typename std::enable_if<is_instantiation<std::reference_wrapper, T>::value>::type
+      push(lua_State *state, LuaCppRuntime &runtime, T value) {
+      LuaNativeValue::push<typename T::type>(state, runtime, value.get());
     }
   };
 }

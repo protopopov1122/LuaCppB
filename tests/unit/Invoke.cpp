@@ -119,7 +119,7 @@ TEST_CASE("Lua function call") {
     const std::string &CODE = "function test(factor)\n"
                               "    return factor:get()\n"
                               "end\n"
-                              "function test2(factor)\n"
+                              "function test2(factor, n)\n"
                               "    return factor\n"
                               "end\n";
     Factor factor(10);
@@ -131,10 +131,10 @@ TEST_CASE("Lua function call") {
     REQUIRE(env["test"](&factor).get<float>() == 10.0f);
     REQUIRE(env["test"](std::make_unique<Factor>(10)).get<float>() == 10.0f);
     REQUIRE(env["test"](std::make_shared<Factor>(10)).get<float>() == 10.0f);
-    Factor &resFactor = env["test2"](factor).get<Factor &>();
-    Factor *resFactor2 = env["test2"](factor);
+    Factor &resFactor = env["test2"](factor, factor).get<Factor &>();
+    Factor *resFactor2 = env["test2"](factor, 10);
     REQUIRE(&resFactor == &factor);
     REQUIRE(resFactor2 == &factor);
-    REQUIRE_THROWS(env["test2"](factor).get<LuaEnvironment *>() != nullptr);
+    REQUIRE_THROWS(env["test2"](factor, 10).get<LuaEnvironment *>() != nullptr);
   }
 }

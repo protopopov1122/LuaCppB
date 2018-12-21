@@ -5,6 +5,7 @@
 #include "luacppb/Invoke/Native.h"
 #include "luacppb/Invoke/Lua.h"
 #include <memory>
+#include <utility>
 #include <type_traits>
 
 namespace LuaCppB {
@@ -73,10 +74,19 @@ namespace LuaCppB {
 		}
 
 		template <typename ... A>
-		LuaFunctionCallResult operator()(A... args) {
+		LuaFunctionCallResult operator()(A &... args) {
 			std::vector<LuaValue> results;
 			this->ref->putOnTop([&](lua_State *state) {
-				LuaFunctionCall::call<A...>(state, -1, results, args...);
+				LuaFunctionCall::call<A...>(state, -1, this->getRuntime(), results, args...);
+			});
+			return LuaFunctionCallResult(results);
+		}
+
+		template <typename ... A>
+		LuaFunctionCallResult operator()(A &&... args) {
+			std::vector<LuaValue> results;
+			this->ref->putOnTop([&](lua_State *state) {
+				LuaFunctionCall::call<A...>(state, -1, this->getRuntime(), results, args...);
 			});
 			return LuaFunctionCallResult(results);
 		}

@@ -10,6 +10,7 @@
 #include <type_traits>
 #include <optional>
 #include <cassert>
+#include <iostream>
 
 namespace LuaCppB {
 
@@ -108,7 +109,7 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
-		typename std::enable_if<std::is_pointer<T>::value, T>::type get(T defaultValue = nullptr) const {
+		typename std::enable_if<std::is_pointer<T>::value && std::is_class<typename std::remove_pointer<T>::type>::value, T>::type get(T defaultValue = nullptr) const {
 			using V = typename std::remove_pointer<T>::type;
 			if (this->type == LuaType::UserData) {
 				assert(this->value.index() == 7);
@@ -120,7 +121,7 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
-		typename std::enable_if<std::is_reference<T>::value, T>::type get() const {
+		typename std::enable_if<std::is_reference<T>::value && std::is_class<typename std::remove_reference<T>::type>::value, T>::type get() const {
 			using V = typename std::remove_reference<T>::type;
 			if (this->type == LuaType::UserData) {
 				assert(this->value.index() == 7);

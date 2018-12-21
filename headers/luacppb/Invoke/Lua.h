@@ -2,8 +2,9 @@
 #define LUACPPB_INVOKE_LUA_H_
 
 #include "luacppb/Base.h"
-#include "luacppb/Value/Value.h"
+#include "luacppb/Value/Native.h"
 #include "luacppb/Reference/Registry.h"
+#include "luacppb/Core/Runtime.h"
 #include <type_traits>
 #include <tuple>
 #include <vector>
@@ -16,31 +17,31 @@ namespace LuaCppB {
 
   template <>
   struct LuaFunctionArgument_Impl<> {
-    static void push(lua_State *state) {}
+    static void push(lua_State *state, LuaCppRuntime &runtime) {}
   };
 
   template <typename B, typename ... A>
   struct LuaFunctionArgument_Impl<B, A...> {
-    static void push(lua_State *state, B arg, A... args) {
-      LuaValue::create<B>(arg).push(state);
-      LuaFunctionArgument_Impl<A...>::push(state, args...);
+    static void push(lua_State *state, LuaCppRuntime &runtime, B &arg, A &... args) {
+      LuaNativeValue::push<B>(state, runtime, arg);
+      LuaFunctionArgument_Impl<A...>::push(state, runtime, args...);
     }
   };
 
   template <typename ... A>
   struct LuaFunctionArgument {
-    static void push(lua_State *state, A... args) {
-      LuaFunctionArgument_Impl<A...>::push(state, args...);
+    static void push(lua_State *state, LuaCppRuntime &runtime, A &... args) {
+      LuaFunctionArgument_Impl<A...>::push(state, runtime, args...);
     }
   };
 
   class LuaFunctionCall {
    public:
     template <typename ... A>
-    static void call(lua_State *state, int index, std::vector<LuaValue> &result, A... args) {
+    static void call(lua_State *state, int index, LuaCppRuntime &runtime, std::vector<LuaValue> &result, A &... args) {
       int top = lua_gettop(state);
       lua_pushvalue(state, index);
-      LuaFunctionArgument<A...>::push(state, args...);
+      LuaFunctionArgument<A...>::push(state, runtime, args...);
       lua_pcall(state, sizeof...(args), LUA_MULTRET, 0);
       int results = lua_gettop(state) - top;
       while (results-- > 0) {
@@ -110,8 +111,8 @@ namespace LuaCppB {
     operator T() {
       return this->get<T>();
     }
-   private:
 
+   private:
     std::vector<LuaValue> result;
   };
 }

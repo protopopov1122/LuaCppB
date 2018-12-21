@@ -106,11 +106,34 @@ TEST_CASE("Invocable object call") {
 }
 
 TEST_CASE("Lua function call") {
-  const std::string &CODE = "function add1000(x)\n"
-                            "    return x + 1000\n"
-                            "end\n";
   LuaEnvironment env;
-  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  float res = env["add1000"](3);
-  REQUIRE(res == 1003);
+  SECTION("Plain call") {
+    const std::string &CODE = "function add1000(x)\n"
+                              "    return x + 1000\n"
+                              "end\n";
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    float res = env["add1000"](3);
+    REQUIRE(res == 1003);
+  }
+  SECTION("Passing and receiving an object") {
+    const std::string &CODE = "function test(factor)\n"
+                              "    return factor:get()\n"
+                              "end\n"
+                              "function test2(factor)\n"
+                              "    return factor\n"
+                              "end\n";
+    Factor factor(10);
+    LuaCppClass<Factor> factorCl("Factor", env);
+    factorCl.bind("get", &Factor::get);
+    env.getClassRegistry().bind(factorCl);
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["test"](factor).get<float>() == 10.0f);
+    REQUIRE(env["test"](&factor).get<float>() == 10.0f);
+    REQUIRE(env["test"](std::make_unique<Factor>(10)).get<float>() == 10.0f);
+    REQUIRE(env["test"](std::make_shared<Factor>(10)).get<float>() == 10.0f);
+    Factor &resFactor = env["test2"](factor).get<Factor &>();
+    Factor *resFactor2 = env["test2"](factor);
+    REQUIRE(&resFactor == &factor);
+    REQUIRE(resFactor2 == &factor);
+  }
 }

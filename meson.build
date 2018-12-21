@@ -17,6 +17,7 @@ lua = dependency('lua')
 lcppbunit = executable('lcppbunit',
   'tests/unit/main.cpp', 'tests/unit/Core.cpp', 'tests/unit/Reference.cpp',
   'tests/unit/Value.cpp', 'tests/unit/Invoke.cpp', 'tests/unit/Object.cpp',
+  'tests/unit/Container.cpp',
   include_directories: headers, dependencies : lua, link_with : LuaCppBLib)
 
 test('Unit tests', lcppbunit)

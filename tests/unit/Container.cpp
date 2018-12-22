@@ -36,4 +36,25 @@ TEST_CASE("Vector") {
     env["vec"] = std::make_shared<std::vector<int>>(vec);
     test_basic_operations(env);
   }
+  SECTION("Assigning values") {
+    SECTION("Primitive") {
+      const std::string &CODE = "vec[2] = 100\n";
+      LuaEnvironment env;
+      std::vector<int> vec = {1, 2, 3, 4};
+      env["vec"] = vec;
+      REQUIRE(env["vec"].exists());
+      REQUIRE(env["vec"].getType() == LuaType::UserData);
+      REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+      REQUIRE(vec[1] == 100);
+    }
+    SECTION("Unsupported") {
+      const std::string &CODE = "vec[2] = 100\n";
+      LuaEnvironment env;
+      std::vector<LuaEnvironment> vec;
+      env["vec"] = vec;
+      REQUIRE(env["vec"].exists());
+      REQUIRE(env["vec"].getType() == LuaType::UserData);
+      REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    }
+  }
 }

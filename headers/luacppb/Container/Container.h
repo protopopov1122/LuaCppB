@@ -6,12 +6,35 @@
 #include "luacppb/Core/Stack.h"
 #include <vector>
 #include <typeinfo>
+#include <type_traits>
 
 namespace LuaCppB {
 
   template <typename T>
   struct is_container {
     static constexpr bool value = is_instantiation<std::vector, T>::value;
+  };
+
+  template <typename T, typename A, typename E = void>
+  struct cpp_vector_newindex {
+    static int newindex(lua_State *state) {
+      return 0;
+    }
+  };
+
+  template <typename T, typename A>
+  struct cpp_vector_newindex<T, A, typename std::enable_if<std::is_same<decltype(std::declval<LuaValue>().get<T>()), T>::value>::type> {
+    static int newindex(lua_State *state) {
+      LuaStack stack(state);
+      using V = std::vector<T, A>;
+      using Handle = LuaCppObjectWrapper<V>;
+      Handle *handle = stack.toPointer<Handle *>(1);
+      std::size_t index = stack.toInteger(2) - 1;
+      T value = stack.get(3).value_or(LuaValue()).get<T>();
+      V &vec = *handle->get();
+      vec[index] = value;
+      return 0;
+    }
   };
 
   class LuaCppContainer {
@@ -48,6 +71,8 @@ namespace LuaCppB {
         lua_pushlightuserdata(state, reinterpret_cast<void *>(pusher));
         lua_pushcclosure(state, &LuaCppContainer::vector_index<T, A>, 2);
         lua_setfield(state, -2, "__index");
+        lua_pushcclosure(state, &cpp_vector_newindex<T, A>::newindex, 0);
+        lua_setfield(state, -2, "__newindex");
         lua_pushcclosure(state, &LuaCppContainer::vector_length<T, A>, 0);
         lua_setfield(state, -2, "__len");
         lua_pushcclosure(state, &LuaCppContainer::vector_gc<T, A>, 0);

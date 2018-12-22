@@ -7,6 +7,7 @@
 #include <vector>
 #include <typeinfo>
 #include <type_traits>
+#include <iostream>
 
 namespace LuaCppB {
 
@@ -48,6 +49,14 @@ namespace LuaCppB {
     }
 
     template <typename T, typename A>
+    static void push(lua_State *state, LuaCppRuntime &runtime, const std::vector<T, A> &vec, void (*pusher)(lua_State *state, LuaCppRuntime &, T &)) {
+      using V = const std::vector<T, A>;
+      LuaCppObjectWrapper<V> *handle = reinterpret_cast<LuaCppObjectWrapper<V> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<V>)));
+      new(handle) LuaCppObjectWrapper<V>(vec);
+      LuaCppContainer::set_vector_meta<T, A, const std::vector<T, A>>(state, runtime, pusher);
+    }
+
+    template <typename T, typename A>
     static void push(lua_State *state, LuaCppRuntime &runtime, std::unique_ptr<std::vector<T, A>> &vec, void (*pusher)(lua_State *state, LuaCppRuntime &, T &)) {
       using V = std::vector<T, A>;
       LuaCppObjectWrapper<V> *handle = reinterpret_cast<LuaCppObjectWrapper<V> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<V>)));
@@ -63,16 +72,21 @@ namespace LuaCppB {
       LuaCppContainer::set_vector_meta<T, A>(state, runtime, pusher);
     }
    private:
-    template <typename T, typename A>
+    template <typename T, typename A, typename V = std::vector<T, A>>
     static void set_vector_meta(lua_State *state, LuaCppRuntime &runtime, void (*pusher)(lua_State *state, LuaCppRuntime &, T &)) {
-      using V = std::vector<T, A>;
-      if (luaL_newmetatable(state, typeid(V).name())) {
+      std::string typeName = typeid(V).name();
+      if constexpr (std::is_const<V>::value) {
+        typeName = typeName + "__const";
+      }
+      if (luaL_newmetatable(state, typeName.c_str())) {
         lua_pushlightuserdata(state, reinterpret_cast<void *>(&runtime));
         lua_pushlightuserdata(state, reinterpret_cast<void *>(pusher));
         lua_pushcclosure(state, &LuaCppContainer::vector_index<T, A>, 2);
         lua_setfield(state, -2, "__index");
-        lua_pushcclosure(state, &cpp_vector_newindex<T, A>::newindex, 0);
-        lua_setfield(state, -2, "__newindex");
+        if constexpr (!std::is_const<V>::value) {
+          lua_pushcclosure(state, &cpp_vector_newindex<T, A>::newindex, 0);
+          lua_setfield(state, -2, "__newindex");
+        }
         lua_pushcclosure(state, &LuaCppContainer::vector_length<T, A>, 0);
         lua_setfield(state, -2, "__len");
         lua_pushcclosure(state, &LuaCppContainer::vector_gc<T, A>, 0);

@@ -38,14 +38,19 @@ TEST_CASE("Vector") {
   }
   SECTION("Assigning values") {
     SECTION("Primitive") {
-      const std::string &CODE = "vec[2] = 100\n";
+      const std::string &CODE = "vec[2] = cvec[2] * 50";
+      const std::string &CODE2 = "cvec[2] = 100";
       LuaEnvironment env;
       std::vector<int> vec = {1, 2, 3, 4};
+      const std::vector<int> vecC(vec);
       env["vec"] = vec;
+      env["cvec"] = vecC;
       REQUIRE(env["vec"].exists());
       REQUIRE(env["vec"].getType() == LuaType::UserData);
       REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+      REQUIRE(env.execute(CODE2) != LuaStatusCode::Ok);
       REQUIRE(vec[1] == 100);
+      REQUIRE(vecC[1] == 2);
     }
     SECTION("Unsupported") {
       const std::string &CODE = "vec[2] = 100\n";

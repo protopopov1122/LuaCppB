@@ -15,7 +15,8 @@ namespace LuaCppB {
   struct LuaNativeValueSpecialCase {
     static constexpr bool value = is_smart_pointer<T>::value ||
                                   is_instantiation<std::reference_wrapper, T>::value ||
-                                  is_instantiation<std::vector, T>::value;
+                                  is_instantiation<std::vector, T>::value ||
+                                  (std::is_const<T>::value && is_instantiation<std::vector, typename std::remove_const<T>::type>::value);
   };
 
   class LuaNativeValue {
@@ -50,6 +51,14 @@ namespace LuaCppB {
 
     template <typename T>
     static typename std::enable_if<is_instantiation<std::vector, T>::value>::type
+      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
+      using E = typename T::value_type;
+      void (*pusher)(lua_State *, LuaCppRuntime &, E &) = &LuaNativeValue::push<E>;
+      LuaCppContainer::push(state, runtime, value, pusher);
+    }
+
+    template <typename T>
+    static typename std::enable_if<std::is_const<T>::value && is_instantiation<std::vector, typename std::remove_const<T>::type>::value>::type
       push(lua_State *state, LuaCppRuntime &runtime, T &value) {
       using E = typename T::value_type;
       void (*pusher)(lua_State *, LuaCppRuntime &, E &) = &LuaNativeValue::push<E>;

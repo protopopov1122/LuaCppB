@@ -59,13 +59,13 @@ TEST_CASE("Object binding") {
 }
 
 TEST_CASE("Class manual binding") {
-  const std::string &CODE = "a = Arith.build(55)\n"
+  const std::string &CODE = "a = Arith.build(55)"
                             "x = a:add(5)\n"
                             "a2 = Arith.new()\n"
                             "a2:set(50)\n"
                             "result = { x, a2:sub(20) }";
   LuaEnvironment env;
-  LuaCppClass<Arith> arith("Arith", env);
+  LuaCppClass<Arith> arith(env);
   arith.bind("add", &Arith::add);
   arith.bind("sub", &Arith::sub);
   arith.bind("set", &Arith::set);

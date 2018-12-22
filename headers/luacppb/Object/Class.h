@@ -7,6 +7,7 @@
 #include "luacppb/Core/Stack.h"
 #include <map>
 #include <type_traits>
+#include <typeinfo>
 
 namespace LuaCppB {
 
@@ -20,6 +21,9 @@ namespace LuaCppB {
    public:
     LuaCppClass(const std::string &className, LuaCppRuntime &runtime)
       : className(className), runtime(runtime) {}
+    
+    LuaCppClass(LuaCppRuntime &runtime)
+      : className(typeid(C).name()), runtime(runtime) {}
 
     const std::string &getClassName() const {
       return this->className;

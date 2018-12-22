@@ -21,10 +21,6 @@ class Arith {
     this->n = n;
   }
 
-  static void build(Arith *arith, int n) {
-    new(arith) Arith(n);
-  }
-
   static Arith &getGlobal() {
     return Arith::global;
   }
@@ -73,11 +69,12 @@ TEST_CASE("Class manual binding") {
   arith.bind("add", &Arith::add);
   arith.bind("sub", &Arith::sub);
   arith.bind("set", &Arith::set);
-  arith.initializer("build", &Arith::build);
+  arith.bind("build", &LuaCppConstructor<Arith, int>);
   env["Arith"] = arith;
+  env.getClassRegistry().bind(arith);
   REQUIRE(env["Arith"].exists());
   REQUIRE(env["Arith"].getType() == LuaType::Table);
-  env.execute(CODE);
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(env["a"].exists());
   REQUIRE(env["a"].getType() == LuaType::UserData);
   REQUIRE(env["result"][1].get<int>() == 60);
@@ -90,7 +87,6 @@ TEST_CASE("Object opaque binding") {
   arithCl.bind("add", &Arith::add);
   arithCl.bind("sub", &Arith::sub);
   arithCl.bind("set", &Arith::set);
-  arithCl.initializer("build", &Arith::build);
   env.getClassRegistry().bind(arithCl);
   SECTION("Assigning object") {
     SECTION("Assigning object by reference") {

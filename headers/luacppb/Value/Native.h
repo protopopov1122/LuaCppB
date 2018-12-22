@@ -37,10 +37,14 @@ namespace LuaCppB {
         using P = typename std::remove_pointer<T>::type;
         if (boxer.canWrap<P>()) {
           boxer.wrap(state, value);
+        } else {
+          lua_pushnil(state);
         }
       } else {
         if (boxer.canWrap<T>()) {
           boxer.wrap(state, &value);
+        } else {
+          lua_pushnil(state);
         }
       }
     }
@@ -52,6 +56,8 @@ namespace LuaCppB {
       LuaCppObjectBoxerRegistry &boxer = runtime.getObjectBoxerRegistry();
       if (boxer.canWrap<V>()) {
         boxer.wrap(state, std::move(value));
+      } else {
+        lua_pushnil(state);
       }
     }
     
@@ -62,6 +68,8 @@ namespace LuaCppB {
       LuaCppObjectBoxerRegistry &boxer = runtime.getObjectBoxerRegistry();
       if (boxer.canWrap<V>()) {
         boxer.wrap(state, value);
+      } else {
+        lua_pushnil(state);
       }
     }
 

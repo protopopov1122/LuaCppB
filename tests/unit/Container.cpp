@@ -105,3 +105,17 @@ TEST_CASE("Tuple") {
     REQUIRE(env["sum"](tuple).get<int>() == 10);
   }
 }
+
+TEST_CASE("Map") {
+  const std::string &CODE = "map[3] = map[1] + map[2]\n"
+                            "sz = #map";
+  LuaEnvironment env;
+  std::map<int, int> map = {
+    { 1, 10 },
+    { 2, 20 }
+  };
+  env["map"] = map;
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(map[3] == 30);
+  REQUIRE(env["sz"].get<int>() == 3);
+}

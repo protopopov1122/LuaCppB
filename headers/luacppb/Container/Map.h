@@ -10,33 +10,33 @@ namespace LuaCppB {
   template <class P>
   class LuaCppMap {
    public:
-    template <typename K, typename V>
-    static void push(lua_State *state, LuaCppRuntime &runtime, std::map<K, V> &map) {
-      using M = std::map<K, V>;
+    template <typename M>
+    static typename std::enable_if<is_instantiation<std::map, M>::value>::type push(lua_State *state, LuaCppRuntime &runtime, M &map) {
       LuaCppObjectWrapper<M> *handle = reinterpret_cast<LuaCppObjectWrapper<M> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<M>)));
       new(handle) LuaCppObjectWrapper<M>(map);
-      LuaCppMap<P>::set_map_meta<K, V>(state, runtime);
+      LuaCppMap<P>::set_map_meta<M>(state, runtime);
     }
    private:
-    template <typename K, typename V, typename M = std::map<K, V>>
+    template <typename M>
     static void set_map_meta(lua_State *state, LuaCppRuntime &runtime) {
       std::string typeName = typeid(M).name();
       if (luaL_newmetatable(state, typeName.c_str())) {
         lua_pushlightuserdata(state, reinterpret_cast<void *>(&runtime));
-        lua_pushcclosure(state, &LuaCppMap<P>::map_get<K, V, M>, 1);
+        lua_pushcclosure(state, &LuaCppMap<P>::map_get<M>, 1);
         lua_setfield(state, -2, "__index");
-        lua_pushcclosure(state, &LuaCppMap<P>::map_put<K, V, M>, 0);
+        lua_pushcclosure(state, &LuaCppMap<P>::map_put<M>, 0);
         lua_setfield(state, -2, "__newindex");
-        lua_pushcclosure(state, &LuaCppMap<P>::map_size<K, V, M>, 0);
+        lua_pushcclosure(state, &LuaCppMap<P>::map_size<M>, 0);
         lua_setfield(state, -2, "__len");
-        lua_pushcclosure(state, &LuaCppMap<P>::map_gc<K, V, M>, 0);
+        lua_pushcclosure(state, &LuaCppMap<P>::map_gc<M>, 0);
         lua_setfield(state, -2, "__gc");
       }
       lua_setmetatable(state, -2);
     }
 
-    template <typename K, typename V, typename M>
+    template <typename M>
     static int map_get(lua_State *state) {
+      using K = typename M::key_type;
       LuaStack stack(state);
       using Handle = LuaCppObjectWrapper<M>;
       Handle *handle = stack.toPointer<Handle *>(1);
@@ -51,8 +51,10 @@ namespace LuaCppB {
       return 1;
     }
 
-    template <typename K, typename V, typename M>
+    template <typename M>
     static int map_put(lua_State *state) {
+      using K = typename M::key_type;
+      using V = typename M::mapped_type;
       LuaStack stack(state);
       using Handle = LuaCppObjectWrapper<M>;
       Handle *handle = stack.toPointer<Handle *>(1);
@@ -65,7 +67,7 @@ namespace LuaCppB {
       return 0;
     }
 
-    template <typename K, typename V, typename M>
+    template <typename M>
     static int map_size(lua_State *state) {
       LuaStack stack(state);
       using Handle = LuaCppObjectWrapper<M>;
@@ -79,7 +81,7 @@ namespace LuaCppB {
       return 1;
     }
 
-    template <typename K, typename V, typename M>
+    template <typename M>
     static int map_gc(lua_State *state) {
       LuaStack stack(state);
       using Handle = LuaCppObjectWrapper<M>;

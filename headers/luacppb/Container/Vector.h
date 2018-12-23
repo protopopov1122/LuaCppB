@@ -21,8 +21,8 @@ namespace LuaCppB {
   template <typename T, typename A>
   struct cpp_vector_newindex<T, A, typename std::enable_if<std::is_same<decltype(std::declval<LuaValue>().get<T>()), T>::value>::type> {
     static int newindex(lua_State *state) {
-      LuaStack stack(state);
       using V = std::vector<T, A>;
+      LuaStack stack(state);
       using Handle = LuaCppObjectWrapper<V>;
       Handle *handle = stack.toPointer<Handle *>(1);
       std::size_t index = stack.toInteger(2) - 1;
@@ -33,82 +33,82 @@ namespace LuaCppB {
     }
   };
 
+  template <class P>
   class LuaCppVector {
    public:
-    template <typename T, typename A>
-    static void push(lua_State *state, LuaCppRuntime &runtime, std::vector<T, A> &vec, void (*pusher)(lua_State *state, LuaCppRuntime &, T &)) {
-      using V = std::vector<T, A>;
+    template <typename V>
+    static typename std::enable_if<is_instantiation<std::vector, V>::value>::type
+      push(lua_State *state, LuaCppRuntime &runtime, V &vec) {
       LuaCppObjectWrapper<V> *handle = reinterpret_cast<LuaCppObjectWrapper<V> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<V>)));
       new(handle) LuaCppObjectWrapper<V>(vec);
-      LuaCppVector::set_vector_meta<T, A>(state, runtime, pusher);
+      LuaCppVector<P>::set_vector_meta<V>(state, runtime);
     }
 
-    template <typename T, typename A>
-    static void push(lua_State *state, LuaCppRuntime &runtime, const std::vector<T, A> &vec, void (*pusher)(lua_State *state, LuaCppRuntime &, T &)) {
-      using V = const std::vector<T, A>;
-      LuaCppObjectWrapper<V> *handle = reinterpret_cast<LuaCppObjectWrapper<V> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<V>)));
-      new(handle) LuaCppObjectWrapper<V>(vec);
-      LuaCppVector::set_vector_meta<T, A, const std::vector<T, A>>(state, runtime, pusher);
+    template <typename V>
+    static typename std::enable_if<is_instantiation<std::vector, V>::value>::type
+      push(lua_State *state, LuaCppRuntime &runtime, const V &vec) {
+      LuaCppObjectWrapper<const V> *handle = reinterpret_cast<LuaCppObjectWrapper<const V> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<V>)));
+      new(handle) LuaCppObjectWrapper<const V>(vec);
+      LuaCppVector<P>::set_vector_meta<const V>(state, runtime);
     }
 
-    template <typename T, typename A>
-    static void push(lua_State *state, LuaCppRuntime &runtime, std::unique_ptr<std::vector<T, A>> &vec, void (*pusher)(lua_State *state, LuaCppRuntime &, T &)) {
-      using V = std::vector<T, A>;
+    template <typename V>
+    static typename std::enable_if<is_instantiation<std::vector, V>::value>::type
+      push(lua_State *state, LuaCppRuntime &runtime, std::unique_ptr<V> &vec) {
       LuaCppObjectWrapper<V> *handle = reinterpret_cast<LuaCppObjectWrapper<V> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<V>)));
       new(handle) LuaCppObjectWrapper<V>(std::move(vec));
-      LuaCppVector::set_vector_meta<T, A>(state, runtime, pusher);
+      LuaCppVector<P>::set_vector_meta<V>(state, runtime);
     }
 
-    template <typename T, typename A>
-    static void push(lua_State *state, LuaCppRuntime &runtime, std::shared_ptr<std::vector<T, A>> &vec, void (*pusher)(lua_State *state, LuaCppRuntime &, T &)) {
-      using V = std::vector<T, A>;
+    template <typename V>
+    static typename std::enable_if<is_instantiation<std::vector, V>::value>::type
+      push(lua_State *state, LuaCppRuntime &runtime, std::shared_ptr<V> &vec) {
       LuaCppObjectWrapper<V> *handle = reinterpret_cast<LuaCppObjectWrapper<V> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<V>)));
       new(handle) LuaCppObjectWrapper<V>(vec);
-      LuaCppVector::set_vector_meta<T, A>(state, runtime, pusher);
+      LuaCppVector<P>::set_vector_meta<V>(state, runtime);
     }
    private:
-    template <typename T, typename A, typename V = std::vector<T, A>>
-    static void set_vector_meta(lua_State *state, LuaCppRuntime &runtime, void (*pusher)(lua_State *state, LuaCppRuntime &, T &)) {
+    template <typename V>
+    static void set_vector_meta(lua_State *state, LuaCppRuntime &runtime) {
+      using T = typename V::value_type;
+      using A = typename V::allocator_type;
       std::string typeName = typeid(V).name();
       if constexpr (std::is_const<V>::value) {
         typeName = typeName + "__const";
       }
       if (luaL_newmetatable(state, typeName.c_str())) {
         lua_pushlightuserdata(state, reinterpret_cast<void *>(&runtime));
-        lua_pushlightuserdata(state, reinterpret_cast<void *>(pusher));
-        lua_pushcclosure(state, &LuaCppVector::vector_index<T, A, V>, 2);
+        lua_pushcclosure(state, &LuaCppVector<P>::vector_index<V>, 1);
         lua_setfield(state, -2, "__index");
         if constexpr (!std::is_const<V>::value) {
           lua_pushcclosure(state, &cpp_vector_newindex<T, A>::newindex, 0);
           lua_setfield(state, -2, "__newindex");
         }
-        lua_pushcclosure(state, &LuaCppVector::vector_length<T, A, V>, 0);
+        lua_pushcclosure(state, &LuaCppVector<P>::vector_length<V>, 0);
         lua_setfield(state, -2, "__len");
-        lua_pushcclosure(state, &LuaCppVector::vector_gc<T, A, V>, 0);
+        lua_pushcclosure(state, &LuaCppVector<P>::vector_gc<V>, 0);
         lua_setfield(state, -2, "__gc");
       }
       lua_setmetatable(state, -2);
     }
 
-    template <typename T, typename A, typename V = std::vector<T, A>>
+    template <typename V>
     static int vector_index(lua_State *state) {
       LuaStack stack(state);
-      using Pusher = void (*)(lua_State *state, LuaCppRuntime &, T &);
       using Handle = LuaCppObjectWrapper<V>;
       Handle *handle = stack.toPointer<Handle *>(1);
       LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(1));
-      Pusher pusher = stack.toPointer<Pusher>(lua_upvalueindex(2));
       std::size_t index = stack.toInteger(2) - 1;
       V &vec = *handle->get();
       if (index >= vec.size()) {
         stack.push();
       } else {
-        pusher(state, runtime, const_cast<T &>(vec.at(index)));
+        P::push(state, runtime, vec.at(index));
       }
       return 1;
     }
 
-    template <typename T, typename A, typename V = std::vector<T, A>>
+    template <typename V>
     static int vector_length(lua_State *state) {
       LuaStack stack(state);
       using Handle = LuaCppObjectWrapper<V>;
@@ -118,7 +118,7 @@ namespace LuaCppB {
       return 1;
     }
 
-    template <typename T, typename A, typename V = std::vector<T, A>>
+    template <typename V>
     static int vector_gc(lua_State *state) {
       LuaStack stack(state);
       using Handle = LuaCppObjectWrapper<V>;

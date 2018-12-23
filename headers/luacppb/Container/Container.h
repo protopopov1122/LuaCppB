@@ -15,28 +15,19 @@ namespace LuaCppB {
     template <typename T, class P>
     static typename std::enable_if<is_instantiation<std::vector, T>::value>::type
       push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      using E = typename T::value_type;
-      using Pusher = void (*)(lua_State *, LuaCppRuntime &, E &);
-      Pusher pusher = &P::push;
-      LuaCppVector::push(state, runtime, value, pusher);
+      LuaCppVector<P>::push(state, runtime, value);
     }
 
     template <typename T, class P>
     static typename std::enable_if<std::is_const<T>::value && is_instantiation<std::vector, typename std::remove_const<T>::type>::value>::type
       push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      using E = typename T::value_type;
-      using Pusher = void (*)(lua_State *, LuaCppRuntime &, E &);
-      Pusher pusher = &P::push;
-      LuaCppVector::push(state, runtime, value, pusher);
+      LuaCppVector<P>::push(state, runtime, value);
     }
 
     template <typename T, class P>
     static typename std::enable_if<is_smart_pointer<T>::value && is_instantiation<std::vector, typename T::element_type>::value>::type
       push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      using E = typename T::element_type::value_type;
-      using Pusher = void (*)(lua_State *, LuaCppRuntime &, E &);
-      Pusher pusher = &P::push;
-      LuaCppVector::push(state, runtime, value, pusher);
+      LuaCppVector<P>::push(state, runtime, value);
     }
 
     template <typename T, class P>

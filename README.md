@@ -1,14 +1,23 @@
 ## Lua C++ Bindings
 
-This repo contains the prototype of Lua-C++ bindings. Currently it has basic features:
-* support of basic data types (int, float, boolean string)
-* support of variables and tables - getting and setting values
-* interop bidings to call C++ functions and methods from Lua code (currently only data types from p.1. are supported)
+This repo contains the prototype of Lua-C++ bindings. Currently it has following features:
+* support of scalar data types and strings.
+* access and modification of Lua variables an tables.
+* transparent invocation of Lua functions.
+* C++ class and object binding to Lua.
+* transparent C++ object passing to/from Lua.
+* support of some STL types - vectors, pairs, tuples.
+
+TODO:
+* extend support of STL types.
+* add support of threading and coroutines.
+* perform refactoring, simplify API.
 
 ### Motivation
 Project inspired by two things:
-* create own compact Lua-C++ bindings to use in my projects
-* interop with C++ is my bachelor thesis topic
+* create own compact Lua-C++ bindings to use in my projects.
+* interop with C++ is my bachelor thesis topic.
 
-### Author
-Jevgenijs Protopopovs
+### Author & License
+Project author: Jevgenijs Protopopovs
+License: currently the project has no license, in future it will be licensed under some sort of permissive license.

@@ -160,3 +160,27 @@ TEST_CASE("Object opaque binding") {
     }
   }
 }
+
+TEST_CASE("Costant object references") {
+  LuaEnvironment env;
+  Arith arith(10);
+  const Arith &cArith = arith;
+  SECTION("Object binding") {
+    const std::string &CODE = "res = arith:add(5)";
+    LuaCppObject<const Arith> obj(cArith, env);
+    obj.bind("add", &Arith::add);
+    env["arith"] = obj;
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["res"].get<int>() == 15);
+  }
+  SECTION("Class binding") {
+    const std::string &CODE = "arith:set(5)\n"
+                              "res = arith:add(5)";
+    LuaCppClass<Arith> arithCl("Arith", env);
+    arithCl.bind("add", &Arith::add);
+    arithCl.bind("set", &Arith::set);
+    env.getClassRegistry().bind(arithCl);
+    env["arith"] = cArith;
+    REQUIRE_THROWS(env.execute(CODE) != LuaStatusCode::Ok);
+  }
+}

@@ -7,6 +7,7 @@
 #include <variant>
 #include <typeinfo>
 #include <typeindex>
+#include <type_traits>
 
 namespace LuaCppB {
 
@@ -16,19 +17,19 @@ namespace LuaCppB {
 		using Unique = std::unique_ptr<C>;
 		using Shared = std::shared_ptr<C>;
 	 public:
-	 	LuaCppObjectWrapper(Raw obj) : object(obj), objectType(typeid(C)) {}
-		LuaCppObjectWrapper(C &obj) : object(&obj), objectType(typeid(C)) {}
-	 	LuaCppObjectWrapper() : objectType(typeid(C)) {
+	 	LuaCppObjectWrapper(Raw obj) : object(obj), objectType(typeid(C)), constant(std::is_const<C>::value) {}
+		LuaCppObjectWrapper(C &obj) : object(&obj), objectType(typeid(C)), constant(std::is_const<C>::value) {}
+	 	LuaCppObjectWrapper() : objectType(typeid(C)), constant(std::is_const<C>::value) {
 		  this->object = std::unique_ptr<C>(reinterpret_cast<C *>(::operator new(sizeof(C))));
 		}
-		LuaCppObjectWrapper(Unique obj) : object(std::move(obj)), objectType(typeid(C)) {}
-		LuaCppObjectWrapper(Shared obj) : object(obj), objectType(typeid(C)) {}
+		LuaCppObjectWrapper(Unique obj) : object(std::move(obj)), objectType(typeid(C)), constant(std::is_const<C>::value) {}
+		LuaCppObjectWrapper(Shared obj) : object(obj), objectType(typeid(C)), constant(std::is_const<C>::value) {}
 		~LuaCppObjectWrapper() {
 			this->object = nullptr;
 		}
 
 		C *get() {
-			if (std::type_index(typeid(C)) != this->objectType) {
+			if (std::type_index(typeid(C)) != this->objectType || (!std::is_const<C>::value && this->constant)) {
 				throw LuaCppBError("Type mismatch", LuaCppBErrorCode::TypeCast);
 			}
 			switch (this->object.index()) {
@@ -45,6 +46,7 @@ namespace LuaCppB {
 	 private:
 		std::variant<Raw, Unique, Shared> object;
 		std::type_index objectType;
+		bool constant;
 	};
 }
 

@@ -81,24 +81,23 @@ namespace LuaCppB {
       if (luaL_newmetatable(state, typeName.c_str())) {
         lua_pushlightuserdata(state, reinterpret_cast<void *>(&runtime));
         lua_pushlightuserdata(state, reinterpret_cast<void *>(pusher));
-        lua_pushcclosure(state, &LuaCppContainer::vector_index<T, A>, 2);
+        lua_pushcclosure(state, &LuaCppContainer::vector_index<T, A, V>, 2);
         lua_setfield(state, -2, "__index");
         if constexpr (!std::is_const<V>::value) {
           lua_pushcclosure(state, &cpp_vector_newindex<T, A>::newindex, 0);
           lua_setfield(state, -2, "__newindex");
         }
-        lua_pushcclosure(state, &LuaCppContainer::vector_length<T, A>, 0);
+        lua_pushcclosure(state, &LuaCppContainer::vector_length<T, A, V>, 0);
         lua_setfield(state, -2, "__len");
-        lua_pushcclosure(state, &LuaCppContainer::vector_gc<T, A>, 0);
+        lua_pushcclosure(state, &LuaCppContainer::vector_gc<T, A, V>, 0);
         lua_setfield(state, -2, "__gc");
       }
       lua_setmetatable(state, -2);
     }
 
-    template <typename T, typename A>
+    template <typename T, typename A, typename V = std::vector<T, A>>
     static int vector_index(lua_State *state) {
       LuaStack stack(state);
-      using V = std::vector<T, A>;
       using Pusher = void (*)(lua_State *state, LuaCppRuntime &, T &);
       using Handle = LuaCppObjectWrapper<V>;
       Handle *handle = stack.toPointer<Handle *>(1);
@@ -109,15 +108,14 @@ namespace LuaCppB {
       if (index >= vec.size()) {
         stack.push();
       } else {
-        pusher(state, runtime, vec.at(index));
+        pusher(state, runtime, const_cast<T &>(vec.at(index)));
       }
       return 1;
     }
 
-    template <typename T, typename A>
+    template <typename T, typename A, typename V = std::vector<T, A>>
     static int vector_length(lua_State *state) {
       LuaStack stack(state);
-      using V = std::vector<T, A>;
       using Handle = LuaCppObjectWrapper<V>;
       Handle *handle = stack.toPointer<Handle *>(1);
       V &vec = *handle->get();
@@ -125,10 +123,9 @@ namespace LuaCppB {
       return 1;
     }
 
-    template <typename T, typename A>
+    template <typename T, typename A, typename V = std::vector<T, A>>
     static int vector_gc(lua_State *state) {
       LuaStack stack(state);
-      using V = std::vector<T, A>;
       using Handle = LuaCppObjectWrapper<V>;
       Handle *handle = stack.toPointer<Handle *>(1);
       if (handle) {

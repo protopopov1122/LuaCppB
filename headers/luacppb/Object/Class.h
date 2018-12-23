@@ -59,12 +59,14 @@ namespace LuaCppB {
 
     template <typename R, typename ... A>
     void bind(const std::string &key, R (C::*method)(A...)) {
-      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<C, R, A...>>(NativeMethodWrapper(method).get(), this->className, this->runtime);
+      using M = R (C::*)(A...);
+      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<C, M, R, A...>>(method, this->className, this->runtime);
     }
 
     template <typename R, typename ... A>
     void bind(const std::string &key, R (C::*method)(A...) const) {
-      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<C, R, A...>>(NativeMethodWrapper(method).get(), this->className, this->runtime);
+      using M = R (C::*)(A...) const;
+      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<const C, M, R, A...>>(method, this->className, this->runtime);
     }
 
     template <typename R, typename ... A>

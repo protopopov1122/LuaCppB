@@ -22,6 +22,13 @@ namespace LuaCppB {
       luaL_setmetatable(state, this->className.c_str());
     }
 
+    void wrap(lua_State *state, const void *raw_ptr) override {
+      const T *object = reinterpret_cast<const T *>(raw_ptr);
+      LuaCppObjectWrapper<const T> *wrapper = reinterpret_cast<LuaCppObjectWrapper<const T> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<const T>)));
+      new(wrapper) LuaCppObjectWrapper<const T>(object);
+      luaL_setmetatable(state, this->className.c_str());
+    }
+
     void wrapUnique(lua_State *state, void *raw_ptr) override {
       std::unique_ptr<T> object = std::unique_ptr<T>(reinterpret_cast<T *>(raw_ptr));
       LuaCppObjectWrapper<T> *wrapper = reinterpret_cast<LuaCppObjectWrapper<T> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<T>)));

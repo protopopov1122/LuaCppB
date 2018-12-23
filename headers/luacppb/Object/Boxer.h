@@ -13,6 +13,7 @@ namespace LuaCppB {
    public:
     virtual ~LuaCppObjectBoxer() = default;
     virtual void wrap(lua_State *, void *) = 0;
+    virtual void wrap(lua_State *, const void *) = 0;
     virtual void wrapUnique(lua_State *, void *) = 0;
     virtual void wrapShared(lua_State *, std::shared_ptr<void>) = 0;
   };
@@ -33,7 +34,11 @@ namespace LuaCppB {
         throw LuaCppBError("Lua state mismatch", LuaCppBErrorCode::StateMismatch);
       }
       if (this->canWrap<T>()) {
-        this->wrappers[typeid(T)]->wrap(state, reinterpret_cast<void *>(object));
+        if constexpr (std::is_const<T>::value) {
+          this->wrappers[typeid(T)]->wrap(state, reinterpret_cast<const void *>(object));
+        } else {
+          this->wrappers[typeid(T)]->wrap(state, reinterpret_cast<void *>(object));
+        }
       }
     }
 

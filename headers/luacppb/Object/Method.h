@@ -11,9 +11,8 @@
 
 namespace LuaCppB {
 
-	template <typename C, typename R, typename ... A>
+	template <typename C, typename M, typename R, typename ... A>
 	class LuaCppObjectMethodCall : public LuaData {
-		using M = R (C::*)(A...);
 	 public:
 		LuaCppObjectMethodCall(M met, LuaCppRuntime &runtime) : method(met), className(), runtime(runtime) {}
 		LuaCppObjectMethodCall(M met, const std::string &cName, LuaCppRuntime &runtime) : method(met), className(cName), runtime(runtime) {}
@@ -25,9 +24,9 @@ namespace LuaCppB {
 			lua_pushlightuserdata(state, reinterpret_cast<void *>(&this->runtime));
 			if (this->className.has_value()) {
 				lua_pushstring(state, this->className.value().c_str());
-				lua_pushcclosure(state, &LuaCppObjectMethodCall<C, R, A...>::class_method_closure, 3);
+				lua_pushcclosure(state, &LuaCppObjectMethodCall<C, M, R, A...>::class_method_closure, 3);
 			} else {
-				lua_pushcclosure(state, &LuaCppObjectMethodCall<C, R, A...>::object_method_closure, 2);
+				lua_pushcclosure(state, &LuaCppObjectMethodCall<C, M, R, A...>::object_method_closure, 2);
 			}
 		}
 	 private:
@@ -52,7 +51,7 @@ namespace LuaCppB {
 			LuaCppObjectMethodCallDescriptor<M> *descriptor = stack.toUserData<LuaCppObjectMethodCallDescriptor<M> *>(lua_upvalueindex(1));
 			LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
 			LuaCppObjectWrapper<C> *object = stack.toPointer<LuaCppObjectWrapper<C> *>(1);
-			return LuaCppObjectMethodCall<C, R, A...>::call(object->get(), descriptor->method, runtime, state);
+			return LuaCppObjectMethodCall<C, M, R, A...>::call(object->get(), descriptor->method, runtime, state);
 		};
 
 		static int class_method_closure(lua_State *state) {
@@ -62,7 +61,7 @@ namespace LuaCppB {
 			std::string className = stack.toString(lua_upvalueindex(3));
 			LuaCppObjectWrapper<C> *object = reinterpret_cast<LuaCppObjectWrapper<C> *>(const_cast<void *>(luaL_checkudata(state, 1, className.c_str())));
 			if (object) {
-				return LuaCppObjectMethodCall<C, R, A...>::call(object->get(), descriptor->method, runtime, state);
+				return LuaCppObjectMethodCall<C, M, R, A...>::call(object->get(), descriptor->method, runtime, state);
 			} else {
 				return 0;
 			}

@@ -5,6 +5,7 @@
 #include "luacppb/Object/Method.h"
 #include "luacppb/Core/Stack.h"
 #include <map>
+#include <type_traits>
 
 namespace LuaCppB {
 
@@ -13,17 +14,17 @@ namespace LuaCppB {
    public:
     LuaCppObject(T *obj, LuaCppRuntime &runtime) : object(obj), runtime(runtime) {}
     LuaCppObject(T &obj, LuaCppRuntime &runtime) : object(&obj), runtime(runtime) {}
-		LuaCppObject(const T *obj, LuaCppRuntime &runtime) : object(const_cast<T *>(obj)), runtime(runtime) {}
-		LuaCppObject(const T &obj, LuaCppRuntime &runtime) : object(const_cast<T *>(&obj)), runtime(runtime) {}
 
     template <typename R, typename ... A>
     void bind(const std::string &key, R (T::*method)(A...)) {
-      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<T, R, A...>>(NativeMethodWrapper(method).get(), this->runtime);
+      using M = R (T::*)(A...);
+      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<T, M, R, A...>>(method, this->runtime);
     }
 
     template <typename R, typename ... A>
     void bind(const std::string &key, R (T::*method)(A...) const) {
-      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<T, R, A...>>(NativeMethodWrapper(method).get(), this->runtime);
+      using M = R (T::*)(A...) const;
+      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<const T, M, R, A...>>(method, this->runtime);
     }
 
     void push(lua_State *state) const override {

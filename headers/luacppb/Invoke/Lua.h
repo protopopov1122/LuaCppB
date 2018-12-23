@@ -95,6 +95,19 @@ namespace LuaCppB {
     }
   };
 
+  template <typename A, typename B>
+  struct LuaFunctionCallResultGetter<std::pair<A, B>> {
+    static std::pair<A, B> get(std::vector<LuaValue> &result) {
+      if (result.size() >= 2) {
+        return std::make_pair(result.at(0).get<A>(), result.at(1).get<B>());
+      } else if (result.size() == 1) {
+        return std::make_pair(result.at(0).get<A>(), LuaValue().get<B>());
+      } else {
+        return std::make_pair(LuaValue().get<A>(), LuaValue().get<B>());
+      }
+    }
+  };
+
   class LuaFunctionCallResult {
    public:
     LuaFunctionCallResult(std::vector<LuaValue> &result)

@@ -41,8 +41,7 @@ namespace LuaCppB {
 				R result = std::apply([object, method](A... args) {	
 					return (object->*method)(args...);
 				}, args);
-				NativeFunctionResult<R>::set(state, runtime, result);
-				return 1;
+				return NativeFunctionResult<R>::set(state, runtime, result);
 			}
 		};
 

@@ -40,6 +40,14 @@ float test_factor_ref(const Factor &factor, float n) {
   return factor.calc(n, n);
 }
 
+std::pair<int, int> test_calc(int n) {
+  return std::make_pair(n, n*n);
+}
+
+std::tuple<int, int, int> test_calc_tuple(int n) {
+  return std::make_tuple(n, n*n, n*n*n);
+}
+
 TEST_CASE("Native function call") {
   LuaEnvironment env;
   SECTION("Function call") {
@@ -65,6 +73,20 @@ TEST_CASE("Native function call") {
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
     REQUIRE(env["results"][1].get<float>() == 200.0f);
     REQUIRE(env["results"][2].get<float>() == 400.0f);
+  }
+  SECTION("Returning std::pair") {
+    const std::string &CODE = "x, y = calc(5)\n"
+                              "sum = x + y";
+    env["calc"] = test_calc;
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["sum"].get<int>() == 30);
+  }
+  SECTION("Returning std::tuple") {
+    const std::string &CODE = "x, y, z = calc(5)\n"
+                              "sum = x + y - z";
+    env["calc"] = test_calc_tuple;
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["sum"].get<int>() == -95);
   }
 }
 
@@ -136,5 +158,25 @@ TEST_CASE("Lua function call") {
     REQUIRE(&resFactor == &factor);
     REQUIRE(resFactor2 == &factor);
     REQUIRE_THROWS(env["test2"](factor, 10).get<LuaEnvironment *>() != nullptr);
+  }
+  SECTION("Receiving std::pair") {
+    const std::string &CODE = "function test(n)\n"
+                              "    return 1, n\n"
+                              "end";
+    LuaEnvironment env;
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    std::pair<int, int> res = env["test"](10);
+    REQUIRE((res.first == 1 && res.second == 10));
+  }
+  SECTION("Receiving std::tuple") {
+    const std::string &CODE = "function test(n)\n"
+                              "    return 1, n, n*n\n"
+                              "end";
+    LuaEnvironment env;
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    std::tuple<int, int, int> res = env["test"](5);
+    REQUIRE(std::get<0>(res) == 1);
+    REQUIRE(std::get<1>(res) == 5);
+    REQUIRE(std::get<2>(res) == 25);
   }
 }

@@ -36,10 +36,39 @@ namespace LuaCppB {
 		}
 	};
 
-	template <typename T>
+	template <typename T, typename E = void>
 	struct NativeFunctionResult {
-		static void set(lua_State *state, LuaCppRuntime &runtime, T &value) {
+		static int set(lua_State *state, LuaCppRuntime &runtime, T &value) {
 			LuaNativeValue::push<T>(state, runtime, value);
+			return 1;
+		}
+	};
+
+	template <typename T>
+	struct NativeFunctionResult<T, typename std::enable_if<is_instantiation<std::pair, T>::value>::type> {
+		static int set(lua_State *state, LuaCppRuntime &runtime, T &value) {
+			LuaNativeValue::push<typename T::first_type>(state, runtime, value.first);
+			LuaNativeValue::push<typename T::second_type>(state, runtime, value.second);
+			return 2;
+		}
+	};
+
+	template <std::size_t I, typename T>
+	struct NativeFunctionResult_Tuple {
+		static void push(lua_State *state, LuaCppRuntime &runtime, T &value) {
+			LuaStack stack(state);
+			if constexpr (I < std::tuple_size<T>::value) {
+				LuaNativeValue::push(state, runtime, std::get<I>(value));
+				NativeFunctionResult_Tuple<I + 1, T>::push(state, runtime, value);
+			}
+		}
+	};
+
+	template <typename T>
+	struct NativeFunctionResult<T, typename std::enable_if<is_instantiation<std::tuple, T>::value>::type> {
+		static int set(lua_State *state, LuaCppRuntime &runtime, T &value) {
+			NativeFunctionResult_Tuple<0, T>::push(state, runtime, value);
+			return std::tuple_size<T>::value;
 		}
 	};
 	
@@ -86,8 +115,7 @@ namespace LuaCppB {
 				return 0;
 			} else {				
 				R result = std::apply(function, args);
-				NativeFunctionResult<R>::set(state, runtime, result);
-				return 1;
+				return NativeFunctionResult<R>::set(state, runtime, result);
 			}
 		};
 
@@ -139,8 +167,7 @@ namespace LuaCppB {
 				R result = std::apply([object, method](A... args) {	
 					return (object->*method)(args...);
 				}, args);
-				NativeFunctionResult<R>::set(state, runtime, result);
-				return 1;
+				return NativeFunctionResult<R>::set(state, runtime, result);
 			}
 		};
 
@@ -183,8 +210,7 @@ namespace LuaCppB {
 				return 0;
 			} else {
 				R result = std::apply(invocable, args);
-				NativeFunctionResult<R>::set(state, runtime, result);
-				return 1;
+				return NativeFunctionResult<R>::set(state, runtime, result);
 			}
 		}
 

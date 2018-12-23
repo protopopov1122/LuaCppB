@@ -28,6 +28,12 @@ namespace LuaCppB {
         lua_setfield(state, -2, "__newindex");
         lua_pushcclosure(state, &LuaCppMap<P>::map_size<M>, 0);
         lua_setfield(state, -2, "__len");
+        lua_pushlightuserdata(state, reinterpret_cast<void *>(&runtime));
+        lua_pushcclosure(state, &LuaCppMap<P>::map_pairs<M>, 1);
+        lua_setfield(state, -2, "__pairs");
+        lua_pushlightuserdata(state, reinterpret_cast<void *>(&runtime));
+        lua_pushcclosure(state, &LuaCppMap<P>::map_ipairs<M>, 1);
+        lua_setfield(state, -2, "__ipairs");
         lua_pushcclosure(state, &LuaCppMap<P>::map_gc<M>, 0);
         lua_setfield(state, -2, "__gc");
       }
@@ -91,6 +97,74 @@ namespace LuaCppB {
         ::operator delete(handle, handle);
       }
       return 0;
+    }
+
+    template <typename M>
+    static int map_pairs(lua_State *state) {
+      lua_pushvalue(state, lua_upvalueindex(1));
+      lua_pushcclosure(state, &LuaCppMap<P>::map_iter<M>, 1);
+      lua_pushvalue(state, 1);
+      lua_pushnil(state);
+      return 3;
+    }
+
+    template <typename M>
+    static int map_ipairs(lua_State *state) {
+      lua_pushvalue(state, lua_upvalueindex(1));
+      lua_pushcclosure(state, &LuaCppMap<P>::map_iiter<M>, 1);
+      lua_pushvalue(state, 1);
+      lua_pushnil(state);
+      return 3;
+    }
+
+    template <typename M>
+    static int map_iter(lua_State *state) {
+      using Handle = LuaCppObjectWrapper<M>;
+      using K = typename M::key_type;
+      LuaStack stack(state);
+      LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(1));
+      Handle *handle = stack.toPointer<Handle *>(1);
+      M *map = handle->get();
+      if (map == nullptr) {
+        return 0;
+      }
+      typename M::const_iterator iter = map->begin();
+      if (!lua_isnil(state, 2)) {
+        K key = stack.get(2).value_or(LuaValue()).get<K>();
+        iter = map->find(key);
+        iter++;
+      }
+      if (iter != map->end()) {
+        P::push(state, runtime, iter->first);
+        P::push(state, runtime, iter->second);
+        return 2;
+      } else {
+        return 0;
+      }
+    }
+
+    template <typename M>
+    static int map_iiter(lua_State *state) {
+      using Handle = LuaCppObjectWrapper<M>;
+      LuaStack stack(state);
+      LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(1));
+      Handle *handle = stack.toPointer<Handle *>(1);
+      M *map = handle->get();
+      if (map == nullptr) {
+        return 0;
+      }
+      std::size_t index = stack.toInteger(2);
+      typename M::const_iterator iter = map->begin();
+      while (index--) {
+        ++iter;
+      }
+      if (iter != map->end()) {
+        P::push(state, runtime, iter->first);
+        P::push(state, runtime, iter->second);
+        return 2;
+      } else {
+        return 0;
+      }
     }
   };
 }

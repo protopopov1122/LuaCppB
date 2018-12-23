@@ -12,11 +12,21 @@ void test_basic_operations(LuaEnvironment &env) {
   const std::string &CODE = "sum = 0\n"
                             "for i = 1, #vec do\n"
                             "    sum = sum + vec[i]\n"
+                            "end\n"
+                            "psum = 0\n"
+                            "for k, v in pairs(vec) do\n"
+                            "    psum = psum + k * v\n"
+                            "end\n"
+                            "isum = 0\n"
+                            "for k, v in ipairs(vec) do\n"
+                            "    isum = isum + k * v\n"
                             "end";
   REQUIRE(env["vec"].exists());
   REQUIRE(env["vec"].getType() == LuaType::UserData);
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(env["sum"].get<int>() == 10);
+  REQUIRE(env["psum"].get<int>() == 30);
+  REQUIRE(env["isum"].get<int>() == 30);
 }
 
 TEST_CASE("Vector") {
@@ -108,7 +118,15 @@ TEST_CASE("Tuple") {
 
 TEST_CASE("Map") {
   const std::string &CODE = "map[3] = map[1] + map[2]\n"
-                            "sz = #map";
+                            "sz = #map\n"
+                            "psum = 0\n"
+                            "for k, v in pairs(map) do\n"
+                            "    psum = psum + k*v\n"
+                            "end\n"
+                            "isum = 0\n"
+                            "for k, v in ipairs(map) do\n"
+                            "    isum = isum + k*v\n"
+                            "end";
   LuaEnvironment env;
   std::map<int, int> map = {
     { 1, 10 },
@@ -118,6 +136,10 @@ TEST_CASE("Map") {
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(map[3] == 30);
   REQUIRE(env["sz"].get<int>() == 3);
+  int psum = env["psum"].get<int>();
+  int isum = env["isum"].get<int>();
+  REQUIRE(psum == 140);
+  REQUIRE(isum == 140);
 }
 
 TEST_CASE("Optional") {

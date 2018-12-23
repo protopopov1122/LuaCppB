@@ -84,6 +84,9 @@ namespace LuaCppB {
           lua_pushcclosure(state, &cpp_vector_newindex<T, A>::newindex, 0);
           lua_setfield(state, -2, "__newindex");
         }
+        lua_pushlightuserdata(state, reinterpret_cast<void *>(&runtime));
+        lua_pushcclosure(state, &LuaCppVector<P>::vector_pairs<V>, 1);
+        lua_setfield(state, -2, "__pairs");
         lua_pushcclosure(state, &LuaCppVector<P>::vector_length<V>, 0);
         lua_setfield(state, -2, "__len");
         lua_pushcclosure(state, &LuaCppVector<P>::vector_gc<V>, 0);
@@ -101,11 +104,11 @@ namespace LuaCppB {
       std::size_t index = stack.toInteger(2) - 1;
       V &vec = *handle->get();
       if (index >= vec.size()) {
-        stack.push();
+        return 0;
       } else {
         P::push(state, runtime, vec.at(index));
+        return 1;
       }
-      return 1;
     }
 
     template <typename V>
@@ -128,6 +131,43 @@ namespace LuaCppB {
         ::operator delete(handle, handle);
       }
       return 0;
+    }
+
+    template <typename V>
+    static int vector_pairs(lua_State *state) {
+      lua_pushvalue(state, lua_upvalueindex(1));
+      lua_pushcclosure(state, &LuaCppVector<P>::vector_iter<V>, 1);
+      lua_pushvalue(state, 1);
+      lua_pushnil(state);
+      return 3;
+    }
+
+    template <typename V>
+    static int vector_iter(lua_State *state) {
+      using Handle = LuaCppObjectWrapper<V>;
+      LuaStack stack(state);
+      LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(1));
+      Handle *handle = stack.toPointer<Handle *>(1);
+      V *vec = handle->get();
+      if (vec == nullptr) {
+        return 0;
+      }
+      std::size_t index = 0;
+      typename V::const_iterator iter = vec->begin();
+      if (!lua_isnil(state, 2)) {
+        index = stack.toInteger(2);
+        std::size_t key = index;
+        while (key--) {
+          ++iter;
+        }
+      }
+      if (iter != vec->end()) {
+        P::push(state, runtime, index + 1);
+        P::push(state, runtime, *iter);
+        return 2;
+      } else {
+        return 0;
+      }
     }
   };
 }

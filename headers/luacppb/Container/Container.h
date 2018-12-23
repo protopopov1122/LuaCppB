@@ -6,6 +6,7 @@
 #include "luacppb/Container/Tuple.h"
 #include "luacppb/Meta.h"
 #include <type_traits>
+#include <optional>
 
 namespace LuaCppB {
 
@@ -50,10 +51,21 @@ namespace LuaCppB {
       LuaCppTuple::push<T, P>(state, runtime, value);
     }
 
+    template <typename T, class P>
+    static typename std::enable_if<is_instantiation<std::optional, T>::value>::type
+      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
+      if (value.has_value()) {
+        P::push(state, runtime, value.value());
+      } else {
+        lua_pushnil(state);
+      }
+    }
+
     template <typename T>
     static constexpr bool is_container() {
       return is_instantiation<std::vector, T>::value ||
              is_instantiation<std::map, T>::value ||
+             is_instantiation<std::optional, T>::value ||
              LuaCppTuple::is_tuple<T>() ||
              (std::is_const<T>::value && LuaCppContainer::is_container<typename std::remove_const<T>::type>());
     }

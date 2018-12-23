@@ -119,3 +119,13 @@ TEST_CASE("Map") {
   REQUIRE(map[3] == 30);
   REQUIRE(env["sz"].get<int>() == 3);
 }
+
+TEST_CASE("Optional") {
+  const std::string &CODE = "res = { type(x) == 'string', type(y) == 'nil' }";
+  LuaEnvironment env;
+  env["x"] = std::optional("Hello, world!");
+  env["y"] = std::optional<std::string>();
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["res"][1].get<bool>());
+  REQUIRE(env["res"][2].get<bool>());
+}

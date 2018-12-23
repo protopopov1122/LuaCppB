@@ -63,3 +63,45 @@ TEST_CASE("Vector") {
     }
   }
 }
+
+TEST_CASE("Pair") {
+  SECTION("Assignment") {
+    const std::string &CODE = "res = pair[1] .. ', ' .. pair[2]";
+    LuaEnvironment env;
+    env["pair"] = std::make_pair(500, "Hello");
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["res"].get<std::string>().compare("500, Hello") == 0);
+  }
+  SECTION("Function argument") {
+    const std::string &CODE = "function test(pair)\n"
+                              "    return pair[1] + pair[2]\n"
+                              "end";
+    LuaEnvironment env;
+    auto pair = std::make_pair(100, 200);
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["test"](pair).get<int>() == 300);
+  }
+}
+
+TEST_CASE("Tuple") {
+  SECTION("Assignment") {
+    const std::string &CODE = "res = (tuple[1] + tuple[2]) .. tuple[4]";
+    LuaEnvironment env;
+    env["tuple"] = std::make_tuple(3.14, 1, true, "Hi");
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["res"].get<std::string>().compare("4.14Hi") == 0);
+  }
+  SECTION("Function argument") {
+    const std::string &CODE = "function sum(tuple)\n"
+                              "    local sum = 0\n"
+                              "    for i = 1, #tuple do\n"
+                              "        sum = sum + tuple[i]\n"
+                              "    end\n"
+                              "    return sum\n"
+                              "end";
+    LuaEnvironment env;
+    auto tuple = std::make_tuple(1, 2, 3, 4);
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["sum"](tuple).get<int>() == 10);
+  }
+}

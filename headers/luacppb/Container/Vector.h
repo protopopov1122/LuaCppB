@@ -27,8 +27,14 @@ namespace LuaCppB {
       Handle *handle = stack.toPointer<Handle *>(1);
       std::size_t index = stack.toInteger(2) - 1;
       T value = stack.get(3).value_or(LuaValue()).get<T>();
-      V &vec = *handle->get();
-      vec[index] = value;
+      V *vec = handle->get();
+      if (vec) {
+        if (index < vec->size()) {
+          (*vec)[index] = value;
+        } else if (index == vec->size()) {
+          vec->push_back(value);
+        }
+      }
       return 0;
     }
   };

@@ -17,6 +17,7 @@ void test_basic_operations(LuaEnvironment &env) {
                             "for k, v in pairs(vec) do\n"
                             "    psum = psum + k * v\n"
                             "end\n"
+                            "vec[#vec + 1] = 5\n"
                             "isum = 0\n"
                             "for k, v in ipairs(vec) do\n"
                             "    isum = isum + k * v\n"
@@ -26,7 +27,7 @@ void test_basic_operations(LuaEnvironment &env) {
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(env["sum"].get<int>() == 10);
   REQUIRE(env["psum"].get<int>() == 30);
-  REQUIRE(env["isum"].get<int>() == 30);
+  REQUIRE(env["isum"].get<int>() == 55);
 }
 
 TEST_CASE("Vector") {

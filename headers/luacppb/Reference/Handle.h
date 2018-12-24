@@ -78,10 +78,10 @@ namespace LuaCppB {
 			LuaStatusCode status = LuaStatusCode::Ok;
 			this->ref->putOnTop([&](lua_State *state) {
 				if (lua_isfunction(state, -1)) {
-					LuaFunctionCall::call<A...>(state, -1, this->getRuntime(), results, args...);
+					status = LuaFunctionCall::call<A...>(state, -1, this->getRuntime(), results, args...);
 				} else if (lua_isthread(state, -1)) {
 					LuaCoroutine coro(LuaThread(state, -1), this->getRuntime());
-					coro.call(results, args...);
+					status = coro.call(results, args...);
 				}
 			});
 			return LuaFunctionCallResult(results, status);
@@ -90,15 +90,16 @@ namespace LuaCppB {
 		template <typename ... A>
 		LuaFunctionCallResult operator()(A &&... args) {
 			std::vector<LuaValue> results;
+			LuaStatusCode status = LuaStatusCode::Ok;
 			this->ref->putOnTop([&](lua_State *state) {
 				if (lua_isfunction(state, -1)) {
-					LuaFunctionCall::call<A...>(state, -1, this->getRuntime(), results, args...);
+					status = LuaFunctionCall::call<A...>(state, -1, this->getRuntime(), results, args...);
 				} else if (lua_isthread(state, -1)) {
 					LuaCoroutine coro(LuaThread(state, -1), this->getRuntime());
-					coro.call(results, args...);
+					status = coro.call(results, args...);
 				}
 			});
-			return LuaFunctionCallResult(results);
+			return LuaFunctionCallResult(results, status);
 		}
 	 private:
 	 	lua_State *state;

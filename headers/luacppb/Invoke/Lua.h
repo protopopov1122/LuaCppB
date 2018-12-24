@@ -39,18 +39,19 @@ namespace LuaCppB {
   class LuaFunctionCall {
    public:
     template <typename ... A>
-    static void call(lua_State *state, int index, LuaCppRuntime &runtime, std::vector<LuaValue> &result, A &... args) {
+    static LuaStatusCode call(lua_State *state, int index, LuaCppRuntime &runtime, std::vector<LuaValue> &result, A &... args) {
       LuaStack stack(state);
       int top = stack.getTop();
       stack.copy(index);
       LuaFunctionArgument<A...>::push(state, runtime, args...);
-      lua_pcall(state, sizeof...(args), LUA_MULTRET, 0);
+      int status = lua_pcall(state, sizeof...(args), LUA_MULTRET, 0);
       int results = stack.getTop() - top;
       while (results-- > 0) {
         result.push_back(LuaValue::peek(state).value());
         stack.pop();
       }
       std::reverse(result.begin(), result.end());
+      return static_cast<LuaStatusCode>(status);
     }
   };
 
@@ -113,9 +114,14 @@ namespace LuaCppB {
   class LuaFunctionCallResult {
    public:
     LuaFunctionCallResult(std::vector<LuaValue> &result, LuaStatusCode status = LuaStatusCode::Ok)
-      : result(result), status(status) {}
+      : result(result), statusCode(status) {}
     LuaFunctionCallResult(const LuaFunctionCallResult &) = delete;
     LuaFunctionCallResult &operator=(const LuaFunctionCallResult &) = delete;
+
+    LuaFunctionCallResult &status(LuaStatusCode &status) {
+      status = this->statusCode;
+      return *this;
+    }
 
     template <typename T>
     T get() {
@@ -129,7 +135,7 @@ namespace LuaCppB {
 
    private:
     std::vector<LuaValue> result;
-    LuaStatusCode status;
+    LuaStatusCode statusCode;
   };
 }
 

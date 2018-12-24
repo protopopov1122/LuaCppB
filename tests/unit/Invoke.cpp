@@ -183,7 +183,9 @@ TEST_CASE("Lua function call") {
 
 template <typename T>
 void test_coro(T &coro) {
-  int r1 = coro(100);
+  LuaStatusCode status = LuaStatusCode::Ok;
+  int r1 = coro(100).status(status);
+  REQUIRE(status == LuaStatusCode::Yield);
   REQUIRE(r1 == 100);
   int r2 = coro(200);
   REQUIRE(r2 == 300);
@@ -205,12 +207,14 @@ TEST_CASE("Coroutines") {
   SECTION("Creating coroutine") {
     REQUIRE(env.execute(BASE) == LuaStatusCode::Ok);
     LuaCoroutine coro = env["fn"];
+    REQUIRE(coro.getStatus() == LuaStatusCode::Ok);
     test_coro(coro);
   }
   SECTION("Explicit coroutine invocation") {
     REQUIRE(env.execute(BASE) == LuaStatusCode::Ok);
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
     LuaCoroutine coro = env["cfn"];
+    REQUIRE(coro.getStatus() == LuaStatusCode::Ok);
     test_coro(coro);
   }
   SECTION("Implicit coroutine invocation") {

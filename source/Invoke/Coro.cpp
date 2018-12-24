@@ -25,4 +25,8 @@ namespace LuaCppB {
     this->runtime = coro.runtime;
     return *this;
   }
+
+  LuaStatusCode LuaCoroutine::getStatus() const {
+    return static_cast<LuaStatusCode>(lua_status(this->thread.toState()));
+  }
 }

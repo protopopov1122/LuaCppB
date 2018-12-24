@@ -17,16 +17,17 @@ namespace LuaCppB {
     LuaCoroutine(LuaCppRuntime &);
     LuaCoroutine(const LuaCoroutine &);
     LuaCoroutine &operator=(const LuaCoroutine &);
+    LuaStatusCode getStatus() const;
 
     template <typename ... A>
-    LuaFunctionCallResult operator()(A... args) {
+    LuaFunctionCallResult operator()(A... args) const {
 			std::vector<LuaValue> result;
 			LuaStatusCode status = this->call<A...>(result, args...);
       return LuaFunctionCallResult(result, status);
     }
 
     template <typename ... A>
-    LuaStatusCode call(std::vector<LuaValue> &result, A &... args) {
+    LuaStatusCode call(std::vector<LuaValue> &result, A &... args) const {
       LuaStack stack(this->thread.toState());
       LuaFunctionArgument<A...>::push(thread.toState(), this->runtime, args...);
       LuaStatusCode status = static_cast<LuaStatusCode>(lua_resume(thread.toState(), nullptr, sizeof...(args)));

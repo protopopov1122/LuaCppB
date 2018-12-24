@@ -9,7 +9,6 @@ namespace LuaCppB {
   class LuaCppRuntime {
    public:
     virtual ~LuaCppRuntime() = default;
-    virtual lua_State *getState() const = 0;
     virtual LuaCppObjectBoxerRegistry &getObjectBoxerRegistry() = 0;
   };
 }

@@ -10,7 +10,7 @@ LuaCppBLib = static_library('luacppb',
   'source/Reference/Field.cpp', 'source/Reference/Handle.cpp',
   'source/Reference/Primary.cpp', 'source/Reference/Registry.cpp',
   'source/Core/Error.cpp', 'source/Core/StackGuard.cpp',
-  'source/Core/Stack.cpp',
+  'source/Core/Stack.cpp', 'source/Invoke/Coro.cpp',
   include_directories : headers)
 lua = dependency('lua')
 

@@ -7,6 +7,7 @@ namespace LuaCppB {
 
   enum class LuaStatusCode {
     Ok = LUA_OK,
+    Yield = LUA_YIELD,
     RuntimeError = LUA_ERRRUN,
     MemAllocError = LUA_ERRMEM,
     MsgHandlerError = LUA_ERRERR,

@@ -112,8 +112,8 @@ namespace LuaCppB {
 
   class LuaFunctionCallResult {
    public:
-    LuaFunctionCallResult(std::vector<LuaValue> &result)
-      : result(result) {}
+    LuaFunctionCallResult(std::vector<LuaValue> &result, LuaStatusCode status = LuaStatusCode::Ok)
+      : result(result), status(status) {}
     LuaFunctionCallResult(const LuaFunctionCallResult &) = delete;
     LuaFunctionCallResult &operator=(const LuaFunctionCallResult &) = delete;
 
@@ -129,6 +129,7 @@ namespace LuaCppB {
 
    private:
     std::vector<LuaValue> result;
+    LuaStatusCode status;
   };
 }
 

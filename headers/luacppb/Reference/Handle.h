@@ -4,6 +4,7 @@
 #include "luacppb/Reference/Base.h"
 #include "luacppb/Invoke/Native.h"
 #include "luacppb/Invoke/Lua.h"
+#include "luacppb/Invoke/Coro.h"
 #include <memory>
 #include <utility>
 #include <type_traits>
@@ -25,7 +26,7 @@ namespace LuaCppB {
 		LuaReferenceHandle &operator=(LuaData &);
 		LuaReferenceHandle &operator=(const LuaReferenceHandle &);
 		LuaValue operator*();
-
+		
 		template <typename R, typename ... A>
 		LuaReferenceHandle &operator=(R (*fn)(A...)) {
 			NativeFunctionCall call(fn, this->getRuntime());
@@ -74,17 +75,28 @@ namespace LuaCppB {
 		template <typename ... A>
 		LuaFunctionCallResult operator()(A &... args) {
 			std::vector<LuaValue> results;
+			LuaStatusCode status = LuaStatusCode::Ok;
 			this->ref->putOnTop([&](lua_State *state) {
-				LuaFunctionCall::call<A...>(state, -1, this->getRuntime(), results, args...);
+				if (lua_isfunction(state, -1)) {
+					LuaFunctionCall::call<A...>(state, -1, this->getRuntime(), results, args...);
+				} else if (lua_isthread(state, -1)) {
+					LuaCoroutine coro(LuaThread(state, -1), this->getRuntime());
+					coro.call(results, args...);
+				}
 			});
-			return LuaFunctionCallResult(results);
+			return LuaFunctionCallResult(results, status);
 		}
 
 		template <typename ... A>
 		LuaFunctionCallResult operator()(A &&... args) {
 			std::vector<LuaValue> results;
 			this->ref->putOnTop([&](lua_State *state) {
-				LuaFunctionCall::call<A...>(state, -1, this->getRuntime(), results, args...);
+				if (lua_isfunction(state, -1)) {
+					LuaFunctionCall::call<A...>(state, -1, this->getRuntime(), results, args...);
+				} else if (lua_isthread(state, -1)) {
+					LuaCoroutine coro(LuaThread(state, -1), this->getRuntime());
+					coro.call(results, args...);
+				}
 			});
 			return LuaFunctionCallResult(results);
 		}

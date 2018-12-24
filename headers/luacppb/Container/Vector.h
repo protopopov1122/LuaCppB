@@ -7,7 +7,6 @@
 #include <vector>
 #include <typeinfo>
 #include <type_traits>
-#include <iostream>
 
 namespace LuaCppB {
 

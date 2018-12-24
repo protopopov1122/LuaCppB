@@ -90,6 +90,12 @@ namespace LuaCppB {
 		void push(lua_State *) const override;
 
 		template <typename T>
+		operator T() {
+			return this->convert<T>();
+		}
+
+	protected:
+		template <typename T>
 		T toPointer() const {
 			T res = nullptr;
 			handle.get([&](lua_State *state) {
@@ -99,10 +105,6 @@ namespace LuaCppB {
 			return res;
 		}
 
-		template <typename T>
-		operator T() {
-			return this->convert<T>();
-		}
 	 private:
 		template <typename T>
 		typename std::enable_if<!std::is_same<T, LuaReferenceHandle>::value, T>::type convert() {
@@ -127,6 +129,19 @@ namespace LuaCppB {
 	 	using LuaReferencedValue::LuaReferencedValue;
 		static LuaUserData get(lua_State *, int = -1);
 		static LuaUserData create(lua_State *, std::size_t);
+
+		template <typename T>
+		T toPointer() const {
+			return this->LuaReferencedValue::toPointer<T>();
+		}
+	};
+
+	class LuaThread : public LuaReferencedValue {
+	 public:
+		using LuaReferencedValue::LuaReferencedValue;
+		lua_State *toState() const;
+		static LuaThread get(lua_State *, int = -1);
+		static LuaThread create(lua_State *);
 	};
 }
 

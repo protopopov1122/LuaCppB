@@ -24,6 +24,8 @@ namespace LuaCppB {
     void push(const std::string &);
     void push(int (*)(lua_State *), int = 0);
     void pushTable();
+    lua_State *pushThread();
+    void *pushUserData(std::size_t);
 
     lua_Integer toInteger(int = -1);
     lua_Number toNumber(int = -1);

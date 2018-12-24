@@ -54,6 +54,14 @@ namespace LuaCppB {
     lua_newtable(this->state);
   }
 
+  lua_State *LuaStack::pushThread() {
+    return lua_newthread(this->state);
+  }
+
+  void *LuaStack::pushUserData(std::size_t sz) {
+    return lua_newuserdata(this->state, sz);
+  }
+
   lua_Integer LuaStack::toInteger(int index) {
     return lua_tointeger(this->state, index);
   }
@@ -155,5 +163,10 @@ namespace LuaCppB {
   template <>
   bool LuaStack::is<LuaType::UserData>(int index) {
     return static_cast<bool>(lua_isuserdata(this->state, index));
+  }
+
+  template <>
+  bool LuaStack::is<LuaType::Thread>(int index) {
+    return static_cast<bool>(lua_isthread(this->state, index));
   }
 }

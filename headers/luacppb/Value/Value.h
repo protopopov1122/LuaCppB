@@ -24,6 +24,7 @@ namespace LuaCppB {
 		LuaValue(LuaTable t) : type(LuaType::Table), value(t) {}
 		LuaValue(void *ptr) : type(LuaType::LightUserData), value(ptr) {}
 		LuaValue(LuaUserData ud) : type(LuaType::UserData), value(ud) {}
+		LuaValue(LuaThread th) : type(LuaType::Thread), value(th) {}
 
 		LuaType getType() const noexcept;
 		void push(lua_State *state) const override;
@@ -136,6 +137,16 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
+		typename std::enable_if<std::is_same<T, LuaThread>::value, T>::type get() const {
+			if (this->type == LuaType::Thread) {
+				assert(this->value.index() == 8);
+				return std::get<LuaThread>(this->value);
+			} else {
+				return LuaThread();
+			}
+		}
+
+		template <typename T>
 		operator T () {
 			return this->get<T>();
 		}
@@ -181,7 +192,7 @@ namespace LuaCppB {
 		}
 	 private:
 		LuaType type;
-	 	std::variant<LuaInteger, LuaNumber, LuaBoolean, LuaString, LuaCFunction, LuaTable, void *, LuaUserData> value;
+	 	std::variant<LuaInteger, LuaNumber, LuaBoolean, LuaString, LuaCFunction, LuaTable, void *, LuaUserData, LuaThread> value;
 	};
 }
 

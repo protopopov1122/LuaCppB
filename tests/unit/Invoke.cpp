@@ -180,3 +180,43 @@ TEST_CASE("Lua function call") {
     REQUIRE(std::get<2>(res) == 25);
   }
 }
+
+template <typename T>
+void test_coro(T &coro) {
+  int r1 = coro(100);
+  REQUIRE(r1 == 100);
+  int r2 = coro(200);
+  REQUIRE(r2 == 300);
+  int res = coro(0);
+  REQUIRE(res == 300);
+}
+
+TEST_CASE("Coroutines") {
+  const std::string &BASE = "fn = function(a)\n"
+                            "    sum = a\n"
+                            "    while a ~= 0 do\n"
+                            "        a = coroutine.yield(sum)\n"
+                            "        sum = sum + a\n"
+                            "    end\n"
+                            "    return sum\n"
+                            "end";
+  const std::string &CODE = "cfn = coroutine.create(fn)";
+  LuaEnvironment env;
+  SECTION("Creating coroutine") {
+    REQUIRE(env.execute(BASE) == LuaStatusCode::Ok);
+    LuaCoroutine coro = env["fn"];
+    test_coro(coro);
+  }
+  SECTION("Explicit coroutine invocation") {
+    REQUIRE(env.execute(BASE) == LuaStatusCode::Ok);
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    LuaCoroutine coro = env["cfn"];
+    test_coro(coro);
+  }
+  SECTION("Implicit coroutine invocation") {
+    REQUIRE(env.execute(BASE) == LuaStatusCode::Ok);
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    auto coro = env["cfn"];
+    test_coro(coro);
+  }
+}

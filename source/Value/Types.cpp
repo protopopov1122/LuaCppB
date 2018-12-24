@@ -130,9 +130,26 @@ namespace LuaCppB {
   }
 
   LuaUserData LuaUserData::create(lua_State *state, std::size_t sz) {
-    lua_newuserdata(state, sz);
+    LuaStack stack(state);
+    stack.pushUserData(sz);
     LuaUserData data(state);
-    lua_pop(state, 1);
+    stack.pop();
     return data;
+  }
+
+  lua_State *LuaThread::toState() const {
+    return this->LuaReferencedValue::toPointer<lua_State *>();
+  }
+
+  LuaThread LuaThread::get(lua_State *state, int index) {
+    return LuaThread(state, index);
+  }
+
+  LuaThread LuaThread::create(lua_State *state) {
+    LuaStack stack(state);
+    stack.pushThread();
+    LuaThread thread(state);
+    stack.pop();
+    return thread;
   }
 }

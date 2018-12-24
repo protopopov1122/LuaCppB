@@ -44,6 +44,9 @@ namespace LuaCppB {
         assert(this->value.index() == 7);
         std::get<LuaUserData>(this->value).push(state);
         break;
+      case LuaType::Thread:
+        assert(this->value.index() == 8);
+        std::get<LuaThread>(this->value).push(state);
       default:
         break;
     } 
@@ -71,6 +74,8 @@ namespace LuaCppB {
       value = LuaValue(stack.toPointer<void *>(index));
     } else if (stack.is<LuaType::UserData>(index)) {
       value = LuaValue(LuaUserData(state, index));
+    } else if (stack.is<LuaType::Thread>(index)) {
+      value = LuaValue(LuaThread(state, index));
     }
     return value;
   }

@@ -16,7 +16,7 @@ namespace LuaCppB {
 	 public:
 		LuaState(lua_State *);
 		virtual ~LuaState() = default;
-		lua_State *getState() const override;
+		lua_State *getState() const;
 		LuaCppClassRegistry &getClassRegistry();
 		LuaCppObjectBoxerRegistry &getObjectBoxerRegistry() override;
 		

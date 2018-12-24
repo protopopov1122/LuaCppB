@@ -90,17 +90,18 @@ namespace LuaCppB {
     : handle(base.handle) {}
 
   void LuaReferencedValue::push(lua_State *state) const {
+    LuaStack stack(state);
     int ref = -1;
     handle.get([&](lua_State *handleState) {
       if (state == handleState) {
-        lua_pushvalue(state, -1);
-        ref = luaL_ref(state, LUA_REGISTRYINDEX);
+        stack.copy(-1);
+        ref = stack.ref();
       } else {
         throw LuaCppBError("Reference handler state must match requested state", LuaCppBErrorCode::StateMismatch);
       }
     });
-    lua_rawgeti(state, LUA_REGISTRYINDEX, ref);
-    luaL_unref(state, LUA_REGISTRYINDEX, ref);
+    stack.getIndex<true>(LUA_REGISTRYINDEX, ref);
+    stack.unref(ref);
   }
 
   template <>
@@ -117,9 +118,10 @@ namespace LuaCppB {
   }
 
   LuaTable LuaTable::create(lua_State *state) {
-    lua_newtable(state);
+    LuaStack stack(state);
+    stack.pushTable();
     LuaTable table(state);
-    lua_pop(state, 1);
+    stack.pop();
     return table;
   }
 

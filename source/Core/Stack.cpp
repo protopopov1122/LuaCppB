@@ -73,4 +73,87 @@ namespace LuaCppB {
   LuaCFunction LuaStack::toCFunction(int index) {
     return lua_tocfunction(this->state, index);
   }
+
+  void LuaStack::setField(int index, const std::string &key) {
+    lua_setfield(this->state, index, key.c_str());
+  }
+
+  void LuaStack::getField(int index, const std::string &key) {
+    lua_getfield(this->state, index, key.c_str());
+  }
+  
+  bool LuaStack::metatable(const std::string &name) {
+    return static_cast<bool>(luaL_newmetatable(this->state, name.c_str()));
+  }
+
+  void LuaStack::setMetatable(int index) {
+    lua_setmetatable(this->state, index);
+  }
+
+  void LuaStack::setMetatable(const std::string &name) {
+    luaL_setmetatable(this->state, name.c_str());
+  }
+
+  int LuaStack::ref() {
+    return luaL_ref(this->state, LUA_REGISTRYINDEX);
+  }
+
+  void LuaStack::unref(int idx) {
+    luaL_unref(this->state, LUA_REGISTRYINDEX, idx);
+  }
+
+  template <>
+  void LuaStack::setIndex<true>(int index, int idx) {
+    lua_rawseti(this->state, index, idx);
+  }
+
+  template <>
+  void LuaStack::getIndex<true>(int index, int idx) {
+    lua_rawgeti(this->state, index, idx);
+  }
+
+  template <>
+  bool LuaStack::is<LuaType::None>(int index) {
+    return static_cast<bool>(lua_isnone(this->state, index));
+  }
+
+  template <>
+  bool LuaStack::is<LuaType::Nil>(int index) {
+    return static_cast<bool>(lua_isnil(this->state, index));
+  }
+
+  template <>
+  bool LuaStack::is<LuaType::Number>(int index) {
+    return static_cast<bool>(lua_isnumber(this->state, index));
+  }
+
+  template <>
+  bool LuaStack::is<LuaType::Boolean>(int index) {
+    return static_cast<bool>(lua_isboolean(this->state, index));
+  }
+
+  template <>
+  bool LuaStack::is<LuaType::String>(int index) {
+    return static_cast<bool>(lua_isstring(this->state, index));
+  }
+
+  template <>
+  bool LuaStack::is<LuaType::Function>(int index) {
+    return static_cast<bool>(lua_iscfunction(this->state, index));
+  }
+
+  template <>
+  bool LuaStack::is<LuaType::Table>(int index) {
+    return static_cast<bool>(lua_istable(this->state, index));
+  }
+
+  template <>
+  bool LuaStack::is<LuaType::LightUserData>(int index) {
+    return static_cast<bool>(lua_islightuserdata(this->state, index));
+  }
+
+  template <>
+  bool LuaStack::is<LuaType::UserData>(int index) {
+    return static_cast<bool>(lua_isuserdata(this->state, index));
+  }
 }

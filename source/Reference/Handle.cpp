@@ -1,4 +1,5 @@
 #include "luacppb/Reference/Reference.h"
+#include "luacppb/Core/Stack.h"
 
 namespace LuaCppB {
 
@@ -31,7 +32,8 @@ namespace LuaCppB {
   bool LuaReferenceHandle::exists() {
     bool exists = false;
     this->ref->putOnTop([&](lua_State *state) {
-      exists = !(lua_isnone(state, -1) || lua_isnil(state, -1));
+      LuaStack stack(state);
+      exists = !(stack.is<LuaType::None>() || stack.is<LuaType::Nil>());
     });
     return exists;
   }

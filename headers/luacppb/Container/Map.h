@@ -12,32 +12,34 @@ namespace LuaCppB {
    public:
     template <typename M>
     static typename std::enable_if<is_instantiation<std::map, M>::value>::type push(lua_State *state, LuaCppRuntime &runtime, M &map) {
-      LuaCppObjectWrapper<M> *handle = reinterpret_cast<LuaCppObjectWrapper<M> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<M>)));
+      LuaStack stack(state);
+      LuaCppObjectWrapper<M> *handle = stack.push<LuaCppObjectWrapper<M>>();
       new(handle) LuaCppObjectWrapper<M>(map);
       LuaCppMap<P>::set_map_meta<M>(state, runtime);
     }
    private:
     template <typename M>
     static void set_map_meta(lua_State *state, LuaCppRuntime &runtime) {
+      LuaStack stack(state);
       std::string typeName = typeid(M).name();
-      if (luaL_newmetatable(state, typeName.c_str())) {
-        lua_pushlightuserdata(state, reinterpret_cast<void *>(&runtime));
-        lua_pushcclosure(state, &LuaCppMap<P>::map_get<M>, 1);
-        lua_setfield(state, -2, "__index");
-        lua_pushcclosure(state, &LuaCppMap<P>::map_put<M>, 0);
-        lua_setfield(state, -2, "__newindex");
-        lua_pushcclosure(state, &LuaCppMap<P>::map_size<M>, 0);
-        lua_setfield(state, -2, "__len");
-        lua_pushlightuserdata(state, reinterpret_cast<void *>(&runtime));
-        lua_pushcclosure(state, &LuaCppMap<P>::map_pairs<M>, 1);
-        lua_setfield(state, -2, "__pairs");
-        lua_pushlightuserdata(state, reinterpret_cast<void *>(&runtime));
-        lua_pushcclosure(state, &LuaCppMap<P>::map_ipairs<M>, 1);
-        lua_setfield(state, -2, "__ipairs");
-        lua_pushcclosure(state, &LuaCppMap<P>::map_gc<M>, 0);
-        lua_setfield(state, -2, "__gc");
+      if (stack.metatable(typeName)) {
+        stack.push(&runtime);
+        stack.push(&LuaCppMap<P>::map_get<M>, 1);
+        stack.setField(-2, "__index");
+        stack.push(&LuaCppMap<P>::map_put<M>);
+        stack.setField(-2, "__newindex");
+        stack.push(&LuaCppMap<P>::map_size<M>);
+        stack.setField(-2, "__len");
+        stack.push(&runtime);
+        stack.push(&LuaCppMap<P>::map_pairs<M>, 1);
+        stack.setField(-2, "__pairs");
+        stack.push(&runtime);
+        stack.push(&LuaCppMap<P>::map_ipairs<M>, 1);
+        stack.setField(-2, "__ipairs");
+        stack.push(&LuaCppMap<P>::map_gc<M>);
+        stack.setField(-2, "__gc");
       }
-      lua_setmetatable(state, -2);
+      stack.setMetatable(-2);
     }
 
     template <typename M>
@@ -101,19 +103,21 @@ namespace LuaCppB {
 
     template <typename M>
     static int map_pairs(lua_State *state) {
-      lua_pushvalue(state, lua_upvalueindex(1));
-      lua_pushcclosure(state, &LuaCppMap<P>::map_iter<M>, 1);
-      lua_pushvalue(state, 1);
-      lua_pushnil(state);
+      LuaStack stack(state);
+      stack.copy(lua_upvalueindex(1));
+      stack.push(&LuaCppMap<P>::map_iter<M>, 1);
+      stack.copy(1);
+      stack.push();
       return 3;
     }
 
     template <typename M>
     static int map_ipairs(lua_State *state) {
-      lua_pushvalue(state, lua_upvalueindex(1));
-      lua_pushcclosure(state, &LuaCppMap<P>::map_iiter<M>, 1);
-      lua_pushvalue(state, 1);
-      lua_pushnil(state);
+      LuaStack stack(state);
+      stack.copy(lua_upvalueindex(1));
+      stack.push(&LuaCppMap<P>::map_iiter<M>, 1);
+      stack.copy(1);
+      stack.push();
       return 3;
     }
 
@@ -129,7 +133,7 @@ namespace LuaCppB {
         return 0;
       }
       typename M::const_iterator iter = map->begin();
-      if (!lua_isnil(state, 2)) {
+      if (!stack.is<LuaType::Nil>(2)) {
         K key = stack.get(2).value_or(LuaValue()).get<K>();
         iter = map->find(key);
         iter++;

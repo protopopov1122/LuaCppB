@@ -1,5 +1,6 @@
 #include "luacppb/Reference/Reference.h"
 #include "luacppb/Core/StackGuard.h"
+#include "luacppb/Core/Stack.h"
 
 namespace LuaCppB {
 
@@ -23,13 +24,14 @@ namespace LuaCppB {
   }
 
   bool LuaStackReference::putOnTop(std::function<void (lua_State *)> callback) {
+    LuaStack stack(this->state);
     LuaStackGuard guard(this->state);
     guard.assumeIndex(this->index);
-    lua_pushvalue(this->state, this->index);
+    stack.copy(this->index);
     auto canary = guard.canary();
     callback(this->state);
     canary.assume();
-    lua_pop(this->state, 1);
+    stack.pop();
     return true;
   }
 

@@ -103,9 +103,10 @@ namespace LuaCppB {
 		NativeFunctionCall(F fn, LuaCppRuntime &runtime) : function(fn), runtime(runtime) {}
 
 		void push(lua_State *state) const override {
-			lua_pushlightuserdata(state, reinterpret_cast<void *>(this->function));
-			lua_pushlightuserdata(state, reinterpret_cast<void *>(&this->runtime));
-			lua_pushcclosure(state, NativeFunctionCall<R, A...>::function_closure, 2);
+			LuaStack stack(state);
+			stack.push(reinterpret_cast<void*>(this->function));
+			stack.push(&this->runtime);
+			stack.push(&NativeFunctionCall<R, A...>::function_closure, 2);
 		}
 	 private:
 		static int call(F function, LuaCppRuntime &runtime, lua_State *state) {
@@ -149,11 +150,12 @@ namespace LuaCppB {
 			: object(const_cast<C *>(&obj)), method(NativeMethodWrapper(met).get()), runtime(runtime) {}
 		
 		void push(lua_State *state) const override {
-			NativeMethodDescriptor<C, M> *descriptor = reinterpret_cast<NativeMethodDescriptor<C, M> *>(lua_newuserdata(state, sizeof(NativeMethodDescriptor<C, M>)));
+			LuaStack stack(state);
+			NativeMethodDescriptor<C, M> *descriptor = stack.push<NativeMethodDescriptor<C, M>>();
 			descriptor->object = this->object;
 			descriptor->method = this->method;
-			lua_pushlightuserdata(state, reinterpret_cast<void *>(&this->runtime));
-			lua_pushcclosure(state, &NativeMethodCall<C, R, A...>::method_closure, 2);	
+			stack.push(&this->runtime);
+			stack.push(&NativeMethodCall<C, R, A...>::method_closure, 2);
 		}
 	 private:
 	 	static int call(C *object, M method, LuaCppRuntime &runtime, lua_State *state) {
@@ -197,10 +199,11 @@ namespace LuaCppB {
 	 	NativeInvocableCall(T inv, LuaCppRuntime &runtime) : invocable(inv), runtime(runtime) {}
 
 		void push(lua_State *state) const {
-			NativeInvocableDescriptor<T> *descriptor = reinterpret_cast<NativeInvocableDescriptor<T> *>(lua_newuserdata(state, sizeof(NativeInvocableDescriptor<T>)));
+			LuaStack stack(state);
+			NativeInvocableDescriptor<T> *descriptor = stack.push<NativeInvocableDescriptor<T>>();
 			new(descriptor) NativeInvocableDescriptor(this->invocable);
-			lua_pushlightuserdata(state, reinterpret_cast<void *>(&this->runtime));
-			lua_pushcclosure(state, &NativeInvocableCall<T, A...>::invocable_closure, 2);
+			stack.push(&this->runtime);
+			stack.push(&NativeInvocableCall<T, A...>::invocable_closure, 2);
 		}
 	 private:
 		static int call(T &invocable, LuaCppRuntime &runtime, lua_State *state) {

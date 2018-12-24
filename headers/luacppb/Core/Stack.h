@@ -31,6 +31,26 @@ namespace LuaCppB {
     std::string toString(int = -1);
     LuaCFunction toCFunction(int = -1);
 
+    void setField(int, const std::string &);
+    void getField(int, const std::string &);
+
+    template <bool R = false>
+    void setIndex(int index, int idx) {
+      lua_seti(this->state, index, idx);
+    }
+
+    template <bool R = false>
+    void getIndex(int index, int idx) {
+      lua_geti(this->state, index, idx);
+    }
+
+    int ref();
+    void unref(int);
+
+    bool metatable(const std::string &);
+    void setMetatable(int = -1);
+    void setMetatable(const std::string &);
+
     template <typename T>
     T toPointer(int index = -1) {
       return reinterpret_cast<T>(const_cast<void *>(lua_topointer(this->state, index)));
@@ -59,6 +79,16 @@ namespace LuaCppB {
     template <typename T>
     T *push() {
       return reinterpret_cast<T *>(lua_newuserdata(state, sizeof(T)));
+    }
+
+    template <typename T>
+    T *checkUserData(int index, const std::string &name) {
+      return reinterpret_cast<T *>(const_cast<void *>(luaL_checkudata(this->state, index, name.c_str())));
+    }
+
+    template <LuaType T>
+    bool is(int index = -1) {
+      return false;
     }
    private:
     lua_State *state;

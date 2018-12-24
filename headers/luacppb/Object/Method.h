@@ -18,15 +18,15 @@ namespace LuaCppB {
 		LuaCppObjectMethodCall(M met, const std::string &cName, LuaCppRuntime &runtime) : method(met), className(cName), runtime(runtime) {}
 
 		void push(lua_State *state) const override {
-			LuaCppObjectMethodCallDescriptor<M> *descriptor = reinterpret_cast<LuaCppObjectMethodCallDescriptor<M> *>(
-        lua_newuserdata(state, sizeof(LuaCppObjectMethodCallDescriptor<M>)));
+			LuaStack stack(state);
+			LuaCppObjectMethodCallDescriptor<M> *descriptor = stack.push<LuaCppObjectMethodCallDescriptor<M>>();
 			descriptor->method = this->method;
-			lua_pushlightuserdata(state, reinterpret_cast<void *>(&this->runtime));
+			stack.push(&this->runtime);
 			if (this->className.has_value()) {
-				lua_pushstring(state, this->className.value().c_str());
-				lua_pushcclosure(state, &LuaCppObjectMethodCall<C, M, R, A...>::class_method_closure, 3);
+				stack.push(this->className.value());
+				stack.push(&LuaCppObjectMethodCall<C, M, R, A...>::class_method_closure, 3);
 			} else {
-				lua_pushcclosure(state, &LuaCppObjectMethodCall<C, M, R, A...>::object_method_closure, 2);
+				stack.push(&LuaCppObjectMethodCall<C, M, R, A...>::object_method_closure, 2);
 			}
 		}
 	 private:
@@ -58,7 +58,7 @@ namespace LuaCppB {
 			LuaCppObjectMethodCallDescriptor<M> *descriptor = stack.toUserData<LuaCppObjectMethodCallDescriptor<M> *>(lua_upvalueindex(1));
 			LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
 			std::string className = stack.toString(lua_upvalueindex(3));
-			LuaCppObjectWrapper<C> *object = reinterpret_cast<LuaCppObjectWrapper<C> *>(const_cast<void *>(luaL_checkudata(state, 1, className.c_str())));
+			LuaCppObjectWrapper<C> *object = stack.checkUserData<LuaCppObjectWrapper<C>>(1, className);
 			if (object) {
 				return LuaCppObjectMethodCall<C, M, R, A...>::call(object->get(), descriptor->method, runtime, state);
 			} else {

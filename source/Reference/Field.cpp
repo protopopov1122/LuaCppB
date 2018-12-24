@@ -7,9 +7,10 @@ namespace LuaCppB {
     bool result = false;
     this->ref.getReference().putOnTop([&](lua_State *state) {
       LuaStackGuard guard(state);
-      if (lua_istable(state, -1)) {
-        lua_getfield(state, -1, this->name.c_str());
-        if (!lua_isnone(state, -1)) {
+      LuaStack stack(state);
+      if (stack.is<LuaType::Table>()) {
+        stack.getField(-1, this->name);
+        if (!stack.is<LuaType::None>()) {
           auto canary = guard.canary();
           callback(state);
           canary.assume();
@@ -25,11 +26,12 @@ namespace LuaCppB {
     bool result = false;
     this->ref.getReference().putOnTop([&](lua_State *state) {
       LuaStackGuard guard(state);
-      if (lua_istable(state, -1)) {
+      LuaStack stack(state);
+      if (stack.is<LuaType::Table>()) {
         auto canary = guard.canary();
         gen(state);
         canary.assume(1);
-        lua_setfield(state, -2, this->name.c_str());
+        stack.setField(-2, this->name);
         result = true;
       }
     });
@@ -40,9 +42,10 @@ namespace LuaCppB {
     bool result = false;
     this->ref.getReference().putOnTop([&](lua_State *state) {
       LuaStackGuard guard(state);
-      if (lua_istable(state, -1)) {
-        lua_geti(state, -1, this->index);
-        if (!lua_isnone(state, -1)) {
+      LuaStack stack(state);
+      if (stack.is<LuaType::Table>()) {
+        stack.getIndex(-1, this->index);
+        if (!stack.is<LuaType::None>()) {
           auto canary = guard.canary();
           callback(state);
           canary.assume();
@@ -58,11 +61,12 @@ namespace LuaCppB {
     bool result = false;
     this->ref.getReference().putOnTop([&](lua_State *state) {
       LuaStackGuard guard(state);
-      if (lua_istable(state, -1)) {
+      LuaStack stack(state);
+      if (stack.is<LuaType::Table>()) {
         auto canary = guard.canary();
         gen(state);
         canary.assume(1);
-        lua_seti(state, -2, this->index);
+        stack.setIndex(-2, this->index);
         result = true;
       }
     });

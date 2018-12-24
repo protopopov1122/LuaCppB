@@ -5,6 +5,7 @@
 #include "luacppb/Value/Native.h"
 #include "luacppb/Reference/Registry.h"
 #include "luacppb/Core/Runtime.h"
+#include "luacppb/Core/Stack.h"
 #include <type_traits>
 #include <tuple>
 #include <vector>
@@ -39,14 +40,15 @@ namespace LuaCppB {
    public:
     template <typename ... A>
     static void call(lua_State *state, int index, LuaCppRuntime &runtime, std::vector<LuaValue> &result, A &... args) {
-      int top = lua_gettop(state);
-      lua_pushvalue(state, index);
+      LuaStack stack(state);
+      int top = stack.getTop();
+      stack.copy(index);
       LuaFunctionArgument<A...>::push(state, runtime, args...);
       lua_pcall(state, sizeof...(args), LUA_MULTRET, 0);
-      int results = lua_gettop(state) - top;
+      int results = stack.getTop() - top;
       while (results-- > 0) {
         result.push_back(LuaValue::peek(state).value());
-        lua_pop(state, 1);
+        stack.pop();
       }
       std::reverse(result.begin(), result.end());
     }

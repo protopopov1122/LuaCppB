@@ -1,5 +1,6 @@
 #include "luacppb/Reference/Registry.h"
 #include "luacppb/Core/StackGuard.h"
+#include "luacppb/Core/Stack.h"
 
 namespace LuaCppB {
 
@@ -9,22 +10,25 @@ namespace LuaCppB {
   LuaUniqueRegistryHandle::LuaUniqueRegistryHandle(lua_State *state, int index)
     : state(state) {
     if (state) {
-      lua_pushvalue(state, index);
-      this->ref = luaL_ref(state, LUA_REGISTRYINDEX);
+      LuaStack stack(state);
+      stack.copy(index);
+      this->ref = stack.ref();
     }
   }
 
   LuaUniqueRegistryHandle::LuaUniqueRegistryHandle(const LuaUniqueRegistryHandle &handle)
     : state(handle.state), ref(0) {
     if (this->state) {
-      lua_rawgeti(this->state, LUA_REGISTRYINDEX, handle.ref);
-      this->ref = luaL_ref(state, LUA_REGISTRYINDEX);
+      LuaStack stack(state);
+      stack.getIndex<true>(LUA_REGISTRYINDEX, handle.ref);
+      this->ref = stack.ref();
     }
   }
 
   LuaUniqueRegistryHandle::~LuaUniqueRegistryHandle() {
     if (this->state) {
-      luaL_unref(this->state, LUA_REGISTRYINDEX, this->ref);
+      LuaStack stack(this->state);
+      stack.unref(this->ref);
     }
   }
 
@@ -35,7 +39,8 @@ namespace LuaCppB {
   bool LuaUniqueRegistryHandle::get(std::function<void (lua_State *)> callback) const {
     if (this->state) {
       LuaStackGuard guard(this->state);
-      lua_rawgeti(this->state, LUA_REGISTRYINDEX, this->ref);
+      LuaStack stack(this->state);
+      stack.getIndex<true>(LUA_REGISTRYINDEX, this->ref);
       auto canary = guard.canary();
       callback(this->state);
       canary.assume();
@@ -47,11 +52,12 @@ namespace LuaCppB {
   bool LuaUniqueRegistryHandle::set(std::function<void (lua_State *)> gen) {
     if (this->state) {
       LuaStackGuard guard(this->state);
-      luaL_unref(this->state, LUA_REGISTRYINDEX, this->ref);
+      LuaStack stack(this->state);
+      stack.unref(this->ref);
       auto canary = guard.canary();
       gen(this->state);
       canary.assume(1);
-      this->ref = luaL_ref(state, LUA_REGISTRYINDEX);
+      this->ref = stack.ref();
     }
     return this->state != nullptr;
   }

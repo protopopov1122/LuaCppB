@@ -30,9 +30,6 @@ namespace LuaCppB {
 
     template <typename T>
     void wrap(lua_State *state, T *object) {
-      if (state != this->state) {
-        throw LuaCppBError("Lua state mismatch", LuaCppBErrorCode::StateMismatch);
-      }
       if (this->canWrap<T>()) {
         if constexpr (std::is_const<T>::value) {
           this->wrappers[typeid(T)]->wrap(state, reinterpret_cast<const void *>(object));
@@ -44,9 +41,6 @@ namespace LuaCppB {
 
     template <typename T>
     void wrap(lua_State *state, std::unique_ptr<T> object) {
-      if (state != this->state) {
-        throw LuaCppBError("Lua state mismatch", LuaCppBErrorCode::StateMismatch);
-      }
       if (this->canWrap<T>()) {
         T *pointer = object.release();
         this->wrappers[typeid(T)]->wrapUnique(state, reinterpret_cast<void *>(pointer));
@@ -55,9 +49,6 @@ namespace LuaCppB {
 
     template <typename T>
     void wrap(lua_State *state, std::shared_ptr<T> object) {
-      if (state != this->state) {
-        throw LuaCppBError("Lua state mismatch", LuaCppBErrorCode::StateMismatch);
-      }
       if (this->canWrap<T>()) {
         this->wrappers[typeid(T)]->wrapShared(state, std::reinterpret_pointer_cast<void >(object));
       }

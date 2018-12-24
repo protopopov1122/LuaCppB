@@ -4,6 +4,7 @@
 #include "luacppb/Object/Class.h"
 #include "luacppb/Object/Boxer.h"
 #include "luacppb/Core/Error.h"
+#include "luacppb/Core/Stack.h"
 #include <typeindex>
 #include <typeinfo>
 
@@ -16,31 +17,35 @@ namespace LuaCppB {
       : className(className) {}
 
     void wrap(lua_State *state, void *raw_ptr) override {
+      LuaStack stack(state);
       T *object = reinterpret_cast<T *>(raw_ptr);
-      LuaCppObjectWrapper<T> *wrapper = reinterpret_cast<LuaCppObjectWrapper<T> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<T>)));
+      LuaCppObjectWrapper<T> *wrapper = stack.push<LuaCppObjectWrapper<T>>();
       new(wrapper) LuaCppObjectWrapper<T>(object);
-      luaL_setmetatable(state, this->className.c_str());
+      stack.setMetatable(this->className);
     }
 
     void wrap(lua_State *state, const void *raw_ptr) override {
+      LuaStack stack(state);
       const T *object = reinterpret_cast<const T *>(raw_ptr);
-      LuaCppObjectWrapper<const T> *wrapper = reinterpret_cast<LuaCppObjectWrapper<const T> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<const T>)));
+      LuaCppObjectWrapper<const T> *wrapper = stack.push<LuaCppObjectWrapper<const T>>();
       new(wrapper) LuaCppObjectWrapper<const T>(object);
-      luaL_setmetatable(state, this->className.c_str());
+      stack.setMetatable(this->className);
     }
 
     void wrapUnique(lua_State *state, void *raw_ptr) override {
+      LuaStack stack(state);
       std::unique_ptr<T> object = std::unique_ptr<T>(reinterpret_cast<T *>(raw_ptr));
-      LuaCppObjectWrapper<T> *wrapper = reinterpret_cast<LuaCppObjectWrapper<T> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<T>)));
+      LuaCppObjectWrapper<T> *wrapper = stack.push<LuaCppObjectWrapper<T>>();
       new(wrapper) LuaCppObjectWrapper<T>(std::move(object));
-      luaL_setmetatable(state, this->className.c_str());
+      stack.setMetatable(this->className);
     }
 
     void wrapShared(lua_State *state, std::shared_ptr<void> raw_object) override {
+      LuaStack stack(state);
       std::shared_ptr<T> object = std::reinterpret_pointer_cast<T>(raw_object);
-      LuaCppObjectWrapper<T> *wrapper = reinterpret_cast<LuaCppObjectWrapper<T> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<T>)));
+      LuaCppObjectWrapper<T> *wrapper = stack.push<LuaCppObjectWrapper<T>>();
       new(wrapper) LuaCppObjectWrapper<T>(object);
-      luaL_setmetatable(state, this->className.c_str());
+      stack.setMetatable(this->className);
     }
    private:
     std::string className;

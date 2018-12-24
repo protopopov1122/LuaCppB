@@ -10,6 +10,7 @@ namespace LuaCppB {
   }
 
   void LuaValue::push(lua_State *state) const {
+    LuaStack stack(state);
     switch (this->type) {
       case LuaType::Number:
         assert(this->value.index() == 0 || this->value.index() == 1);
@@ -37,7 +38,7 @@ namespace LuaCppB {
         break;
       case LuaType::LightUserData:
         assert(this->value.index() == 6);
-        lua_pushlightuserdata(state, std::get<void *>(this->value));
+        stack.push(std::get<void *>(this->value));
         break;
       case LuaType::UserData:
         assert(this->value.index() == 7);
@@ -50,25 +51,25 @@ namespace LuaCppB {
 
   std::optional<LuaValue> LuaValue::peek(lua_State *state, lua_Integer index) {
     LuaStack stack(state);
-    if (index > lua_gettop(state)) {
+    if (index > stack.getTop()) {
       throw LuaCppBError("Lua stack overflow", LuaCppBErrorCode::StackOverflow);
     }
     std::optional<LuaValue> value;
     if (lua_isinteger(state, index)) {
       value = LuaValue::create<lua_Integer>(stack.toInteger(index));
-    } else if (lua_isnumber(state, index)) {
+    } else if (stack.is<LuaType::Number>(index)) {
       value = LuaValue::create<lua_Number>(stack.toNumber(index));
-    } else if (lua_isboolean(state, index)) {
+    } else if (stack.is<LuaType::Boolean>(index)) {
       value = LuaValue::create<bool>(stack.toBoolean(index));
-    } else if (lua_isstring(state, index)) {
+    } else if (stack.is<LuaType::String>(index)) {
       value = LuaValue::create<std::string>(stack.toString(index));
-    } else if (lua_iscfunction(state, index)) {
+    } else if (stack.is<LuaType::Function>(index)) {
       value = LuaValue::create<LuaCFunction_ptr>(stack.toCFunction(index));
-    } else if (lua_istable(state, index)) {
+    } else if (stack.is<LuaType::Table>(index)) {
       value = LuaValue(LuaTable(state, index));
-    } else if (lua_islightuserdata(state, index)) {
+    } else if (stack.is<LuaType::LightUserData>(index)) {
       value = LuaValue(stack.toPointer<void *>(index));
-    } else if (lua_isuserdata(state, index)) {
+    } else if (stack.is<LuaType::UserData>(index)) {
       value = LuaValue(LuaUserData(state, index));
     }
     return value;

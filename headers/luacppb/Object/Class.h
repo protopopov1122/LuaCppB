@@ -30,25 +30,26 @@ namespace LuaCppB {
     }
     
     void push(lua_State *state) const override {
-      if (luaL_newmetatable(state, this->className.c_str()) != 0) {
-        lua_newtable(state);
+      LuaStack stack(state);
+      if (stack.metatable(this->className)) {
+        stack.pushTable();
         for (auto it = this->methods.begin(); it != this->methods.end(); ++it) {
           it->second->push(state);
-          lua_setfield(state, -2, it->first.c_str());
+          stack.setField(-2, it->first);
         }
-        lua_setfield(state, -2, "__index");
+        stack.setField(-2, "__index");
         if constexpr (std::is_default_constructible<C>::value) {
-          lua_pushstring(state, this->className.c_str());
-          lua_pushcclosure(state, &LuaCppClass<C>::newObject, 1);
-          lua_setfield(state, -2, "new");
+          stack.push(this->className);
+          stack.push(&LuaCppClass<C>::newObject, 1);
+          stack.setField(-2, "new");
         }
         for (auto it = this->staticMethods.begin(); it != this->staticMethods.end(); ++it) {
           it->second->push(state);
-          lua_setfield(state, -2, it->first.c_str());
+          stack.setField(-2, it->first);
         }
-        lua_pushstring(state, this->className.c_str());
-        lua_pushcclosure(state, &LuaCppClass<C>::gcObject, 1);
-        lua_setfield(state, -2, "__gc");
+        stack.push(this->className);
+        stack.push(&LuaCppClass<C>::gcObject, 1);
+        stack.setField(-2, "__gc");
       }
     }
 
@@ -75,15 +76,15 @@ namespace LuaCppB {
     }
    private:
     static int newObject(lua_State *state) {
+      LuaStack stack(state);
       if constexpr (std::is_default_constructible<C>::value) {
-        LuaStack stack(state);
         std::string className = stack.toString(lua_upvalueindex(1));
-        LuaCppObjectWrapper<C> *object = reinterpret_cast<LuaCppObjectWrapper<C> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<C>)));
+        LuaCppObjectWrapper<C> *object = stack.push<LuaCppObjectWrapper<C>>();
         new(object) LuaCppObjectWrapper<C>();
         new(object->get()) C();
-        luaL_setmetatable(state, className.c_str());
+        stack.setMetatable(className);
       } else {
-        lua_pushnil(state);
+        stack.push();
       }
       return 1;
     }
@@ -91,7 +92,7 @@ namespace LuaCppB {
     static int gcObject(lua_State *state) {
       LuaStack stack(state);
       std::string className = stack.toString(lua_upvalueindex(1));
-      LuaCppObjectWrapper<C> *object = reinterpret_cast<LuaCppObjectWrapper<C> *>(luaL_checkudata(state, 1, className.c_str()));
+      LuaCppObjectWrapper<C> *object = stack.checkUserData<LuaCppObjectWrapper<C>>(1, className);
       if (object) {
         object->~LuaCppObjectWrapper();
         ::operator delete(object, object);

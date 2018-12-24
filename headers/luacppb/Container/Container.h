@@ -4,6 +4,7 @@
 #include "luacppb/Container/Vector.h"
 #include "luacppb/Container/Map.h"
 #include "luacppb/Container/Tuple.h"
+#include "luacppb/Core/Stack.h"
 #include "luacppb/Meta.h"
 #include <type_traits>
 #include <optional>
@@ -48,7 +49,8 @@ namespace LuaCppB {
       if (value.has_value()) {
         P::push(state, runtime, value.value());
       } else {
-        lua_pushnil(state);
+        LuaStack stack(state);
+        stack.push();
       }
     }
 

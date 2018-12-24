@@ -45,7 +45,8 @@ namespace LuaCppB {
     template <typename V>
     static typename std::enable_if<is_instantiation<std::vector, V>::value>::type
       push(lua_State *state, LuaCppRuntime &runtime, V &vec) {
-      LuaCppObjectWrapper<V> *handle = reinterpret_cast<LuaCppObjectWrapper<V> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<V>)));
+      LuaStack stack(state);
+      LuaCppObjectWrapper<V> *handle = stack.push<LuaCppObjectWrapper<V>>();
       new(handle) LuaCppObjectWrapper<V>(vec);
       LuaCppVector<P>::set_vector_meta<V>(state, runtime);
     }
@@ -53,7 +54,8 @@ namespace LuaCppB {
     template <typename V>
     static typename std::enable_if<is_instantiation<std::vector, V>::value>::type
       push(lua_State *state, LuaCppRuntime &runtime, const V &vec) {
-      LuaCppObjectWrapper<const V> *handle = reinterpret_cast<LuaCppObjectWrapper<const V> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<V>)));
+      LuaStack stack(state);
+      LuaCppObjectWrapper<const V> *handle = stack.push<LuaCppObjectWrapper<const V>>();
       new(handle) LuaCppObjectWrapper<const V>(vec);
       LuaCppVector<P>::set_vector_meta<const V>(state, runtime);
     }
@@ -61,7 +63,8 @@ namespace LuaCppB {
     template <typename V>
     static typename std::enable_if<is_instantiation<std::vector, V>::value>::type
       push(lua_State *state, LuaCppRuntime &runtime, std::unique_ptr<V> &vec) {
-      LuaCppObjectWrapper<V> *handle = reinterpret_cast<LuaCppObjectWrapper<V> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<V>)));
+      LuaStack stack(state);
+      LuaCppObjectWrapper<V> *handle = stack.push<LuaCppObjectWrapper<V>>();
       new(handle) LuaCppObjectWrapper<V>(std::move(vec));
       LuaCppVector<P>::set_vector_meta<V>(state, runtime);
     }
@@ -69,7 +72,8 @@ namespace LuaCppB {
     template <typename V>
     static typename std::enable_if<is_instantiation<std::vector, V>::value>::type
       push(lua_State *state, LuaCppRuntime &runtime, std::shared_ptr<V> &vec) {
-      LuaCppObjectWrapper<V> *handle = reinterpret_cast<LuaCppObjectWrapper<V> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<V>)));
+      LuaStack stack(state);
+      LuaCppObjectWrapper<V> *handle = stack.push<LuaCppObjectWrapper<V>>();
       new(handle) LuaCppObjectWrapper<V>(vec);
       LuaCppVector<P>::set_vector_meta<V>(state, runtime);
     }
@@ -82,23 +86,24 @@ namespace LuaCppB {
       if constexpr (std::is_const<V>::value) {
         typeName = typeName + "__const";
       }
-      if (luaL_newmetatable(state, typeName.c_str())) {
-        lua_pushlightuserdata(state, reinterpret_cast<void *>(&runtime));
-        lua_pushcclosure(state, &LuaCppVector<P>::vector_index<V>, 1);
-        lua_setfield(state, -2, "__index");
+      LuaStack stack(state);
+      if (stack.metatable(typeName)) {
+        stack.push(&runtime);
+        stack.push(&LuaCppVector<P>::vector_index<V>, 1);
+        stack.setField(-2, "__index");
         if constexpr (!std::is_const<V>::value) {
-          lua_pushcclosure(state, &cpp_vector_newindex<T, A>::newindex, 0);
-          lua_setfield(state, -2, "__newindex");
+          stack.push(&cpp_vector_newindex<T, A>::newindex);
+          stack.setField(-2, "__newindex");
         }
-        lua_pushlightuserdata(state, reinterpret_cast<void *>(&runtime));
-        lua_pushcclosure(state, &LuaCppVector<P>::vector_pairs<V>, 1);
-        lua_setfield(state, -2, "__pairs");
-        lua_pushcclosure(state, &LuaCppVector<P>::vector_length<V>, 0);
-        lua_setfield(state, -2, "__len");
-        lua_pushcclosure(state, &LuaCppVector<P>::vector_gc<V>, 0);
-        lua_setfield(state, -2, "__gc");
+        stack.push(&runtime);
+        stack.push(&LuaCppVector<P>::vector_pairs<V>, 1);
+        stack.setField(-2, "__pairs");
+        stack.push(&LuaCppVector<P>::vector_length<V>);
+        stack.setField(-2, "__len");
+        stack.push(&LuaCppVector::vector_gc<V>);
+        stack.setField(-2, "__gc");
       }
-      lua_setmetatable(state, -2);
+      stack.setMetatable(-2);
     }
 
     template <typename V>
@@ -141,10 +146,11 @@ namespace LuaCppB {
 
     template <typename V>
     static int vector_pairs(lua_State *state) {
-      lua_pushvalue(state, lua_upvalueindex(1));
-      lua_pushcclosure(state, &LuaCppVector<P>::vector_iter<V>, 1);
-      lua_pushvalue(state, 1);
-      lua_pushnil(state);
+      LuaStack stack(state);
+      stack.copy(lua_upvalueindex(1));
+      stack.push(&LuaCppVector<P>::vector_iter<V>, 1);
+      stack.copy(1);
+      stack.push();
       return 3;
     }
 
@@ -160,7 +166,7 @@ namespace LuaCppB {
       }
       std::size_t index = 0;
       typename V::const_iterator iter = vec->begin();
-      if (!lua_isnil(state, 2)) {
+      if (!stack.is<LuaType::Nil>(2)) {
         index = stack.toInteger(2);
         std::size_t key = index;
         while (key--) {

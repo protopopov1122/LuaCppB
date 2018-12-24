@@ -17,7 +17,7 @@ namespace LuaCppB {
       LuaStack stack(state);
       if constexpr (I < std::tuple_size<T>::value) {
         P::push(state, runtime, std::get<I>(tuple));
-        lua_rawseti(state, -2, I + 1);
+        stack.setIndex<true>(-2, I + 1);
         LuaCppTuplePush_Impl<I + 1, P, A...>::push(state, runtime, tuple);
       }
     }
@@ -27,7 +27,8 @@ namespace LuaCppB {
   struct LuaCppTuplePush {
     template <typename ... A>
     static void push(lua_State *state, LuaCppRuntime &runtime, std::tuple<A...> &tuple) {
-      lua_newtable(state);
+      LuaStack stack(state);
+      stack.pushTable();
       LuaCppTuplePush_Impl<0, P, A...>::push(state, runtime, tuple);
     }
   };
@@ -52,11 +53,12 @@ namespace LuaCppB {
    private:
     template <typename A, typename B, class P>
     static void pushPair(lua_State *state, LuaCppRuntime &runtime, std::pair<A, B> &pair) {
-      lua_newtable(state);
+      LuaStack stack(state);
+      stack.pushTable();
       P::push(state, runtime, pair.first);
-      lua_rawseti(state, -2, 1);
+      stack.setIndex<true>(-2, 1);
       P::push(state, runtime, pair.second);
-      lua_rawseti(state, -2, 2);
+      stack.setIndex<true>(-2, 2);
     }
   };
 }

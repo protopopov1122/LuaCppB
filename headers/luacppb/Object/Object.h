@@ -28,18 +28,19 @@ namespace LuaCppB {
     }
 
     void push(lua_State *state) const override {
-      LuaCppObjectWrapper<T> *object = reinterpret_cast<LuaCppObjectWrapper<T> *>(lua_newuserdata(state, sizeof(LuaCppObjectWrapper<T>)));
+      LuaStack stack(state);
+      LuaCppObjectWrapper<T> *object = stack.push<LuaCppObjectWrapper<T>>();
       new(object) LuaCppObjectWrapper<T>(this->object);
-      lua_newtable(state);
-      lua_newtable(state);
+      stack.pushTable();
+      stack.pushTable();
       for (auto it = this->methods.begin(); it != this->methods.end(); ++it) {
         it->second->push(state);
-        lua_setfield(state, -2, it->first.c_str());
+        stack.setField(-2, it->first);
       }
-      lua_setfield(state, -2, "__index");
-      lua_pushcfunction(state, &LuaCppObject<T>::gcObject);
-      lua_setfield(state, -2, "__gc");
-      lua_setmetatable(state, -2);
+      stack.setField(-2, "__index");
+      stack.push(&LuaCppObject<T>::gcObject);
+      stack.setField(-2, "__gc");
+      stack.setMetatable(-2);
     }
    private:
     static int gcObject(lua_State *state) {

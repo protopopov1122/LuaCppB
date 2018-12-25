@@ -2,6 +2,8 @@
 #include "luacppb/Core/State.h"
 #include "luacppb/Reference/Reference.h"
 #include "luacppb/Invoke/Native.h"
+#include "luacppb/Invoke/Promise.h"
+#include "luacppb/Object/Object.h"
 
 using namespace LuaCppB;
 
@@ -223,4 +225,24 @@ TEST_CASE("Coroutines") {
     auto coro = env["cfn"];
     test_coro(coro);
   }
+}
+
+
+void test_cont(LuaState env, int val) {
+  LuaPromise<int>(env["fn"], env).call([](int i) {
+    REQUIRE(i == 120);
+  }, val);
+}
+
+TEST_CASE("Continuations") {
+  const std::string &CODE = "function fn(x)\n"
+                            "    a = coroutine.yield()\n"
+                            "    return x + a\n"
+                            "end\n"
+                            "coro = coroutine.create(test)\n"
+                            "coroutine.resume(coro, 100)\n"
+                            "coroutine.resume(coro, 20)\n";
+  LuaEnvironment env;
+  env["test"] = test_cont;
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
 }

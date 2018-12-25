@@ -5,8 +5,8 @@
 
 namespace LuaCppB {
 
-	LuaState::LuaState(lua_State *state)
-		: state(state), registry(std::make_unique<LuaCppClassRegistry>(state)) {
+	LuaState::LuaState(lua_State *state, std::shared_ptr<LuaCppClassRegistry> registry)
+		: state(state), registry(registry == nullptr ? std::make_shared<LuaCppClassRegistry>(state) : registry) {
 		assert(this->state != nullptr);
 	}
 
@@ -20,6 +20,10 @@ namespace LuaCppB {
 
 	LuaCppObjectBoxerRegistry &LuaState::getObjectBoxerRegistry() {
 		return *this->registry;
+	}
+
+	std::shared_ptr<LuaCppObjectBoxerRegistry> LuaState::getOwnedObjectBoxerRegistry() {
+		return this->registry;
 	}
 
 	LuaReferenceHandle LuaState::operator[](const std::string &name) {

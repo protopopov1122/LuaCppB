@@ -17,23 +17,33 @@ namespace LuaCppB {
 	
 	template <std::size_t I, typename T, typename E = void>
 	struct NativeFunctionArgument {
-		static T get(lua_State *state) {
+		static T get(lua_State *state, LuaCppRuntime &runtime) {
 			return LuaValue::peek(state, I).value_or(LuaValue()).get<T>();
 		}
+
+		static constexpr bool Virtual = false;
 	};
 
 	template <std::size_t I, typename T>
 	struct NativeFunctionArgument<I, T, typename std::enable_if<std::is_same<T, LuaState>::value>::type> {
-		static T get(lua_State *state) {
-			return LuaState(state);
+		static T get(lua_State *state, LuaCppRuntime &runtime) {
+			std::shared_ptr<LuaCppObjectBoxerRegistry> reg = runtime.getOwnedObjectBoxerRegistry();
+			std::shared_ptr<LuaCppClassRegistry> clReg = std::static_pointer_cast<LuaCppClassRegistry>(reg);
+			return LuaState(state, clReg);
 		}
+
+		static constexpr bool Virtual = true;
 	};
 
 	template <std::size_t I, typename T>
 	struct NativeFunctionArgument<I, T, typename std::enable_if<std::is_same<T, LuaReferenceHandle>::value>::type> {
-		static T get(lua_State *state) {
-			return LuaState(state)[I];
+		static T get(lua_State *state, LuaCppRuntime &runtime) {
+			std::shared_ptr<LuaCppObjectBoxerRegistry> reg = runtime.getOwnedObjectBoxerRegistry();
+			std::shared_ptr<LuaCppClassRegistry> clReg = std::static_pointer_cast<LuaCppClassRegistry>(reg);
+			return LuaState(state, clReg)[I];
 		}
+
+		static constexpr bool Virtual = false;
 	};
 
 	template <typename T, typename E = void>
@@ -77,22 +87,26 @@ namespace LuaCppB {
 
 	template <std::size_t I>
 	struct NativeFunctionArgumentsTuple_Impl<I> {
-		static std::tuple<> value(lua_State *state) {
+		static std::tuple<> value(lua_State *state, LuaCppRuntime &runtime) {
 			return std::make_tuple();
 		}
 	};
 
 	template <std::size_t I, typename T, typename ... Ts>
 	struct NativeFunctionArgumentsTuple_Impl<I, T, Ts...> {
-		static std::tuple<T, Ts...> value(lua_State *state) {
-			return std::tuple_cat(std::forward_as_tuple(NativeFunctionArgument<I, T>::get(state)), NativeFunctionArgumentsTuple_Impl<I + 1, Ts...>::value(state));
+		static std::tuple<T, Ts...> value(lua_State *state, LuaCppRuntime &runtime) {
+			if constexpr (!NativeFunctionArgument<I, T>::Virtual) {
+				return std::tuple_cat(std::forward_as_tuple(NativeFunctionArgument<I, T>::get(state, runtime)), NativeFunctionArgumentsTuple_Impl<I + 1, Ts...>::value(state, runtime));
+			} else {
+				return std::tuple_cat(std::forward_as_tuple(NativeFunctionArgument<I, T>::get(state, runtime)), NativeFunctionArgumentsTuple_Impl<I, Ts...>::value(state, runtime));
+			}
 		};
 	};
 	
 	template <std::size_t S, typename ... A>
 	struct NativeFunctionArgumentsTuple {
-		static std::tuple<A...> value(lua_State *state) {
-			return NativeFunctionArgumentsTuple_Impl<S, A...>::value(state);
+		static std::tuple<A...> value(lua_State *state, LuaCppRuntime &runtime) {
+			return NativeFunctionArgumentsTuple_Impl<S, A...>::value(state, runtime);
 		}
 	};
 
@@ -110,7 +124,7 @@ namespace LuaCppB {
 		}
 	 private:
 		static int call(F function, LuaCppRuntime &runtime, lua_State *state) {
-			std::tuple<A...> args = NativeFunctionArgumentsTuple<1, A...>::value(state);
+			std::tuple<A...> args = NativeFunctionArgumentsTuple<1, A...>::value(state, runtime);
 			if constexpr (std::is_void<R>::value) {
 				std::apply(function, args);
 				return 0;
@@ -159,7 +173,7 @@ namespace LuaCppB {
 		}
 	 private:
 	 	static int call(C *object, M method, LuaCppRuntime &runtime, lua_State *state) {
-			std::tuple<A...> args = NativeFunctionArgumentsTuple<1,A...>::value(state);
+			std::tuple<A...> args = NativeFunctionArgumentsTuple<1,A...>::value(state, runtime);
 			if constexpr (std::is_void<R>::value) {
 				std::apply([object, method](A... args) {	
 					return (object->*method)(args...);
@@ -207,7 +221,7 @@ namespace LuaCppB {
 		}
 	 private:
 		static int call(T &invocable, LuaCppRuntime &runtime, lua_State *state) {
-			std::tuple<A...> args = NativeFunctionArgumentsTuple<1, A...>::value(state);
+			std::tuple<A...> args = NativeFunctionArgumentsTuple<1, A...>::value(state, runtime);
 			if constexpr (std::is_void<R>::value) {
 				std::apply(invocable, args);
 				return 0;

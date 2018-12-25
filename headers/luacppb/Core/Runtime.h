@@ -3,6 +3,7 @@
 
 #include "luacppb/Base.h"
 #include "luacppb/Object/Boxer.h"
+#include <memory>
 
 namespace LuaCppB {
 
@@ -10,6 +11,7 @@ namespace LuaCppB {
    public:
     virtual ~LuaCppRuntime() = default;
     virtual LuaCppObjectBoxerRegistry &getObjectBoxerRegistry() = 0;
+    virtual std::shared_ptr<LuaCppObjectBoxerRegistry> getOwnedObjectBoxerRegistry() = 0;
   };
 }
 

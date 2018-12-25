@@ -36,6 +36,47 @@ namespace LuaCppB {
     }
   };
 
+  class LuaFunctionContinuation {
+   public:
+    virtual ~LuaFunctionContinuation() = default;
+    virtual int call(LuaStatusCode, std::vector<LuaValue> &) = 0;
+  };
+
+  class LuaFunctionContinuationHandle {
+   public:
+    LuaFunctionContinuationHandle(std::unique_ptr<LuaFunctionContinuation> cont, LuaCppRuntime &runtime, int top)
+      : cont(std::move(cont)), runtime(runtime), top(top) {}
+    
+    void getResult(lua_State *state, std::vector<LuaValue> &result) {
+      LuaStack stack(state);
+      int results = stack.getTop() - top;
+      while (results-- > 0) {
+        result.push_back(LuaValue::peek(state).value());
+        stack.pop();
+      }
+      std::reverse(result.begin(), result.end());
+    }
+
+    LuaCppRuntime &getRuntime() {
+      return this->runtime;
+    }
+
+    LuaFunctionContinuation &getContinuation() {
+      return *this->cont;
+    }
+
+    static int fnContinuation(lua_State *state, int status, lua_KContext ctx) {
+      std::unique_ptr<LuaFunctionContinuationHandle> handle(reinterpret_cast<LuaFunctionContinuationHandle *>(ctx));
+      std::vector<LuaValue> result;
+      handle->getResult(state, result);
+      return handle->getContinuation().call(static_cast<LuaStatusCode>(status), result);
+    }
+   private:
+    std::unique_ptr<LuaFunctionContinuation> cont;
+    LuaCppRuntime &runtime;
+    int top;
+  };
+
   class LuaFunctionCall {
    public:
     template <typename ... A>
@@ -52,6 +93,19 @@ namespace LuaCppB {
       }
       std::reverse(result.begin(), result.end());
       return static_cast<LuaStatusCode>(status);
+    }
+
+    template <typename ... A>
+    static void callK(lua_State *state, int index, int top, LuaCppRuntime &runtime, std::unique_ptr<LuaFunctionContinuation> cont, A &... args) {
+      LuaStack stack(state);
+      stack.copy(index);
+      LuaFunctionArgument<A...>::push(state, runtime, args...);
+      LuaFunctionContinuationHandle *handle = new LuaFunctionContinuationHandle(std::move(cont), runtime, top);
+      lua_KContext ctx = reinterpret_cast<lua_KContext>(handle);
+      LuaFunctionContinuationHandle::fnContinuation(state,
+        lua_pcallk(state, sizeof...(args), LUA_MULTRET, 0,
+                  ctx, &LuaFunctionContinuationHandle::fnContinuation),
+        ctx);
     }
   };
 

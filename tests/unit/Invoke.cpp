@@ -2,7 +2,7 @@
 #include "luacppb/Core/State.h"
 #include "luacppb/Reference/Reference.h"
 #include "luacppb/Invoke/Native.h"
-#include "luacppb/Invoke/Promise.h"
+#include "luacppb/Invoke/Continuation.h"
 #include "luacppb/Object/Object.h"
 
 using namespace LuaCppB;
@@ -229,9 +229,10 @@ TEST_CASE("Coroutines") {
 
 
 void test_cont(LuaState env, int val) {
-  LuaPromise<int>(env["fn"], env).call([](int i) {
+  LuaContinuation<int>(env["fn"], env).call(FnWrapper<int, int>([](int i) {
     REQUIRE(i == 120);
-  }, val);
+    return i * 2;
+  }), val);
 }
 
 TEST_CASE("Continuations") {
@@ -241,8 +242,31 @@ TEST_CASE("Continuations") {
                             "end\n"
                             "coro = coroutine.create(test)\n"
                             "coroutine.resume(coro, 100)\n"
-                            "coroutine.resume(coro, 20)\n";
+                            "fin, res = coroutine.resume(coro, 20)";
   LuaEnvironment env;
   env["test"] = test_cont;
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["res"].get<int>() == 240);
+}
+
+void test_yield(LuaState env, int x) {
+  LuaContinuation<int>::yield(env.getState(), env, FnWrapper<void, int>([env, x](int y) {
+    LuaState state(env);
+    LuaContinuation<int>::yield(env.getState(), state, FnWrapper<int, int>([x, y](int z) {
+      return x + y + z;
+    }), x + y);
+  }), x);
+}
+
+TEST_CASE("Yielding") {
+  const std::string &CODE = "co = coroutine.wrap(fn)\n"
+                            "r1 = co(10)\n"
+                            "r2 = co(15)\n"
+                            "res = co(5)";
+  LuaEnvironment env;
+  env["fn"] = test_yield;
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["r1"].get<int>() == 10);
+  REQUIRE(env["r2"].get<int>() == 25);
+  REQUIRE(env["res"].get<int>() == 30);
 }

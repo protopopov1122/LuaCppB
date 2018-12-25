@@ -73,12 +73,12 @@ namespace LuaCppB {
 
 		template <typename ... A>
 		LuaFunctionCallResult operator()(A &... args) {
-			return LuaFunctionInvoke<LuaReference>::invoke<A...>(*this->ref, this->getRuntime(), args...);
+			return LuaFunctionInvoke::invoke<LuaReference, A...>(*this->ref, this->getRuntime(), args...);
 		}
 
 		template <typename ... A>
 		LuaFunctionCallResult operator()(A &&... args) {
-			return LuaFunctionInvoke<LuaReference>::invoke<A...>(*this->ref, this->getRuntime(), args...);
+			return LuaFunctionInvoke::invoke<LuaReference, A...>(*this->ref, this->getRuntime(), args...);
 		}
 	 private:
 	 	lua_State *state;

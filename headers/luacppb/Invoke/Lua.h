@@ -39,7 +39,7 @@ namespace LuaCppB {
   class LuaFunctionContinuation {
    public:
     virtual ~LuaFunctionContinuation() = default;
-    virtual int call(LuaStatusCode, std::vector<LuaValue> &) = 0;
+    virtual int call(lua_State *, LuaCppRuntime &, LuaStatusCode, std::vector<LuaValue> &) = 0;
   };
 
   class LuaFunctionContinuationHandle {
@@ -69,7 +69,7 @@ namespace LuaCppB {
       std::unique_ptr<LuaFunctionContinuationHandle> handle(reinterpret_cast<LuaFunctionContinuationHandle *>(ctx));
       std::vector<LuaValue> result;
       handle->getResult(state, result);
-      return handle->getContinuation().call(static_cast<LuaStatusCode>(status), result);
+      return handle->getContinuation().call(state, handle->getRuntime(), static_cast<LuaStatusCode>(status), result);
     }
    private:
     std::unique_ptr<LuaFunctionContinuation> cont;
@@ -96,14 +96,28 @@ namespace LuaCppB {
     }
 
     template <typename ... A>
-    static void callK(lua_State *state, int index, int top, LuaCppRuntime &runtime, std::unique_ptr<LuaFunctionContinuation> cont, A &... args) {
+    static void callK(lua_State *state, int index, LuaCppRuntime &runtime, std::unique_ptr<LuaFunctionContinuation> cont, A &... args) {
       LuaStack stack(state);
+      int top = stack.getTop();
       stack.copy(index);
       LuaFunctionArgument<A...>::push(state, runtime, args...);
       LuaFunctionContinuationHandle *handle = new LuaFunctionContinuationHandle(std::move(cont), runtime, top);
       lua_KContext ctx = reinterpret_cast<lua_KContext>(handle);
       LuaFunctionContinuationHandle::fnContinuation(state,
         lua_pcallk(state, sizeof...(args), LUA_MULTRET, 0,
+                  ctx, &LuaFunctionContinuationHandle::fnContinuation),
+        ctx);
+    }
+
+    template <typename ... A>
+    static void yieldK(lua_State *state, LuaCppRuntime &runtime, std::unique_ptr<LuaFunctionContinuation> cont, A &... args) {
+      LuaStack stack(state);
+      int top = stack.getTop();
+      LuaFunctionArgument<A...>::push(state, runtime, args...);
+      LuaFunctionContinuationHandle *handle = new LuaFunctionContinuationHandle(std::move(cont), runtime, top);
+      lua_KContext ctx = reinterpret_cast<lua_KContext>(handle);
+      LuaFunctionContinuationHandle::fnContinuation(state,
+        lua_yieldk(state, sizeof...(args),
                   ctx, &LuaFunctionContinuationHandle::fnContinuation),
         ctx);
     }

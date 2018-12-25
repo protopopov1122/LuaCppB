@@ -55,7 +55,7 @@ TEST_CASE("Native function call") {
   SECTION("Function call") {
     const std::string &CODE = "results = { quad(16), invert(false) }";
     env["quad"] = test_quad_fn;
-    env["invert"] = NativeFunctionCall(test_invert, env);
+    env["invert"] = test_invert;
     REQUIRE(env["quad"].exists());
     REQUIRE(env["quad"].getType() == LuaType::Function);
     REQUIRE(env["invert"].exists());
@@ -99,9 +99,9 @@ TEST_CASE("Native method call") {
                             "res3 = calc(2, 3)";
   LuaEnvironment env;
   Factor factor(10);
-  env["calc"] = NativeMethodCall(&factor, &Factor::calc, env);
-  env["get"] = NativeMethodCall(&factor, &Factor::get, env);
-  env["set"] = NativeMethodCall(factor, &Factor::set, env); 
+  env["calc"] = NativeMethod<LuaNativeValue>::create(&factor, &Factor::calc, env);
+  env["get"] = NativeMethod<LuaNativeValue>::create(&factor, &Factor::get, env);
+  env["set"] = NativeMethod<LuaNativeValue>::create(factor, &Factor::set, env); 
   REQUIRE((env["calc"].exists() && env["get"].exists() && env["set"].exists()));
   REQUIRE(env["calc"].getType() == LuaType::Function);
   REQUIRE(env["get"].getType() == LuaType::Function);
@@ -115,13 +115,13 @@ TEST_CASE("Native method call") {
 TEST_CASE("Invocable object call") {
   const std::string &CODE = "result = { factorial(5), factorial(7) }";
   LuaEnvironment env;
-  env["factorial"] = NativeInvocable([](int n) {
+  env["factorial"] = [](int n) {
     int res = 1;
     while (n > 0) {
       res *= n--;
     }
     return res;
-  }, env);
+  };
   REQUIRE(env["factorial"].exists());
   REQUIRE(env["factorial"].getType() == LuaType::Function);
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);

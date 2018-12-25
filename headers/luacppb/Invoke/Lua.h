@@ -13,26 +13,26 @@
 
 namespace LuaCppB {
 
-  template <typename ... A>
+  template <typename P, typename ... A>
   struct LuaFunctionArgument_Impl {};
 
-  template <>
-  struct LuaFunctionArgument_Impl<> {
+  template <typename P>
+  struct LuaFunctionArgument_Impl<P> {
     static void push(lua_State *state, LuaCppRuntime &runtime) {}
   };
 
-  template <typename B, typename ... A>
-  struct LuaFunctionArgument_Impl<B, A...> {
+  template <typename P, typename B, typename ... A>
+  struct LuaFunctionArgument_Impl<P, B, A...> {
     static void push(lua_State *state, LuaCppRuntime &runtime, B &arg, A &... args) {
-      LuaNativeValue::push<B>(state, runtime, arg);
-      LuaFunctionArgument_Impl<A...>::push(state, runtime, args...);
+      P::push(state, runtime, arg);
+      LuaFunctionArgument_Impl<P, A...>::push(state, runtime, args...);
     }
   };
 
-  template <typename ... A>
+  template <typename P, typename ... A>
   struct LuaFunctionArgument {
     static void push(lua_State *state, LuaCppRuntime &runtime, A &... args) {
-      LuaFunctionArgument_Impl<A...>::push(state, runtime, args...);
+      LuaFunctionArgument_Impl<P, A...>::push(state, runtime, args...);
     }
   };
 
@@ -84,7 +84,7 @@ namespace LuaCppB {
       LuaStack stack(state);
       int top = stack.getTop();
       stack.copy(index);
-      LuaFunctionArgument<A...>::push(state, runtime, args...);
+      LuaFunctionArgument<LuaNativeValue, A...>::push(state, runtime, args...);
       int status = lua_pcall(state, sizeof...(args), LUA_MULTRET, 0);
       int results = stack.getTop() - top;
       while (results-- > 0) {
@@ -100,7 +100,7 @@ namespace LuaCppB {
       LuaStack stack(state);
       int top = stack.getTop();
       stack.copy(index);
-      LuaFunctionArgument<A...>::push(state, runtime, args...);
+      LuaFunctionArgument<LuaNativeValue, A...>::push(state, runtime, args...);
       LuaFunctionContinuationHandle *handle = new LuaFunctionContinuationHandle(std::move(cont), runtime, top);
       lua_KContext ctx = reinterpret_cast<lua_KContext>(handle);
       LuaFunctionContinuationHandle::fnContinuation(state,
@@ -113,7 +113,7 @@ namespace LuaCppB {
     static void yieldK(lua_State *state, LuaCppRuntime &runtime, std::unique_ptr<LuaFunctionContinuation> cont, A &... args) {
       LuaStack stack(state);
       int top = stack.getTop();
-      LuaFunctionArgument<A...>::push(state, runtime, args...);
+      LuaFunctionArgument<LuaNativeValue, A...>::push(state, runtime, args...);
       LuaFunctionContinuationHandle *handle = new LuaFunctionContinuationHandle(std::move(cont), runtime, top);
       lua_KContext ctx = reinterpret_cast<lua_KContext>(handle);
       LuaFunctionContinuationHandle::fnContinuation(state,

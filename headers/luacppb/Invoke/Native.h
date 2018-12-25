@@ -2,7 +2,6 @@
 #define LUACPPB_INVOKE_NATIVE_H_
 
 #include "luacppb/Base.h"
-#include "luacppb/Value/Native.h"
 #include "luacppb/Invoke/Method.h"
 #include "luacppb/Core/Runtime.h"
 #include "luacppb/Core/State.h"
@@ -46,38 +45,38 @@ namespace LuaCppB {
 		static constexpr bool Virtual = false;
 	};
 
-	template <typename T, typename E = void>
+	template <typename P, typename T, typename E = void>
 	struct NativeFunctionResult {
 		static int set(lua_State *state, LuaCppRuntime &runtime, T &value) {
-			LuaNativeValue::push<T>(state, runtime, value);
+			P::push(state, runtime, value);
 			return 1;
 		}
 	};
 
-	template <typename T>
-	struct NativeFunctionResult<T, typename std::enable_if<is_instantiation<std::pair, T>::value>::type> {
+	template <typename P, typename T>
+	struct NativeFunctionResult<P, T, typename std::enable_if<is_instantiation<std::pair, T>::value>::type> {
 		static int set(lua_State *state, LuaCppRuntime &runtime, T &value) {
-			LuaNativeValue::push<typename T::first_type>(state, runtime, value.first);
-			LuaNativeValue::push<typename T::second_type>(state, runtime, value.second);
+			P::push(state, runtime, value.first);
+			P::push(state, runtime, value.second);
 			return 2;
 		}
 	};
 
-	template <std::size_t I, typename T>
+	template <typename P, std::size_t I, typename T>
 	struct NativeFunctionResult_Tuple {
 		static void push(lua_State *state, LuaCppRuntime &runtime, T &value) {
 			LuaStack stack(state);
 			if constexpr (I < std::tuple_size<T>::value) {
-				LuaNativeValue::push(state, runtime, std::get<I>(value));
-				NativeFunctionResult_Tuple<I + 1, T>::push(state, runtime, value);
+				P::push(state, runtime, std::get<I>(value));
+				NativeFunctionResult_Tuple<P, I + 1, T>::push(state, runtime, value);
 			}
 		}
 	};
 
-	template <typename T>
-	struct NativeFunctionResult<T, typename std::enable_if<is_instantiation<std::tuple, T>::value>::type> {
+	template <typename P, typename T>
+	struct NativeFunctionResult<P, T, typename std::enable_if<is_instantiation<std::tuple, T>::value>::type> {
 		static int set(lua_State *state, LuaCppRuntime &runtime, T &value) {
-			NativeFunctionResult_Tuple<0, T>::push(state, runtime, value);
+			NativeFunctionResult_Tuple<P, 0, T>::push(state, runtime, value);
 			return std::tuple_size<T>::value;
 		}
 	};
@@ -110,7 +109,7 @@ namespace LuaCppB {
 		}
 	};
 
-	template <typename R, typename ... A>
+	template <typename P, typename R, typename ... A>
 	class NativeFunctionCall : public LuaData {
 		using F = R (*)(A...);
 	 public:
@@ -120,7 +119,7 @@ namespace LuaCppB {
 			LuaStack stack(state);
 			stack.push(reinterpret_cast<void*>(this->function));
 			stack.push(&this->runtime);
-			stack.push(&NativeFunctionCall<R, A...>::function_closure, 2);
+			stack.push(&NativeFunctionCall<P, R, A...>::function_closure, 2);
 		}
 	 private:
 		static int call(F function, LuaCppRuntime &runtime, lua_State *state) {
@@ -130,7 +129,7 @@ namespace LuaCppB {
 				return 0;
 			} else {				
 				R result = std::apply(function, args);
-				return NativeFunctionResult<R>::set(state, runtime, result);
+				return NativeFunctionResult<P, R>::set(state, runtime, result);
 			}
 		};
 
@@ -138,7 +137,7 @@ namespace LuaCppB {
 			LuaStack stack(state);
 			F fn = stack.toPointer<F>(lua_upvalueindex(1));
 			LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
-			return NativeFunctionCall<R, A...>::call(fn, runtime, state);
+			return NativeFunctionCall<P, R, A...>::call(fn, runtime, state);
 		};
 
 		F function;
@@ -151,7 +150,7 @@ namespace LuaCppB {
 		M method;
 	};
 
-	template <typename C, typename R, typename ... A>
+	template <typename P, typename C, typename R, typename ... A>
 	class NativeMethodCall : public LuaData {
 		using M = R (C::*)(A...);
 		using Mc = R (C::*)(A...) const;
@@ -169,7 +168,7 @@ namespace LuaCppB {
 			descriptor->object = this->object;
 			descriptor->method = this->method;
 			stack.push(&this->runtime);
-			stack.push(&NativeMethodCall<C, R, A...>::method_closure, 2);
+			stack.push(&NativeMethodCall<P, C, R, A...>::method_closure, 2);
 		}
 	 private:
 	 	static int call(C *object, M method, LuaCppRuntime &runtime, lua_State *state) {
@@ -183,7 +182,7 @@ namespace LuaCppB {
 				R result = std::apply([object, method](A... args) {	
 					return (object->*method)(args...);
 				}, args);
-				return NativeFunctionResult<R>::set(state, runtime, result);
+				return NativeFunctionResult<P, R>::set(state, runtime, result);
 			}
 		};
 
@@ -191,12 +190,36 @@ namespace LuaCppB {
 			LuaStack stack(state);
 			NativeMethodDescriptor<C, M> *descriptor = stack.toUserData<NativeMethodDescriptor<C, M> *>(lua_upvalueindex(1));
 			LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
-			return NativeMethodCall<C, R, A...>::call(descriptor->object, descriptor->method, runtime, state);
+			return NativeMethodCall<P, C, R, A...>::call(descriptor->object, descriptor->method, runtime, state);
 		};
 
 		C *object;
 		M method;
 		LuaCppRuntime &runtime;
+	};
+
+	template <typename P>
+	class NativeMethod {
+	 public:
+	 	template <typename C, typename R, typename ... A>
+	 	static NativeMethodCall<P, C, R, A...> create(C &obj, R (C::*met)(A...), LuaCppRuntime &runtime) {
+			return NativeMethodCall<P, C, R, A...>(obj, met, runtime);
+		}
+		
+	 	template <typename C, typename R, typename ... A>
+	 	static NativeMethodCall<P, C, R, A...> create(C *obj, R (C::*met)(A...), LuaCppRuntime &runtime) {
+			return NativeMethodCall<P, C, R, A...>(obj, met, runtime);
+		}
+
+	 	template <typename C, typename R, typename ... A>
+	 	static NativeMethodCall<P, C, R, A...> create(const C &obj, R (C::*met)(A...) const, LuaCppRuntime &runtime) {
+			return NativeMethodCall<P, C, R, A...>(obj, met, runtime);
+		}
+		
+	 	template <typename C, typename R, typename ... A>
+	 	static NativeMethodCall<P, C, R, A...> create(const C *obj, R (C::*met)(A...) const, LuaCppRuntime &runtime) {
+			return NativeMethodCall<P, C, R, A...>(obj, met, runtime);
+		}
 	};
 
 	template <typename T>
@@ -206,7 +229,7 @@ namespace LuaCppB {
 		T invocable;
 	};
 
-	template <typename T, typename ... A>
+	template <typename P, typename T, typename ... A>
 	class NativeInvocableCall : public LuaData {
 		using R = typename std::invoke_result<T, A...>::type;
 	 public:
@@ -217,7 +240,7 @@ namespace LuaCppB {
 			NativeInvocableDescriptor<T> *descriptor = stack.push<NativeInvocableDescriptor<T>>();
 			new(descriptor) NativeInvocableDescriptor(this->invocable);
 			stack.push(&this->runtime);
-			stack.push(&NativeInvocableCall<T, A...>::invocable_closure, 2);
+			stack.push(&NativeInvocableCall<P, T, A...>::invocable_closure, 2);
 		}
 	 private:
 		static int call(T &invocable, LuaCppRuntime &runtime, lua_State *state) {
@@ -227,7 +250,7 @@ namespace LuaCppB {
 				return 0;
 			} else {
 				R result = std::apply(invocable, args);
-				return NativeFunctionResult<R>::set(state, runtime, result);
+				return NativeFunctionResult<P, R>::set(state, runtime, result);
 			}
 		}
 
@@ -235,47 +258,51 @@ namespace LuaCppB {
 			LuaStack stack(state);
 			NativeInvocableDescriptor<T> *descriptor = stack.toUserData<NativeInvocableDescriptor<T> *>(lua_upvalueindex(1));
 			LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
-			return NativeInvocableCall<T, A...>::call(descriptor->invocable, runtime, state);
+			return NativeInvocableCall<P, T, A...>::call(descriptor->invocable, runtime, state);
 		}
 
 		T invocable;
 		LuaCppRuntime &runtime;
 	};
 
-	template<typename T>
-	struct NativeInvocableBuilder : public NativeInvocableBuilder<decltype(&T::operator())> {};
+	template<typename P, typename T>
+	struct NativeInvocableBuilder : public NativeInvocableBuilder<P, decltype(&T::operator())> {};
 
-	template<typename R, typename ... A>
-	struct NativeInvocableBuilder<R(A...)> {
+	template<typename P, typename R, typename ... A>
+	struct NativeInvocableBuilder<P, R(A...)> {
 		using FunctionType = std::function<R(A...)>;
-		using Type = NativeInvocableCall<FunctionType, A...>;
+		using Type = NativeInvocableCall<P, FunctionType, A...>;
 		static Type create(FunctionType && f, LuaCppRuntime &runtime) {
 			return Type(f, runtime);
 		}
 	};
 
-	template<typename R, typename ... A>
-	struct NativeInvocableBuilder<R(*)(A...)> {
+	template<typename P, typename R, typename ... A>
+	struct NativeInvocableBuilder<P, R(*)(A...)> {
 		using FunctionType = std::function<R(A...)>;
-		using Type = NativeInvocableCall<FunctionType, A...>;
+		using Type = NativeInvocableCall<P, FunctionType, A...>;
 		static Type create(FunctionType && f, LuaCppRuntime &runtime) {
 			return Type(f, runtime);
 		}
 	};
 
-	template<typename C, typename R, typename ... A>
-	struct NativeInvocableBuilder<R (C::*)(A...) const> {
+	template<typename P, typename C, typename R, typename ... A>
+	struct NativeInvocableBuilder<P, R (C::*)(A...) const> {
 		using FunctionType = std::function<R(A...)>;
-		using Type = NativeInvocableCall<FunctionType, A...>;
+		using Type = NativeInvocableCall<P, FunctionType, A...>;
 		static Type create(FunctionType && f, LuaCppRuntime &runtime) {
 			return Type(f, runtime);
 		}
 	};
 
-	template<class F>
-	typename NativeInvocableBuilder<F>::Type NativeInvocable(F && func, LuaCppRuntime &runtime) {
-		return NativeInvocableBuilder<F>::create(func, runtime);
-	}
+	template <typename P>
+	class NativeInvocable {
+	 public:
+	 	template <typename F>
+		static typename NativeInvocableBuilder<P, F>::Type create(F && func, LuaCppRuntime &runtime) {
+			return NativeInvocableBuilder<P, F>::create(func, runtime);
+		}
+	};
 }
 
 #endif

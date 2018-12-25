@@ -5,6 +5,7 @@
 #include "luacppb/Invoke/Invoke.h"
 #include "luacppb/Reference/Handle.h"
 #include "luacppb/Core/Stack.h"
+#include "luacppb/Value/Native.h"
 #include <functional>
 
 namespace LuaCppB {
@@ -50,7 +51,7 @@ namespace LuaCppB {
             return 0;
         } else {
           R value = std::apply(this->callback, args);
-          return NativeFunctionResult<R>::set(state, runtime, value);
+          return NativeFunctionResult<LuaNativeValue, R>::set(state, runtime, value);
         }
       }
       return 0;

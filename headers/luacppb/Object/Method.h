@@ -2,6 +2,7 @@
 #define LUACPPB_OBJECT_METHOD_H_
 
 #include "luacppb/Base.h"
+#include "luacppb/Value/Native.h"
 #include "luacppb/Object/Wrapper.h"
 #include "luacppb/Invoke/Native.h"
 #include "luacppb/Invoke/Method.h"
@@ -41,7 +42,7 @@ namespace LuaCppB {
 				R result = std::apply([object, method](A... args) {	
 					return (object->*method)(args...);
 				}, args);
-				return NativeFunctionResult<R>::set(state, runtime, result);
+				return NativeFunctionResult<LuaNativeValue, R>::set(state, runtime, result);
 			}
 		};
 

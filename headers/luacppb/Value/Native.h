@@ -3,6 +3,7 @@
 
 #include "luacppb/Base.h"
 #include "luacppb/Value/Value.h"
+#include "luacppb/Invoke/Native.h"
 #include "luacppb/Core/Runtime.h"
 #include "luacppb/Object/Native.h"
 #include "luacppb/Container/Container.h"
@@ -16,6 +17,7 @@ namespace LuaCppB {
   struct LuaNativeValueSpecialCase {
     static constexpr bool value = is_smart_pointer<T>::value ||
                                   is_instantiation<std::reference_wrapper, T>::value ||
+                                  is_callable<T>::value ||
                                   LuaCppContainer::is_container<T>();
   };
 
@@ -59,6 +61,12 @@ namespace LuaCppB {
     static typename std::enable_if<is_smart_pointer<T>::value && LuaCppContainer::is_container<typename T::element_type>()>::type
       push(lua_State *state, LuaCppRuntime &runtime, T &value) {
       LuaCppContainer::push<T, LuaNativeValue>(state, runtime, value);
+    }
+
+    template <typename T>
+    static typename std::enable_if<is_callable<T>::value>::type
+      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
+      NativeInvocable<LuaNativeValue>::create(std::forward<T>(value), runtime).push(state);
     }
   };
 }

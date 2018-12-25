@@ -29,7 +29,7 @@ namespace LuaCppB {
     template <typename ... A>
     LuaStatusCode call(std::vector<LuaValue> &result, A &... args) const {
       LuaStack stack(this->thread.toState());
-      LuaFunctionArgument<A...>::push(thread.toState(), this->runtime, args...);
+      LuaFunctionArgument<LuaNativeValue, A...>::push(thread.toState(), this->runtime, args...);
       LuaStatusCode status = static_cast<LuaStatusCode>(lua_resume(thread.toState(), nullptr, sizeof...(args)));
       int results = stack.getTop();
       while (results-- > 0) {

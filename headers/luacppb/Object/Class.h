@@ -2,6 +2,7 @@
 #define LUACPPB_OBJECT_CLASS_H_
 
 #include "luacppb/Base.h"
+#include "luacppb/Value/Native.h"
 #include "luacppb/Invoke/Native.h"
 #include "luacppb/Object/Method.h"
 #include "luacppb/Core/Stack.h"
@@ -72,7 +73,7 @@ namespace LuaCppB {
 
     template <typename R, typename ... A>
     void bind(const std::string &key, R (*function)(A...)) {
-      this->staticMethods[key] = std::make_shared<NativeFunctionCall<R, A...>>(function, this->runtime);
+      this->staticMethods[key] = std::make_shared<NativeFunctionCall<LuaNativeValue, R, A...>>(function, this->runtime);
     }
    private:
     static int newObject(lua_State *state) {

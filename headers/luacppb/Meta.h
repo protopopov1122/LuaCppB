@@ -20,6 +20,12 @@ namespace LuaCppB {
 	struct is_smart_pointer {
 		static constexpr bool value = is_instantiation<std::unique_ptr, T>::value || is_instantiation<std::shared_ptr, T>::value;
 	};
+
+	template <typename T, typename E = void>
+	struct is_callable : std::is_function<T> {};
+
+	template <typename T>
+	struct is_callable<T, typename std::enable_if<std::is_same<decltype(void(&T::operator())), void>::value>::type> : std::true_type {};
 }
 
 #endif

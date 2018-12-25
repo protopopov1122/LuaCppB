@@ -241,6 +241,41 @@ namespace LuaCppB {
 		T invocable;
 		LuaCppRuntime &runtime;
 	};
+
+	template<typename T>
+	struct NativeInvocableBuilder : public NativeInvocableBuilder<decltype(&T::operator())> {};
+
+	template<typename R, typename ... A>
+	struct NativeInvocableBuilder<R(A...)> {
+		using FunctionType = std::function<R(A...)>;
+		using Type = NativeInvocableCall<FunctionType, A...>;
+		static Type create(FunctionType && f, LuaCppRuntime &runtime) {
+			return Type(f, runtime);
+		}
+	};
+
+	template<typename R, typename ... A>
+	struct NativeInvocableBuilder<R(*)(A...)> {
+		using FunctionType = std::function<R(A...)>;
+		using Type = NativeInvocableCall<FunctionType, A...>;
+		static Type create(FunctionType && f, LuaCppRuntime &runtime) {
+			return Type(f, runtime);
+		}
+	};
+
+	template<typename C, typename R, typename ... A>
+	struct NativeInvocableBuilder<R (C::*)(A...) const> {
+		using FunctionType = std::function<R(A...)>;
+		using Type = NativeInvocableCall<FunctionType, A...>;
+		static Type create(FunctionType && f, LuaCppRuntime &runtime) {
+			return Type(f, runtime);
+		}
+	};
+
+	template<class F>
+	typename NativeInvocableBuilder<F>::Type NativeInvocable(F && func, LuaCppRuntime &runtime) {
+		return NativeInvocableBuilder<F>::create(func, runtime);
+	}
 }
 
 #endif

@@ -99,9 +99,9 @@ TEST_CASE("Native method call") {
                             "res3 = calc(2, 3)";
   LuaEnvironment env;
   Factor factor(10);
-  env["calc"] = NativeMethodCall<Factor, float, float, float>(&factor, &Factor::calc, env);
-  env["get"] = NativeMethodCall<Factor, float>(&factor, &Factor::get, env);
-  env["set"] = NativeMethodCall<Factor, void, float>(factor, &Factor::set, env); 
+  env["calc"] = NativeMethodCall(&factor, &Factor::calc, env);
+  env["get"] = NativeMethodCall(&factor, &Factor::get, env);
+  env["set"] = NativeMethodCall(factor, &Factor::set, env); 
   REQUIRE((env["calc"].exists() && env["get"].exists() && env["set"].exists()));
   REQUIRE(env["calc"].getType() == LuaType::Function);
   REQUIRE(env["get"].getType() == LuaType::Function);
@@ -115,7 +115,7 @@ TEST_CASE("Native method call") {
 TEST_CASE("Invocable object call") {
   const std::string &CODE = "result = { factorial(5), factorial(7) }";
   LuaEnvironment env;
-  env["factorial"] = NativeInvocableCall<std::function<int(int)>, int>([](int n) {
+  env["factorial"] = NativeInvocable([](int n) {
     int res = 1;
     while (n > 0) {
       res *= n--;
@@ -229,10 +229,10 @@ TEST_CASE("Coroutines") {
 
 
 void test_cont(LuaState env, int val) {
-  LuaContinuation<int>(env["fn"], env).call(FnWrapper<int, int>([](int i) {
+  LuaContinuation<int>(env["fn"], env).call([](int i) {
     REQUIRE(i == 120);
     return i * 2;
-  }), val);
+  }, val);
 }
 
 TEST_CASE("Continuations") {
@@ -250,12 +250,12 @@ TEST_CASE("Continuations") {
 }
 
 void test_yield(LuaState env, int x) {
-  LuaContinuation<int>::yield(env.getState(), env, FnWrapper<void, int>([env, x](int y) {
+  LuaContinuation<int>::yield(env.getState(), env, [env, x](int y) {
     LuaState state(env);
-    LuaContinuation<int>::yield(env.getState(), state, FnWrapper<int, int>([x, y](int z) {
+    LuaContinuation<int>::yield(env.getState(), state, [x, y](int z) {
       return x + y + z;
-    }), x + y);
-  }), x);
+    }, x + y);
+  }, x);
 }
 
 TEST_CASE("Yielding") {

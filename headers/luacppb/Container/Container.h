@@ -37,6 +37,18 @@ namespace LuaCppB {
       push(lua_State *state, LuaCppRuntime &runtime, T &value) {
       LuaCppMap<P>::push(state, runtime, value);
     }
+
+    template <typename T, class P>
+    static typename std::enable_if<std::is_const<T>::value && is_instantiation<std::map, typename std::remove_const<T>::type>::value>::type
+      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
+      LuaCppMap<P>::push(state, runtime, value);
+    }
+
+    template <typename T, class P>
+    static typename std::enable_if<is_smart_pointer<T>::value && is_instantiation<std::map, typename T::element_type>::value>::type
+      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
+      LuaCppMap<P>::push(state, runtime, value);
+    }
     // Pair & tuple
     template <typename T, class P>
     static typename std::enable_if<LuaCppTuple::is_tuple<T>()>::type

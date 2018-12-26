@@ -11,7 +11,35 @@ namespace LuaCppB {
   class LuaCppMap {
    public:
     template <typename M>
-    static typename std::enable_if<is_instantiation<std::map, M>::value>::type push(lua_State *state, LuaCppRuntime &runtime, M &map) {
+    static typename std::enable_if<is_instantiation<std::map, M>::value>::type
+      push(lua_State *state, LuaCppRuntime &runtime, M &map) {
+      LuaStack stack(state);
+      LuaCppObjectWrapper<M> *handle = stack.push<LuaCppObjectWrapper<M>>();
+      new(handle) LuaCppObjectWrapper<M>(map);
+      LuaCppMap<P>::set_map_meta<M>(state, runtime);
+    }
+
+    template <typename M>
+    static typename std::enable_if<is_instantiation<std::map, M>::value>::type
+      push(lua_State *state, LuaCppRuntime &runtime, const M &map) {
+      LuaStack stack(state);
+      LuaCppObjectWrapper<const M> *handle = stack.push<LuaCppObjectWrapper<const M>>();
+      new(handle) LuaCppObjectWrapper<const M>(map);
+      LuaCppMap<P>::set_map_meta<const M>(state, runtime);
+    }
+
+    template <typename M>
+    static typename std::enable_if<is_instantiation<std::map, M>::value>::type
+      push(lua_State *state, LuaCppRuntime &runtime, std::unique_ptr<M> &map) {
+      LuaStack stack(state);
+      LuaCppObjectWrapper<M> *handle = stack.push<LuaCppObjectWrapper<M>>();
+      new(handle) LuaCppObjectWrapper<M>(std::move(map));
+      LuaCppMap<P>::set_map_meta<M>(state, runtime);
+    }
+
+    template <typename M>
+    static typename std::enable_if<is_instantiation<std::map, M>::value>::type
+      push(lua_State *state, LuaCppRuntime &runtime, std::shared_ptr<M> &map) {
       LuaStack stack(state);
       LuaCppObjectWrapper<M> *handle = stack.push<LuaCppObjectWrapper<M>>();
       new(handle) LuaCppObjectWrapper<M>(map);
@@ -26,8 +54,10 @@ namespace LuaCppB {
         stack.push(&runtime);
         stack.push(&LuaCppMap<P>::map_get<M>, 1);
         stack.setField(-2, "__index");
-        stack.push(&LuaCppMap<P>::map_put<M>);
-        stack.setField(-2, "__newindex");
+        if constexpr (!std::is_const<M>::value) {
+          stack.push(&LuaCppMap<P>::map_put<M>);
+          stack.setField(-2, "__newindex");
+        }
         stack.push(&LuaCppMap<P>::map_size<M>);
         stack.setField(-2, "__len");
         stack.push(&runtime);

@@ -117,7 +117,7 @@ TEST_CASE("Tuple") {
   }
 }
 
-TEST_CASE("Map") {
+void test_map(LuaEnvironment &env) {
   const std::string &CODE = "map[3] = map[1] + map[2]\n"
                             "sz = #map\n"
                             "psum = 0\n"
@@ -128,19 +128,54 @@ TEST_CASE("Map") {
                             "for k, v in ipairs(map) do\n"
                             "    isum = isum + k*v\n"
                             "end";
-  LuaEnvironment env;
-  std::map<int, int> map = {
-    { 1, 10 },
-    { 2, 20 }
-  };
-  env["map"] = map;
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  REQUIRE(map[3] == 30);
   REQUIRE(env["sz"].get<int>() == 3);
   int psum = env["psum"].get<int>();
   int isum = env["isum"].get<int>();
   REQUIRE(psum == 140);
   REQUIRE(isum == 140);
+}
+
+TEST_CASE("Map") {
+  LuaEnvironment env;
+  std::map<int, int> map = {
+    { 1, 10 },
+    { 2, 20 }
+  };
+  SECTION("By reference") {
+    env["map"] = map;
+    test_map(env);
+    REQUIRE(map[3] == 30);
+  }
+  SECTION("By const reference") {
+   const std::string &CODE = "sz = #map\n"
+                             "psum = 0\n"
+                             "for k, v in pairs(map) do\n"
+                             "    psum = psum + k*v\n"
+                             "end\n"
+                             "isum = 0\n"
+                             "for k, v in ipairs(map) do\n"
+                             "    isum = isum + k*v\n"
+                             "end";
+    const auto &cMap = map;
+    env["map"] = cMap;
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["sz"].get<int>() == 2);
+    int psum = env["psum"];
+    int isum = env["isum"];
+    REQUIRE(psum == 50);
+    REQUIRE(isum == 50);
+  }
+  SECTION("Unique pointer") {
+    env["map"] = std::make_unique<std::map<int, int>>(map);
+    test_map(env);
+  }
+  SECTION("Shared pointer") {
+    auto ptr = std::make_shared<std::map<int, int>>(map);
+    env["map"] = ptr;
+    test_map(env);
+    REQUIRE(ptr->at(3) == 30);
+  }
 }
 
 TEST_CASE("Optional") {

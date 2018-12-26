@@ -5,7 +5,7 @@
 #include <functional>
 #include <memory>
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 
   class LuaRegistryHandle {
    public:

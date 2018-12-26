@@ -5,8 +5,7 @@
 #include <type_traits>
 #include <memory>
 
-namespace LuaCppB {
-
+namespace LuaCppB::Internal {
 	template<typename T>
 	struct always_false : std::false_type {};
 

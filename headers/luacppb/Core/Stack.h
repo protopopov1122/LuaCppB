@@ -6,7 +6,7 @@
 #include <string>
 #include <type_traits>
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 
   class LuaStack {
    public:

@@ -1,12 +1,14 @@
 #include "luacppb/Value/Value.h"
-#include "luacppb/Reference/Reference.h"
+#include "luacppb/Reference/Primary.h"
+#include "luacppb/Reference/Field.h"
+#include "luacppb/Reference/Handle.h"
 #include "luacppb/Core/Error.h"
 #include "luacppb/Core/Stack.h"
 
 namespace LuaCppB {
 
   void LuaNil::push(lua_State *state) const {
-    LuaStack stack(state);
+    Internal::LuaStack stack(state);
     stack.push();
   }
 
@@ -19,12 +21,12 @@ namespace LuaCppB {
   LuaInteger::LuaInteger(lua_Integer i) : integer(i) {}
 
   void LuaInteger::push(lua_State *state) const {
-    LuaStack stack(state);
+    Internal::LuaStack stack(state);
     stack.push(this->integer);
   }
 
   LuaInteger LuaInteger::get(lua_State *state, int index) {
-    LuaStack stack(state);
+    Internal::LuaStack stack(state);
     return LuaInteger(stack.toInteger(index));
   }
 
@@ -33,24 +35,24 @@ namespace LuaCppB {
   LuaNumber::LuaNumber(lua_Number n) : number(n) {}
   
   void LuaNumber::push(lua_State *state) const {
-    LuaStack stack(state);
+    Internal::LuaStack stack(state);
     stack.push(this->number);
   }
 
   LuaNumber LuaNumber::get(lua_State *state, int index) {
-    LuaStack stack(state);
+    Internal::LuaStack stack(state);
     return LuaNumber(stack.toNumber(index));
   }
 
   LuaBoolean::LuaBoolean(bool b) : boolean(b) {}
 
   void LuaBoolean::push(lua_State *state) const {
-    LuaStack stack(state);
+    Internal::LuaStack stack(state);
     stack.push(this->boolean);
   }
 
   LuaBoolean LuaBoolean::get(lua_State *state, int index) {
-    LuaStack stack(state);
+    Internal::LuaStack stack(state);
     return LuaBoolean(stack.toBoolean(index));
   }
 
@@ -59,24 +61,24 @@ namespace LuaCppB {
   LuaString::LuaString(const char *str) : string(str) {}
 
   void LuaString::push(lua_State *state) const {
-    LuaStack stack(state);
+    Internal::LuaStack stack(state);
     stack.push(this->string);
   }
 
   LuaString LuaString::get(lua_State *state, int index) {
-    LuaStack stack(state);
+    Internal::LuaStack stack(state);
     return LuaString(stack.toString(index));
   }
 
   LuaCFunction::LuaCFunction(LuaCFunction_ptr fn) : function(fn) {}
   
   void LuaCFunction::push(lua_State *state) const {
-    LuaStack stack(state);
+    Internal::LuaStack stack(state);
     stack.push(this->function);
   }
 
   LuaCFunction LuaCFunction::get(lua_State *state, int index) {
-    LuaStack stack(state);
+    Internal::LuaStack stack(state);
     return LuaCFunction(stack.toCFunction(index));
   }
 
@@ -90,7 +92,7 @@ namespace LuaCppB {
     : handle(base.handle) {}
 
   void LuaReferencedValue::push(lua_State *state) const {
-    LuaStack stack(state);
+    Internal::LuaStack stack(state);
     int ref = -1;
     handle.get([&](lua_State *handleState) {
       if (state == handleState) {
@@ -108,7 +110,7 @@ namespace LuaCppB {
   LuaReferenceHandle LuaReferencedValue::convert<LuaReferenceHandle>() {
     LuaReferenceHandle handle;
     this->handle.get([&](lua_State *state) {
-      handle = LuaReferenceHandle(state, std::make_unique<LuaRegistryReference>(state, handle.getRuntime()));
+      handle = LuaReferenceHandle(state, std::make_unique<Internal::LuaRegistryReference>(state, handle.getRuntime()));
     });
     return handle;
   }
@@ -118,7 +120,7 @@ namespace LuaCppB {
   }
 
   LuaTable LuaTable::create(lua_State *state) {
-    LuaStack stack(state);
+    Internal::LuaStack stack(state);
     stack.pushTable();
     LuaTable table(state);
     stack.pop();
@@ -130,7 +132,7 @@ namespace LuaCppB {
   }
 
   LuaUserData LuaUserData::create(lua_State *state, std::size_t sz) {
-    LuaStack stack(state);
+    Internal::LuaStack stack(state);
     stack.pushUserData(sz);
     LuaUserData data(state);
     stack.pop();
@@ -146,7 +148,7 @@ namespace LuaCppB {
   }
 
   LuaThread LuaThread::create(lua_State *state) {
-    LuaStack stack(state);
+    Internal::LuaStack stack(state);
     stack.pushThread();
     LuaThread thread(state);
     stack.pop();

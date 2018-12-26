@@ -7,6 +7,4 @@ extern "C" {
 #include <lauxlib.h>
 }
 
-#include <iostream>
-
 #endif

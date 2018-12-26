@@ -10,7 +10,7 @@
 #include <type_traits>
 #include <functional>
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 
 
   template <typename T>
@@ -20,7 +20,7 @@ namespace LuaCppB {
                                   is_smart_pointer<T>::value ||
                                   is_instantiation<std::reference_wrapper, T>::value ||
                                   is_callable<T>::value ||
-                                  LuaCppContainer::is_container<T>();
+                                  Internal::LuaCppContainer::is_container<T>();
   };
 
   class LuaNativeValue {
@@ -47,13 +47,13 @@ namespace LuaCppB {
     template <typename T>
     static typename std::enable_if<!LuaNativeValueSpecialCase<T>::value>::type
       push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      LuaNativeObject::push<T>(state, runtime, value);
+      Internal::LuaNativeObject::push<T>(state, runtime, value);
     }
     
     template <typename T>
-    static typename std::enable_if<is_smart_pointer<T>::value && !LuaCppContainer::is_container<typename T::element_type>()>::type
+    static typename std::enable_if<is_smart_pointer<T>::value && !Internal::LuaCppContainer::is_container<typename T::element_type>()>::type
       push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      LuaNativeObject::push<T>(state, runtime, value);
+      Internal::LuaNativeObject::push<T>(state, runtime, value);
     }
     // Reference wrapped values
     template <typename T>
@@ -63,21 +63,21 @@ namespace LuaCppB {
     }
     // Containers
     template <typename T>
-    static typename std::enable_if<LuaCppContainer::is_container<T>()>::type
+    static typename std::enable_if<Internal::LuaCppContainer::is_container<T>()>::type
       push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      LuaCppContainer::push<T, LuaNativeValue>(state, runtime, value);
+      Internal::LuaCppContainer::push<T, Internal::LuaNativeValue>(state, runtime, value);
     }
 
     template <typename T>
-    static typename std::enable_if<is_smart_pointer<T>::value && LuaCppContainer::is_container<typename T::element_type>()>::type
+    static typename std::enable_if<is_smart_pointer<T>::value && Internal::LuaCppContainer::is_container<typename T::element_type>()>::type
       push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      LuaCppContainer::push<T, LuaNativeValue>(state, runtime, value);
+      Internal::LuaCppContainer::push<T, Internal::LuaNativeValue>(state, runtime, value);
     }
     // Callables
     template <typename T>
     static typename std::enable_if<is_callable<T>::value>::type
       push(lua_State *state, LuaCppRuntime &runtime, T value) {
-      NativeInvocable<LuaNativeValue>::create(value, runtime).push(state);
+      NativeInvocable<Internal::LuaNativeValue>::create(value, runtime).push(state);
     }
   };
 }

@@ -4,7 +4,7 @@
 #include "luacppb/Base.h"
 #include <cinttypes>
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 
   class LuaStackCanary {
    public:

@@ -2,7 +2,7 @@
 #include "luacppb/Core/StackGuard.h"
 #include "luacppb/Core/Stack.h"
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 
   LuaUniqueRegistryHandle::LuaUniqueRegistryHandle()
     : state(nullptr), ref(0) {}
@@ -10,7 +10,7 @@ namespace LuaCppB {
   LuaUniqueRegistryHandle::LuaUniqueRegistryHandle(lua_State *state, int index)
     : state(state) {
     if (state) {
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       stack.copy(index);
       this->ref = stack.ref();
     }
@@ -19,7 +19,7 @@ namespace LuaCppB {
   LuaUniqueRegistryHandle::LuaUniqueRegistryHandle(const LuaUniqueRegistryHandle &handle)
     : state(handle.state), ref(0) {
     if (this->state) {
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       stack.getIndex<true>(LUA_REGISTRYINDEX, handle.ref);
       this->ref = stack.ref();
     }
@@ -27,7 +27,7 @@ namespace LuaCppB {
 
   LuaUniqueRegistryHandle::~LuaUniqueRegistryHandle() {
     if (this->state) {
-      LuaStack stack(this->state);
+      Internal::LuaStack stack(this->state);
       stack.unref(this->ref);
     }
   }
@@ -38,8 +38,8 @@ namespace LuaCppB {
 
   bool LuaUniqueRegistryHandle::get(std::function<void (lua_State *)> callback) const {
     if (this->state) {
-      LuaStackGuard guard(this->state);
-      LuaStack stack(this->state);
+      Internal::LuaStackGuard guard(this->state);
+      Internal::LuaStack stack(this->state);
       stack.getIndex<true>(LUA_REGISTRYINDEX, this->ref);
       auto canary = guard.canary();
       callback(this->state);
@@ -51,8 +51,8 @@ namespace LuaCppB {
 
   bool LuaUniqueRegistryHandle::set(std::function<void (lua_State *)> gen) {
     if (this->state) {
-      LuaStackGuard guard(this->state);
-      LuaStack stack(this->state);
+      Internal::LuaStackGuard guard(this->state);
+      Internal::LuaStack stack(this->state);
       stack.unref(this->ref);
       auto canary = guard.canary();
       gen(this->state);

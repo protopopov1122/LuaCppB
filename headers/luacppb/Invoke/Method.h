@@ -3,7 +3,7 @@
 
 #include "luacppb/Base.h"
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 
   template <typename C, typename R, typename ... A>
   class NativeMethodWrapper {

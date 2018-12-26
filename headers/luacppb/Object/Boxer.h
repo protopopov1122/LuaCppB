@@ -7,10 +7,10 @@
 #include <map>
 #include <memory>
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 
   class LuaCppObjectBoxer {
-   public:
+  public:
     virtual ~LuaCppObjectBoxer() = default;
     virtual void wrap(lua_State *, void *) = 0;
     virtual void wrap(lua_State *, const void *) = 0;
@@ -55,13 +55,13 @@ namespace LuaCppB {
     }
    protected:
     template <typename T>
-    void addBoxer(std::shared_ptr<LuaCppObjectBoxer> wrapper) {
+    void addBoxer(std::shared_ptr<Internal::LuaCppObjectBoxer> wrapper) {
       this->wrappers[typeid(T)] = wrapper;
     }
    protected:
     lua_State *state;
    private:
-    std::map<std::type_index, std::shared_ptr<LuaCppObjectBoxer>> wrappers;
+    std::map<std::type_index, std::shared_ptr<Internal::LuaCppObjectBoxer>> wrappers;
   };
 }
 

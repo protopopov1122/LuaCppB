@@ -5,7 +5,7 @@
 #include "luacppb/Object/Registry.h"
 #include "luacppb/Core/Error.h"
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 
 	class LuaGlobalVariable : public LuaReference {
 	 public:
@@ -45,7 +45,7 @@ namespace LuaCppB {
 		bool putOnTop(std::function<void (lua_State *)>) override;
 		bool setValue(std::function<void (lua_State *)>) override;
 	 private:
-	 	LuaSharedRegistryHandle handle;
+	 	Internal::LuaSharedRegistryHandle handle;
 	};
 }
 

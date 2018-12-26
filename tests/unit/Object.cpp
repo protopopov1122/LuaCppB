@@ -1,7 +1,7 @@
 #include "catch.hpp"
 #include "luacppb/Core/State.h"
 #include "luacppb/Object/Object.h"
-#include "luacppb/Reference/Reference.h"
+#include "luacppb/Reference/Handle.h"
 #include "luacppb/Object/Class.h"
 #include "luacppb/Object/Registry.h"
 

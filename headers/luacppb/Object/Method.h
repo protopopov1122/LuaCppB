@@ -10,7 +10,7 @@
 #include "luacppb/Core/Runtime.h"
 #include <optional>
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 
 	template <typename C, typename M, typename R, typename ... A>
 	class LuaCppObjectMethodCall : public LuaData {
@@ -19,7 +19,7 @@ namespace LuaCppB {
 		LuaCppObjectMethodCall(M met, const std::string &cName, LuaCppRuntime &runtime) : method(met), className(cName), runtime(runtime) {}
 
 		void push(lua_State *state) const override {
-			LuaStack stack(state);
+			Internal::LuaStack stack(state);
 			LuaCppObjectMethodCallDescriptor<M> *descriptor = stack.push<LuaCppObjectMethodCallDescriptor<M>>();
 			descriptor->method = this->method;
 			stack.push(&this->runtime);
@@ -42,12 +42,12 @@ namespace LuaCppB {
 				R result = std::apply([object, method](A... args) {	
 					return (object->*method)(args...);
 				}, args);
-				return NativeFunctionResult<LuaNativeValue, R>::set(state, runtime, result);
+				return NativeFunctionResult<Internal::LuaNativeValue, R>::set(state, runtime, result);
 			}
 		};
 
 		static int object_method_closure(lua_State *state) {
-			LuaStack stack(state);
+			Internal::LuaStack stack(state);
 			LuaCppObjectMethodCallDescriptor<M> *descriptor = stack.toUserData<LuaCppObjectMethodCallDescriptor<M> *>(lua_upvalueindex(1));
 			LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
 			LuaCppObjectWrapper<C> *object = stack.toPointer<LuaCppObjectWrapper<C> *>(1);
@@ -55,7 +55,7 @@ namespace LuaCppB {
 		};
 
 		static int class_method_closure(lua_State *state) {
-			LuaStack stack(state);
+			Internal::LuaStack stack(state);
 			LuaCppObjectMethodCallDescriptor<M> *descriptor = stack.toUserData<LuaCppObjectMethodCallDescriptor<M> *>(lua_upvalueindex(1));
 			LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
 			std::string className = stack.toString(lua_upvalueindex(3));

@@ -31,7 +31,7 @@ namespace LuaCppB {
     }
     
     void push(lua_State *state) const override {
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       if (stack.metatable(this->className)) {
         stack.pushTable();
         for (auto it = this->methods.begin(); it != this->methods.end(); ++it) {
@@ -62,22 +62,22 @@ namespace LuaCppB {
     template <typename R, typename ... A>
     void bind(const std::string &key, R (C::*method)(A...)) {
       using M = R (C::*)(A...);
-      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<C, M, R, A...>>(method, this->className, this->runtime);
+      this->methods[key] = std::make_shared<Internal::LuaCppObjectMethodCall<C, M, R, A...>>(method, this->className, this->runtime);
     }
 
     template <typename R, typename ... A>
     void bind(const std::string &key, R (C::*method)(A...) const) {
       using M = R (C::*)(A...) const;
-      this->methods[key] = std::make_shared<LuaCppObjectMethodCall<const C, M, R, A...>>(method, this->className, this->runtime);
+      this->methods[key] = std::make_shared<Internal::LuaCppObjectMethodCall<const C, M, R, A...>>(method, this->className, this->runtime);
     }
 
     template <typename R, typename ... A>
     void bind(const std::string &key, R (*function)(A...)) {
-      this->staticMethods[key] = std::make_shared<NativeFunctionCall<LuaNativeValue, R, A...>>(function, this->runtime);
+      this->staticMethods[key] = std::make_shared<Internal::NativeFunctionCall<Internal::LuaNativeValue, R, A...>>(function, this->runtime);
     }
    private:
     static int newObject(lua_State *state) {
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       if constexpr (std::is_default_constructible<C>::value) {
         std::string className = stack.toString(lua_upvalueindex(1));
         LuaCppObjectWrapper<C> *object = stack.push<LuaCppObjectWrapper<C>>();
@@ -91,7 +91,7 @@ namespace LuaCppB {
     }
 
     static int gcObject(lua_State *state) {
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       std::string className = stack.toString(lua_upvalueindex(1));
       LuaCppObjectWrapper<C> *object = stack.checkUserData<LuaCppObjectWrapper<C>>(1, className);
       if (object) {

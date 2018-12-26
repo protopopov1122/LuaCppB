@@ -8,7 +8,7 @@
 #include <type_traits>
 #include <tuple>
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 
 	template <std::size_t I, typename T, typename E = void>
 	struct NativeFunctionArgument {
@@ -23,7 +23,7 @@ namespace LuaCppB {
 	struct NativeFunctionArgument<I, T, typename std::enable_if<std::is_same<T, LuaState>::value>::type> {
 		static T get(lua_State *state, LuaCppRuntime &runtime) {
 			std::shared_ptr<LuaCppObjectBoxerRegistry> reg = runtime.getOwnedObjectBoxerRegistry();
-			std::shared_ptr<LuaCppClassRegistry> clReg = std::static_pointer_cast<LuaCppClassRegistry>(reg);
+			std::shared_ptr<Internal::LuaCppClassRegistry> clReg = std::static_pointer_cast<Internal::LuaCppClassRegistry>(reg);
 			return LuaState(state, clReg);
 		}
 
@@ -34,7 +34,7 @@ namespace LuaCppB {
 	struct NativeFunctionArgument<I, T, typename std::enable_if<std::is_same<T, LuaReferenceHandle>::value>::type> {
 		static T get(lua_State *state, LuaCppRuntime &runtime) {
 			std::shared_ptr<LuaCppObjectBoxerRegistry> reg = runtime.getOwnedObjectBoxerRegistry();
-			std::shared_ptr<LuaCppClassRegistry> clReg = std::static_pointer_cast<LuaCppClassRegistry>(reg);
+			std::shared_ptr<Internal::LuaCppClassRegistry> clReg = std::static_pointer_cast<Internal::LuaCppClassRegistry>(reg);
 			return LuaState(state, clReg)[I];
 		}
 
@@ -61,7 +61,7 @@ namespace LuaCppB {
 	template <typename P, std::size_t I, typename T>
 	struct NativeFunctionResult_Tuple {
 		static void push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-			LuaStack stack(state);
+			Internal::LuaStack stack(state);
 			if constexpr (I < std::tuple_size<T>::value) {
 				P::push(state, runtime, std::get<I>(value));
 				NativeFunctionResult_Tuple<P, I + 1, T>::push(state, runtime, value);

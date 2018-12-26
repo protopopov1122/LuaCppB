@@ -1,6 +1,8 @@
 #include "catch.hpp"
 #include "luacppb/Core/State.h"
-#include "luacppb/Reference/Reference.h"
+#include "luacppb/Reference/Primary.h"
+#include "luacppb/Reference/Field.h"
+#include "luacppb/Reference/Handle.h"
 #include "luacppb/Invoke/Callable.h"
 #include "luacppb/Invoke/Continuation.h"
 #include "luacppb/Object/Object.h"
@@ -101,7 +103,7 @@ TEST_CASE("Native method call") {
   Factor factor(10);
   env["calc"] = NativeCallable(&factor, &Factor::calc, env);
   env["get"] = NativeCallable(&factor, &Factor::get, env);
-  env["set"] = NativeMethod<LuaNativeValue>::create(factor, &Factor::set, env); 
+  env["set"] = NativeCallable(&factor, &Factor::set, env); 
   REQUIRE((env["calc"].exists() && env["get"].exists() && env["set"].exists()));
   REQUIRE(env["calc"].getType() == LuaType::Function);
   REQUIRE(env["get"].getType() == LuaType::Function);

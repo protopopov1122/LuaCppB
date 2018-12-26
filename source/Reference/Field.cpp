@@ -1,13 +1,13 @@
-#include "luacppb/Reference/Reference.h"
+#include "luacppb/Reference/Field.h"
 #include "luacppb/Core/StackGuard.h"
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 
   bool LuaTableField::putOnTop(std::function<void (lua_State *)> callback) {
     bool result = false;
     this->ref.getReference().putOnTop([&](lua_State *state) {
-      LuaStackGuard guard(state);
-      LuaStack stack(state);
+      Internal::LuaStackGuard guard(state);
+      Internal::LuaStack stack(state);
       if (stack.is<LuaType::Table>()) {
         stack.getField(-1, this->name);
         if (!stack.is<LuaType::None>()) {
@@ -25,8 +25,8 @@ namespace LuaCppB {
   bool LuaTableField::setValue(std::function<void (lua_State *)> gen) {
     bool result = false;
     this->ref.getReference().putOnTop([&](lua_State *state) {
-      LuaStackGuard guard(state);
-      LuaStack stack(state);
+      Internal::LuaStackGuard guard(state);
+      Internal::LuaStack stack(state);
       if (stack.is<LuaType::Table>()) {
         auto canary = guard.canary();
         gen(state);
@@ -41,8 +41,8 @@ namespace LuaCppB {
   bool LuaArrayField::putOnTop(std::function<void (lua_State *)> callback) {
     bool result = false;
     this->ref.getReference().putOnTop([&](lua_State *state) {
-      LuaStackGuard guard(state);
-      LuaStack stack(state);
+      Internal::LuaStackGuard guard(state);
+      Internal::LuaStack stack(state);
       if (stack.is<LuaType::Table>()) {
         stack.getIndex(-1, this->index);
         if (!stack.is<LuaType::None>()) {
@@ -60,8 +60,8 @@ namespace LuaCppB {
   bool LuaArrayField::setValue(std::function<void (lua_State *)> gen) {
     bool result = false;
     this->ref.getReference().putOnTop([&](lua_State *state) {
-      LuaStackGuard guard(state);
-      LuaStack stack(state);
+      Internal::LuaStackGuard guard(state);
+      Internal::LuaStack stack(state);
       if (stack.is<LuaType::Table>()) {
         auto canary = guard.canary();
         gen(state);

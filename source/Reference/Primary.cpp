@@ -1,11 +1,11 @@
-#include "luacppb/Reference/Reference.h"
+#include "luacppb/Reference/Primary.h"
 #include "luacppb/Core/StackGuard.h"
 #include "luacppb/Core/Stack.h"
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 
   bool LuaGlobalVariable::putOnTop(std::function<void (lua_State *)> callback) {
-    LuaStackGuard guard(this->state);
+    Internal::LuaStackGuard guard(this->state);
     lua_getglobal(this->state, this->name.c_str());
     auto canary = guard.canary();
     callback(this->state);
@@ -15,7 +15,7 @@ namespace LuaCppB {
   }
 
   bool LuaGlobalVariable::setValue(std::function<void (lua_State *)> gen) {
-    LuaStackGuard guard(this->state);
+    Internal::LuaStackGuard guard(this->state);
     auto canary = guard.canary();
     gen(this->state);
     canary.assume(1);
@@ -24,8 +24,8 @@ namespace LuaCppB {
   }
 
   bool LuaStackReference::putOnTop(std::function<void (lua_State *)> callback) {
-    LuaStack stack(this->state);
-    LuaStackGuard guard(this->state);
+    Internal::LuaStack stack(this->state);
+    Internal::LuaStackGuard guard(this->state);
     guard.assumeIndex(this->index);
     stack.copy(this->index);
     auto canary = guard.canary();

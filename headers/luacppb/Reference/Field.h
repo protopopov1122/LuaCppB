@@ -3,7 +3,7 @@
 
 #include "luacppb/Reference/Handle.h"
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 
 	class LuaTableField : public LuaReference {
 	 public:

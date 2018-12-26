@@ -8,7 +8,7 @@ using namespace LuaCppB;
 TEST_CASE("Stack guard") {
   LuaEnvironment env;
   lua_State *state = env.getState();
-  LuaStackGuard guard(state);
+  Internal::LuaStackGuard guard(state);
   SECTION("Basic operations") {
     lua_pushinteger(state, 1);
     REQUIRE(lua_gettop(state) == guard.size());
@@ -45,7 +45,7 @@ int stack_test_fn(lua_State *stack) {
 
 TEST_CASE("Stack") {
   LuaEnvironment env;
-  LuaStack stack(env.getState());
+  Internal::LuaStack stack(env.getState());
 
   REQUIRE(stack.getTop() == 0);
   SECTION("Value pushing") {

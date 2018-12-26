@@ -1,5 +1,4 @@
 #include "luacppb/Value/Value.h"
-#include "luacppb/Reference/Reference.h"
 #include "luacppb/Core/Error.h"
 #include "luacppb/Core/Stack.h"
 
@@ -10,7 +9,7 @@ namespace LuaCppB {
   }
 
   void LuaValue::push(lua_State *state) const {
-    LuaStack stack(state);
+    Internal::LuaStack stack(state);
     switch (this->type) {
       case LuaType::Number:
         assert(this->value.index() == 0 || this->value.index() == 1);
@@ -53,7 +52,7 @@ namespace LuaCppB {
   }
 
   std::optional<LuaValue> LuaValue::peek(lua_State *state, lua_Integer index) {
-    LuaStack stack(state);
+    Internal::LuaStack stack(state);
     if (index > stack.getTop()) {
       throw LuaCppBError("Lua stack overflow", LuaCppBErrorCode::StackOverflow);
     }

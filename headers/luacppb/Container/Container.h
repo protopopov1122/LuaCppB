@@ -9,7 +9,7 @@
 #include <type_traits>
 #include <optional>
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 
   class LuaCppContainer {
    public:
@@ -62,7 +62,7 @@ namespace LuaCppB {
       if (value.has_value()) {
         P::push(state, runtime, value.value());
       } else {
-        LuaStack stack(state);
+        Internal::LuaStack stack(state);
         stack.push();
       }
     }

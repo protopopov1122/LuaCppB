@@ -12,7 +12,7 @@
 #include <utility>
 #include <functional>
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 	
 	template <typename P, typename R, typename ... A>
 	class NativeFunctionCall : public LuaData {
@@ -21,25 +21,25 @@ namespace LuaCppB {
 		NativeFunctionCall(F fn, LuaCppRuntime &runtime) : function(fn), runtime(runtime) {}
 
 		void push(lua_State *state) const override {
-			LuaStack stack(state);
+			Internal::LuaStack stack(state);
 			stack.push(reinterpret_cast<void*>(this->function));
 			stack.push(&this->runtime);
 			stack.push(&NativeFunctionCall<P, R, A...>::function_closure, 2);
 		}
 	 private:
 		static int call(F function, LuaCppRuntime &runtime, lua_State *state) {
-			std::tuple<A...> args = NativeFunctionArgumentsTuple<1, A...>::value(state, runtime);
+			std::tuple<A...> args = Internal::NativeFunctionArgumentsTuple<1, A...>::value(state, runtime);
 			if constexpr (std::is_void<R>::value) {
 				std::apply(function, args);
 				return 0;
 			} else {				
 				R result = std::apply(function, args);
-				return NativeFunctionResult<P, R>::set(state, runtime, result);
+				return Internal::NativeFunctionResult<P, R>::set(state, runtime, result);
 			}
 		};
 
 		static int function_closure(lua_State *state) {
-			LuaStack stack(state);
+			Internal::LuaStack stack(state);
 			F fn = stack.toPointer<F>(lua_upvalueindex(1));
 			LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
 			return NativeFunctionCall<P, R, A...>::call(fn, runtime, state);
@@ -63,12 +63,12 @@ namespace LuaCppB {
 		NativeMethodCall(C *obj, M met, LuaCppRuntime &runtime) : object(obj), method(met), runtime(runtime) {}
 		NativeMethodCall(C &obj, M met, LuaCppRuntime &runtime) : object(&obj), method(met), runtime(runtime) {}
 		NativeMethodCall(const C *obj, Mc met, LuaCppRuntime &runtime)
-			: object(const_cast<C *>(obj)), method(NativeMethodWrapper(met).get()), runtime(runtime) {}
+			: object(const_cast<C *>(obj)), method(Internal::NativeMethodWrapper(met).get()), runtime(runtime) {}
 		NativeMethodCall(const C &obj, Mc met, LuaCppRuntime &runtime)
-			: object(const_cast<C *>(&obj)), method(NativeMethodWrapper(met).get()), runtime(runtime) {}
+			: object(const_cast<C *>(&obj)), method(Internal::NativeMethodWrapper(met).get()), runtime(runtime) {}
 		
 		void push(lua_State *state) const override {
-			LuaStack stack(state);
+			Internal::LuaStack stack(state);
 			NativeMethodDescriptor<C, M> *descriptor = stack.push<NativeMethodDescriptor<C, M>>();
 			descriptor->object = this->object;
 			descriptor->method = this->method;
@@ -77,7 +77,7 @@ namespace LuaCppB {
 		}
 	 private:
 	 	static int call(C *object, M method, LuaCppRuntime &runtime, lua_State *state) {
-			std::tuple<A...> args = NativeFunctionArgumentsTuple<1,A...>::value(state, runtime);
+			std::tuple<A...> args = Internal::NativeFunctionArgumentsTuple<1,A...>::value(state, runtime);
 			if constexpr (std::is_void<R>::value) {
 				std::apply([object, method](A... args) {	
 					return (object->*method)(args...);
@@ -87,12 +87,12 @@ namespace LuaCppB {
 				R result = std::apply([object, method](A... args) {	
 					return (object->*method)(args...);
 				}, args);
-				return NativeFunctionResult<P, R>::set(state, runtime, result);
+				return Internal::NativeFunctionResult<P, R>::set(state, runtime, result);
 			}
 		};
 
 		static int method_closure(lua_State *state) {
-			LuaStack stack(state);
+			Internal::LuaStack stack(state);
 			NativeMethodDescriptor<C, M> *descriptor = stack.toUserData<NativeMethodDescriptor<C, M> *>(lua_upvalueindex(1));
 			LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
 			return NativeMethodCall<P, C, R, A...>::call(descriptor->object, descriptor->method, runtime, state);
@@ -113,6 +113,16 @@ namespace LuaCppB {
 		
 	 	template <typename C, typename R, typename ... A>
 	 	static NativeMethodCall<P, C, R, A...> create(C *obj, R (C::*met)(A...), LuaCppRuntime &runtime) {
+			return NativeMethodCall<P, C, R, A...>(obj, met, runtime);
+		}
+
+	 	template <typename C, typename R, typename ... A>
+	 	static NativeMethodCall<P, C, R, A...> create(C &obj, R (C::*met)(A...) const, LuaCppRuntime &runtime) {
+			return NativeMethodCall<P, C, R, A...>(obj, met, runtime);
+		}
+		
+	 	template <typename C, typename R, typename ... A>
+	 	static NativeMethodCall<P, C, R, A...> create(C *obj, R (C::*met)(A...) const, LuaCppRuntime &runtime) {
 			return NativeMethodCall<P, C, R, A...>(obj, met, runtime);
 		}
 
@@ -141,7 +151,7 @@ namespace LuaCppB {
 	 	NativeInvocableCall(T inv, LuaCppRuntime &runtime) : invocable(inv), runtime(runtime) {}
 
 		void push(lua_State *state) const {
-			LuaStack stack(state);
+			Internal::LuaStack stack(state);
 			NativeInvocableDescriptor<T> *descriptor = stack.push<NativeInvocableDescriptor<T>>();
 			new(descriptor) NativeInvocableDescriptor(this->invocable);
 			stack.push(&this->runtime);
@@ -149,18 +159,18 @@ namespace LuaCppB {
 		}
 	 private:
 		static int call(T &invocable, LuaCppRuntime &runtime, lua_State *state) {
-			std::tuple<A...> args = NativeFunctionArgumentsTuple<1, A...>::value(state, runtime);
+			std::tuple<A...> args = Internal::NativeFunctionArgumentsTuple<1, A...>::value(state, runtime);
 			if constexpr (std::is_void<R>::value) {
 				std::apply(invocable, args);
 				return 0;
 			} else {
 				R result = std::apply(invocable, args);
-				return NativeFunctionResult<P, R>::set(state, runtime, result);
+				return Internal::NativeFunctionResult<P, R>::set(state, runtime, result);
 			}
 		}
 
 		static int invocable_closure(lua_State *state) {
-			LuaStack stack(state);
+			Internal::LuaStack stack(state);
 			NativeInvocableDescriptor<T> *descriptor = stack.toUserData<NativeInvocableDescriptor<T> *>(lua_upvalueindex(1));
 			LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
 			return NativeInvocableCall<P, T, A...>::call(descriptor->invocable, runtime, state);

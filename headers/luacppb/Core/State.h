@@ -10,22 +10,24 @@
 namespace LuaCppB {
 
 	class LuaReferenceHandle;
-	class LuaCppClassRegistry;
+	namespace Internal {
+		class LuaCppClassRegistry;
+	}
 
 	class LuaState : public LuaCppRuntime {
 	 public:
-		LuaState(lua_State *, std::shared_ptr<LuaCppClassRegistry> = nullptr);
+		LuaState(lua_State *, std::shared_ptr<Internal::LuaCppClassRegistry> = nullptr);
 		virtual ~LuaState() = default;
 		lua_State *getState() const;
-		LuaCppClassRegistry &getClassRegistry();
-		LuaCppObjectBoxerRegistry &getObjectBoxerRegistry() override;
-		std::shared_ptr<LuaCppObjectBoxerRegistry> getOwnedObjectBoxerRegistry() override;
+		Internal::LuaCppClassRegistry &getClassRegistry();
+		Internal::LuaCppObjectBoxerRegistry &getObjectBoxerRegistry() override;
+		std::shared_ptr<Internal::LuaCppObjectBoxerRegistry> getOwnedObjectBoxerRegistry() override;
 		
 		LuaReferenceHandle operator[](const std::string &);
 		LuaReferenceHandle operator[](lua_Integer);
 	 protected:
 		lua_State *state;
-		std::shared_ptr<LuaCppClassRegistry> registry;
+		std::shared_ptr<Internal::LuaCppClassRegistry> registry;
 	};
 
 	class LuaUniqueState : public LuaState {

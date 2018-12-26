@@ -5,7 +5,7 @@
 #include "luacppb/Meta.h"
 #include "luacppb/Core/Stack.h"
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 
   template <class P>
   class LuaCppMap {
@@ -13,7 +13,7 @@ namespace LuaCppB {
     template <typename M>
     static typename std::enable_if<is_instantiation<std::map, M>::value>::type
       push(lua_State *state, LuaCppRuntime &runtime, M &map) {
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       LuaCppObjectWrapper<M> *handle = stack.push<LuaCppObjectWrapper<M>>();
       new(handle) LuaCppObjectWrapper<M>(map);
       LuaCppMap<P>::set_map_meta<M>(state, runtime);
@@ -22,7 +22,7 @@ namespace LuaCppB {
     template <typename M>
     static typename std::enable_if<is_instantiation<std::map, M>::value>::type
       push(lua_State *state, LuaCppRuntime &runtime, const M &map) {
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       LuaCppObjectWrapper<const M> *handle = stack.push<LuaCppObjectWrapper<const M>>();
       new(handle) LuaCppObjectWrapper<const M>(map);
       LuaCppMap<P>::set_map_meta<const M>(state, runtime);
@@ -31,7 +31,7 @@ namespace LuaCppB {
     template <typename M>
     static typename std::enable_if<is_instantiation<std::map, M>::value>::type
       push(lua_State *state, LuaCppRuntime &runtime, std::unique_ptr<M> &map) {
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       LuaCppObjectWrapper<M> *handle = stack.push<LuaCppObjectWrapper<M>>();
       new(handle) LuaCppObjectWrapper<M>(std::move(map));
       LuaCppMap<P>::set_map_meta<M>(state, runtime);
@@ -40,7 +40,7 @@ namespace LuaCppB {
     template <typename M>
     static typename std::enable_if<is_instantiation<std::map, M>::value>::type
       push(lua_State *state, LuaCppRuntime &runtime, std::shared_ptr<M> &map) {
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       LuaCppObjectWrapper<M> *handle = stack.push<LuaCppObjectWrapper<M>>();
       new(handle) LuaCppObjectWrapper<M>(map);
       LuaCppMap<P>::set_map_meta<M>(state, runtime);
@@ -48,7 +48,7 @@ namespace LuaCppB {
    private:
     template <typename M>
     static void set_map_meta(lua_State *state, LuaCppRuntime &runtime) {
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       std::string typeName = typeid(M).name();
       if (stack.metatable(typeName)) {
         stack.push(&runtime);
@@ -75,7 +75,7 @@ namespace LuaCppB {
     template <typename M>
     static int map_get(lua_State *state) {
       using K = typename M::key_type;
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       using Handle = LuaCppObjectWrapper<M>;
       Handle *handle = stack.toPointer<Handle *>(1);
       LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(1));
@@ -93,7 +93,7 @@ namespace LuaCppB {
     static int map_put(lua_State *state) {
       using K = typename M::key_type;
       using V = typename M::mapped_type;
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       using Handle = LuaCppObjectWrapper<M>;
       Handle *handle = stack.toPointer<Handle *>(1);
       K key = stack.get(2).value_or(LuaValue()).get<K>();
@@ -107,7 +107,7 @@ namespace LuaCppB {
 
     template <typename M>
     static int map_size(lua_State *state) {
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       using Handle = LuaCppObjectWrapper<M>;
       Handle *handle = stack.toPointer<Handle *>(1);
       M *map = handle->get();
@@ -121,7 +121,7 @@ namespace LuaCppB {
 
     template <typename M>
     static int map_gc(lua_State *state) {
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       using Handle = LuaCppObjectWrapper<M>;
       Handle *handle = stack.toPointer<Handle *>(1);
       if (handle) {
@@ -133,7 +133,7 @@ namespace LuaCppB {
 
     template <typename M>
     static int map_pairs(lua_State *state) {
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       stack.copy(lua_upvalueindex(1));
       stack.push(&LuaCppMap<P>::map_iter<M>, 1);
       stack.copy(1);
@@ -143,7 +143,7 @@ namespace LuaCppB {
 
     template <typename M>
     static int map_ipairs(lua_State *state) {
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       stack.copy(lua_upvalueindex(1));
       stack.push(&LuaCppMap<P>::map_iiter<M>, 1);
       stack.copy(1);
@@ -155,7 +155,7 @@ namespace LuaCppB {
     static int map_iter(lua_State *state) {
       using Handle = LuaCppObjectWrapper<M>;
       using K = typename M::key_type;
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(1));
       Handle *handle = stack.toPointer<Handle *>(1);
       M *map = handle->get();
@@ -180,7 +180,7 @@ namespace LuaCppB {
     template <typename M>
     static int map_iiter(lua_State *state) {
       using Handle = LuaCppObjectWrapper<M>;
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(1));
       Handle *handle = stack.toPointer<Handle *>(1);
       M *map = handle->get();

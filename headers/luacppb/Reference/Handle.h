@@ -14,10 +14,10 @@ namespace LuaCppB {
 	class LuaReferenceHandle {
 	 public:
 	 	LuaReferenceHandle() : state(nullptr), ref(nullptr) {}
-		LuaReferenceHandle(lua_State *state, std::unique_ptr<LuaReference> ref) : state(state), ref(std::move(ref)) {}
+		LuaReferenceHandle(lua_State *state, std::unique_ptr<Internal::LuaReference> ref) : state(state), ref(std::move(ref)) {}
 		LuaReferenceHandle(const LuaReferenceHandle &);
 
-		LuaReference &getReference() const;
+		Internal::LuaReference &getReference() const;
 		LuaCppRuntime &getRuntime() const;
 		bool exists();
 		LuaType getType();
@@ -49,17 +49,17 @@ namespace LuaCppB {
 		}
 
 		template <typename ... A>
-		LuaFunctionCallResult operator()(A &... args) {
-			return LuaFunctionInvoke::invoke<LuaReference, A...>(*this->ref, this->getRuntime(), args...);
+		Internal::LuaFunctionCallResult operator()(A &... args) {
+			return Internal::LuaFunctionInvoke::invoke<Internal::LuaReference, A...>(*this->ref, this->getRuntime(), args...);
 		}
 
 		template <typename ... A>
-		LuaFunctionCallResult operator()(A &&... args) {
-			return LuaFunctionInvoke::invoke<LuaReference, A...>(*this->ref, this->getRuntime(), args...);
+		Internal::LuaFunctionCallResult operator()(A &&... args) {
+			return Internal::LuaFunctionInvoke::invoke<Internal::LuaReference, A...>(*this->ref, this->getRuntime(), args...);
 		}
 	 private:
 	 	lua_State *state;
-		std::unique_ptr<LuaReference> ref;
+		std::unique_ptr<Internal::LuaReference> ref;
 	};
 }
 

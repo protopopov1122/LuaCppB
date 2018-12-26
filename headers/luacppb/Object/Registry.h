@@ -8,7 +8,7 @@
 #include <typeindex>
 #include <typeinfo>
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 
   template <typename T>
   class LuaCppClassObjectBoxer : public LuaCppObjectBoxer {
@@ -17,7 +17,7 @@ namespace LuaCppB {
       : className(className) {}
 
     void wrap(lua_State *state, void *raw_ptr) override {
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       T *object = reinterpret_cast<T *>(raw_ptr);
       LuaCppObjectWrapper<T> *wrapper = stack.push<LuaCppObjectWrapper<T>>();
       new(wrapper) LuaCppObjectWrapper<T>(object);
@@ -25,7 +25,7 @@ namespace LuaCppB {
     }
 
     void wrap(lua_State *state, const void *raw_ptr) override {
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       const T *object = reinterpret_cast<const T *>(raw_ptr);
       LuaCppObjectWrapper<const T> *wrapper = stack.push<LuaCppObjectWrapper<const T>>();
       new(wrapper) LuaCppObjectWrapper<const T>(object);
@@ -33,7 +33,7 @@ namespace LuaCppB {
     }
 
     void wrapUnique(lua_State *state, void *raw_ptr) override {
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       std::unique_ptr<T> object = std::unique_ptr<T>(reinterpret_cast<T *>(raw_ptr));
       LuaCppObjectWrapper<T> *wrapper = stack.push<LuaCppObjectWrapper<T>>();
       new(wrapper) LuaCppObjectWrapper<T>(std::move(object));
@@ -41,7 +41,7 @@ namespace LuaCppB {
     }
 
     void wrapShared(lua_State *state, std::shared_ptr<void> raw_object) override {
-      LuaStack stack(state);
+      Internal::LuaStack stack(state);
       std::shared_ptr<T> object = std::reinterpret_pointer_cast<T>(raw_object);
       LuaCppObjectWrapper<T> *wrapper = stack.push<LuaCppObjectWrapper<T>>();
       new(wrapper) LuaCppObjectWrapper<T>(object);

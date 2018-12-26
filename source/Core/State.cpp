@@ -1,12 +1,14 @@
 #include "luacppb/Core/State.h"
-#include "luacppb/Reference/Reference.h"
+#include "luacppb/Reference/Primary.h"
+#include "luacppb/Reference/Field.h"
 #include "luacppb/Object/Registry.h"
 #include <cassert>
+#include <memory>
 
 namespace LuaCppB {
 
-	LuaState::LuaState(lua_State *state, std::shared_ptr<LuaCppClassRegistry> registry)
-		: state(state), registry(registry == nullptr ? std::make_shared<LuaCppClassRegistry>(state) : registry) {
+	LuaState::LuaState(lua_State *state, std::shared_ptr<Internal::LuaCppClassRegistry> registry)
+		: state(state), registry(registry == nullptr ? std::make_shared<Internal::LuaCppClassRegistry>(state) : registry) {
 		assert(this->state != nullptr);
 	}
 
@@ -14,25 +16,25 @@ namespace LuaCppB {
 		return this->state;
 	}
 
-	LuaCppClassRegistry &LuaState::getClassRegistry() {
+	Internal::LuaCppClassRegistry &LuaState::getClassRegistry() {
 		return *this->registry;
 	}
 
-	LuaCppObjectBoxerRegistry &LuaState::getObjectBoxerRegistry() {
+	Internal::LuaCppObjectBoxerRegistry &LuaState::getObjectBoxerRegistry() {
 		return *this->registry;
 	}
 
-	std::shared_ptr<LuaCppObjectBoxerRegistry> LuaState::getOwnedObjectBoxerRegistry() {
+	std::shared_ptr<Internal::LuaCppObjectBoxerRegistry> LuaState::getOwnedObjectBoxerRegistry() {
 		return this->registry;
 	}
 
 	LuaReferenceHandle LuaState::operator[](const std::string &name) {
-		return LuaReferenceHandle(this->state, std::make_unique<LuaGlobalVariable>(*this, name));
+		return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaGlobalVariable>(*this, name));
 	}
 
 
 	LuaReferenceHandle LuaState::operator[](lua_Integer index) {
-		return LuaReferenceHandle(this->state, std::make_unique<LuaStackReference>(*this, index));
+		return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaStackReference>(*this, index));
 	}
 
 	LuaUniqueState::LuaUniqueState(lua_State *state)

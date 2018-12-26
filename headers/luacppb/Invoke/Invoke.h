@@ -7,7 +7,7 @@
 #include "luacppb/Invoke/Coro.h"
 #include <memory>
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 
   class LuaFunctionInvoke {
    public:

@@ -10,7 +10,7 @@
 #include <type_traits>
 #include <functional>
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 
 	class LuaReference {
 	 public:
@@ -63,7 +63,7 @@ namespace LuaCppB {
 		template <typename T>
 		typename std::enable_if<!std::is_base_of<LuaData, T>::value>::type set(T &value) {
 			this->setValue([&](lua_State *state) {
-				LuaNativeValue::push<T>(state, this->runtime, value);
+				Internal::LuaNativeValue::push<T>(state, this->runtime, value);
 			});
 		}
 	 protected:

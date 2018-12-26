@@ -1,7 +1,7 @@
 #include "luacppb/Core/Stack.h"
 #include "luacppb/Core/Error.h"
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 
   LuaStack::LuaStack(lua_State *state)
     : state(state) {

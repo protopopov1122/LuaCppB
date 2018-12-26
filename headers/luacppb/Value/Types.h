@@ -108,13 +108,13 @@ namespace LuaCppB {
 	 private:
 		template <typename T>
 		typename std::enable_if<!std::is_same<T, LuaReferenceHandle>::value, T>::type convert() {
-			static_assert(always_false<T>::value , "");
+			static_assert(Internal::always_false<T>::value , "");
 		}
 
 		template <typename T>
 		typename std::enable_if<std::is_same<T, LuaReferenceHandle>::value, T>::type convert();
 
-	 	LuaSharedRegistryHandle handle;
+	 	Internal::LuaSharedRegistryHandle handle;
 	};
 
 	class LuaTable : public LuaReferencedValue {

@@ -1,7 +1,7 @@
 #include "luacppb/Core/StackGuard.h"
 #include "luacppb/Core/Error.h"
 
-namespace LuaCppB {
+namespace LuaCppB::Internal {
 
   LuaStackCanary::LuaStackCanary(lua_State *state)
     : state(state) {

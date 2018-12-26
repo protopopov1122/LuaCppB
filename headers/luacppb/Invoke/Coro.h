@@ -20,16 +20,16 @@ namespace LuaCppB {
     LuaStatusCode getStatus() const;
 
     template <typename ... A>
-    LuaFunctionCallResult operator()(A... args) const {
+    Internal::LuaFunctionCallResult operator()(A... args) const {
 			std::vector<LuaValue> result;
 			LuaStatusCode status = this->call<A...>(result, args...);
-      return LuaFunctionCallResult(result, status);
+      return Internal::LuaFunctionCallResult(result, status);
     }
 
     template <typename ... A>
     LuaStatusCode call(std::vector<LuaValue> &result, A &... args) const {
-      LuaStack stack(this->thread.toState());
-      LuaFunctionArgument<LuaNativeValue, A...>::push(thread.toState(), this->runtime, args...);
+      Internal::LuaStack stack(this->thread.toState());
+      Internal::LuaFunctionArgument<Internal::LuaNativeValue, A...>::push(thread.toState(), this->runtime, args...);
       LuaStatusCode status = static_cast<LuaStatusCode>(lua_resume(thread.toState(), nullptr, sizeof...(args)));
       int results = stack.getTop();
       while (results-- > 0) {

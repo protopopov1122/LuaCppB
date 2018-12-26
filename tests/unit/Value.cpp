@@ -57,7 +57,7 @@ TEST_CASE("Value peek method") {
   LuaEnvironment env;
   lua_State *state = env.getState();
   REQUIRE_FALSE(LuaValue::peek(state).has_value());
-  LuaStackGuard guard(state);
+  Internal::LuaStackGuard guard(state);
   auto canary = guard.canary();
   SECTION("Integer") {
     lua_pushinteger(state, 1);
@@ -96,7 +96,7 @@ TEST_CASE("Value peek method") {
 TEST_CASE("Value push method") {
   LuaEnvironment env;
   lua_State *state = env.getState();
-  LuaStack stack(state);
+  Internal::LuaStack stack(state);
   SECTION("Nil") {
     LuaValue().push(state);
     REQUIRE(lua_isnil(state, -1));

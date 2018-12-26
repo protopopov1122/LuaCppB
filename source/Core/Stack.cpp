@@ -147,7 +147,7 @@ namespace LuaCppB::Internal {
 
   template <>
   bool LuaStack::is<LuaType::Function>(int index) {
-    return static_cast<bool>(lua_iscfunction(this->state, index));
+    return static_cast<bool>(lua_isfunction(this->state, index));
   }
 
   template <>
@@ -169,4 +169,13 @@ namespace LuaCppB::Internal {
   bool LuaStack::is<LuaType::Thread>(int index) {
     return static_cast<bool>(lua_isthread(this->state, index));
   }
+
+  bool LuaStack::isInteger(int index) {
+    return static_cast<bool>(lua_isinteger(this->state, index));
+  }
+
+  bool LuaStack::isCFunction(int index) {
+    return static_cast<bool>(lua_iscfunction(this->state, index));
+  }
+  bool isCFunction(int = -1);
 }

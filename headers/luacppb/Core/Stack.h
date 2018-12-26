@@ -92,6 +92,9 @@ namespace LuaCppB::Internal {
     bool is(int index = -1) {
       return false;
     }
+    
+    bool isInteger(int = -1);
+    bool isCFunction(int = -1);
    private:
     lua_State *state;
   };

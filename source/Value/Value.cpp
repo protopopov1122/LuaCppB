@@ -57,7 +57,7 @@ namespace LuaCppB {
       throw LuaCppBError("Lua stack overflow", LuaCppBErrorCode::StackOverflow);
     }
     std::optional<LuaValue> value;
-    if (lua_isinteger(state, index)) {
+    if (stack.isInteger(index)) {
       value = LuaValue::create<lua_Integer>(stack.toInteger(index));
     } else if (stack.is<LuaType::Number>(index)) {
       value = LuaValue::create<lua_Number>(stack.toNumber(index));
@@ -65,7 +65,7 @@ namespace LuaCppB {
       value = LuaValue::create<bool>(stack.toBoolean(index));
     } else if (stack.is<LuaType::String>(index)) {
       value = LuaValue::create<std::string>(stack.toString(index));
-    } else if (stack.is<LuaType::Function>(index)) {
+    } else if (stack.isCFunction(index)) {
       value = LuaValue::create<LuaCFunction_ptr>(stack.toCFunction(index));
     } else if (stack.is<LuaType::Table>(index)) {
       value = LuaValue(LuaTable(state, index));

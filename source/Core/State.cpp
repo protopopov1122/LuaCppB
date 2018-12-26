@@ -7,8 +7,8 @@
 
 namespace LuaCppB {
 
-	LuaState::LuaState(lua_State *state, std::shared_ptr<Internal::LuaCppClassRegistry> registry)
-		: state(state), registry(registry == nullptr ? std::make_shared<Internal::LuaCppClassRegistry>(state) : registry) {
+	LuaState::LuaState(lua_State *state, std::shared_ptr<Internal::LuaRuntimeInfo> runtime)
+		: state(state), runtime(runtime == nullptr ? std::make_shared<Internal::LuaRuntimeInfo>(std::make_shared<Internal::LuaCppClassRegistry>(state)) : runtime) {
 		assert(this->state != nullptr);
 	}
 
@@ -17,15 +17,15 @@ namespace LuaCppB {
 	}
 
 	Internal::LuaCppClassRegistry &LuaState::getClassRegistry() {
-		return *this->registry;
+		return this->runtime->getClassRegistry();
 	}
 
 	Internal::LuaCppObjectBoxerRegistry &LuaState::getObjectBoxerRegistry() {
-		return *this->registry;
+		return this->runtime->getClassRegistry();
 	}
 
-	std::shared_ptr<Internal::LuaCppObjectBoxerRegistry> LuaState::getOwnedObjectBoxerRegistry() {
-		return this->registry;
+	std::shared_ptr<Internal::LuaRuntimeInfo> &LuaState::getRuntimeInfo() {
+		return this->runtime;
 	}
 
 	LuaReferenceHandle LuaState::operator[](const std::string &name) {

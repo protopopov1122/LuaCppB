@@ -22,9 +22,7 @@ namespace LuaCppB::Internal {
 	template <std::size_t I, typename T>
 	struct NativeFunctionArgument<I, T, typename std::enable_if<std::is_same<T, LuaState>::value>::type> {
 		static T get(lua_State *state, LuaCppRuntime &runtime) {
-			std::shared_ptr<LuaCppObjectBoxerRegistry> reg = runtime.getOwnedObjectBoxerRegistry();
-			std::shared_ptr<Internal::LuaCppClassRegistry> clReg = std::static_pointer_cast<Internal::LuaCppClassRegistry>(reg);
-			return LuaState(state, clReg);
+			return LuaState(state, runtime.getRuntimeInfo());
 		}
 
 		static constexpr bool Virtual = true;
@@ -33,9 +31,7 @@ namespace LuaCppB::Internal {
 	template <std::size_t I, typename T>
 	struct NativeFunctionArgument<I, T, typename std::enable_if<std::is_same<T, LuaReferenceHandle>::value>::type> {
 		static T get(lua_State *state, LuaCppRuntime &runtime) {
-			std::shared_ptr<LuaCppObjectBoxerRegistry> reg = runtime.getOwnedObjectBoxerRegistry();
-			std::shared_ptr<Internal::LuaCppClassRegistry> clReg = std::static_pointer_cast<Internal::LuaCppClassRegistry>(reg);
-			return LuaState(state, clReg)[I];
+			return LuaState(state, runtime.getRuntimeInfo())[I];
 		}
 
 		static constexpr bool Virtual = false;

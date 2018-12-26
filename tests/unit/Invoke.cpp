@@ -246,7 +246,7 @@ TEST_CASE("Coroutines") {
 
 
 void test_cont(LuaState env, int val) {
-  LuaContinuation<int>(env["fn"], env).call([](int i) {
+  LuaContinuation(env["fn"], env).call([](int i) {
     REQUIRE(i == 120);
     return i * 2;
   }, val);
@@ -267,9 +267,8 @@ TEST_CASE("Continuations") {
 }
 
 void test_yield(LuaState env, int x) {
-  LuaContinuation<int>::yield(env.getState(), env, [env, x](int y) {
-    LuaState state(env);
-    LuaContinuation<int>::yield(env.getState(), state, [x, y](int z) {
+  LuaContinuation::yield(env.getState(), env, [x](LuaState env, int y) {
+    LuaContinuation::yield(env.getState(), env, [x, y](int z) {
       return x + y + z;
     }, x + y);
   }, x);

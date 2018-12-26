@@ -45,7 +45,7 @@ namespace LuaCppB::Internal {
   class LuaFunctionContinuationHandle {
    public:
     LuaFunctionContinuationHandle(std::unique_ptr<LuaFunctionContinuation> cont, LuaCppRuntime &runtime, int top)
-      : cont(std::move(cont)), runtime(runtime), top(top) {}
+      : cont(std::move(cont)), runtime(runtime.getRuntimeInfo()), top(top) {}
     
     void getResult(lua_State *state, std::vector<LuaValue> &result) {
       Internal::LuaStack stack(state);
@@ -57,7 +57,7 @@ namespace LuaCppB::Internal {
       std::reverse(result.begin(), result.end());
     }
 
-    LuaCppRuntime &getRuntime() {
+    std::shared_ptr<LuaRuntimeInfo> &getRuntime() {
       return this->runtime;
     }
 
@@ -69,11 +69,12 @@ namespace LuaCppB::Internal {
       std::unique_ptr<LuaFunctionContinuationHandle> handle(reinterpret_cast<LuaFunctionContinuationHandle *>(ctx));
       std::vector<LuaValue> result;
       handle->getResult(state, result);
-      return handle->getContinuation().call(state, handle->getRuntime(), static_cast<LuaStatusCode>(status), result);
+      LuaState luaState(state, handle->getRuntime());
+      return handle->getContinuation().call(state, luaState, static_cast<LuaStatusCode>(status), result);
     }
    private:
     std::unique_ptr<LuaFunctionContinuation> cont;
-    LuaCppRuntime &runtime;
+    std::shared_ptr<LuaRuntimeInfo> runtime;
     int top;
   };
 

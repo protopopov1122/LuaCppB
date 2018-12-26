@@ -4,7 +4,7 @@
 #include "luacppb/Base.h"
 #include "luacppb/Value/Native.h"
 #include "luacppb/Object/Wrapper.h"
-#include "luacppb/Invoke/Native.h"
+#include "luacppb/Invoke/ArgRet.h"
 #include "luacppb/Invoke/Method.h"
 #include "luacppb/Core/Stack.h"
 #include "luacppb/Core/Runtime.h"

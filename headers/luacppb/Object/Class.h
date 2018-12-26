@@ -3,7 +3,7 @@
 
 #include "luacppb/Base.h"
 #include "luacppb/Value/Native.h"
-#include "luacppb/Invoke/Native.h"
+#include "luacppb/Invoke/ArgRet.h"
 #include "luacppb/Object/Method.h"
 #include "luacppb/Core/Stack.h"
 #include <map>

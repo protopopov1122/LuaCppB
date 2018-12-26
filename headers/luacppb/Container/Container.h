@@ -13,6 +13,7 @@ namespace LuaCppB {
 
   class LuaCppContainer {
    public:
+    // Vectors
     template <typename T, class P>
     static typename std::enable_if<is_instantiation<std::vector, T>::value>::type
       push(lua_State *state, LuaCppRuntime &runtime, T &value) {
@@ -30,19 +31,19 @@ namespace LuaCppB {
       push(lua_State *state, LuaCppRuntime &runtime, T &value) {
       LuaCppVector<P>::push(state, runtime, value);
     }
-
+    // Map
     template <typename T, class P>
     static typename std::enable_if<is_instantiation<std::map, T>::value>::type
       push(lua_State *state, LuaCppRuntime &runtime, T &value) {
       LuaCppMap<P>::push(state, runtime, value);
     }
-
+    // Pair & tuple
     template <typename T, class P>
     static typename std::enable_if<LuaCppTuple::is_tuple<T>()>::type
       push(lua_State *state, LuaCppRuntime &runtime, T &value) {
       LuaCppTuple::push<T, P>(state, runtime, value);
     }
-
+    // Optional
     template <typename T, class P>
     static typename std::enable_if<is_instantiation<std::optional, T>::value>::type
       push(lua_State *state, LuaCppRuntime &runtime, T &value) {

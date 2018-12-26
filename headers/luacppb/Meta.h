@@ -25,6 +25,9 @@ namespace LuaCppB {
 	struct is_callable : std::is_function<T> {};
 
 	template <typename T>
+	struct is_callable<T, typename std::enable_if<std::is_pointer<T>::value>::type> : std::is_function<typename std::remove_pointer<T>::type> {};
+
+	template <typename T>
 	struct is_callable<T, typename std::enable_if<std::is_same<decltype(void(&T::operator())), void>::value>::type> : std::true_type {};
 }
 

@@ -60,24 +60,10 @@ namespace LuaCppB {
 			});
 		}
 
-		void set(LuaData &value) {
-			this->setValue([&value](lua_State *state) {
-				value.push(state);
-			});
-		}
-
 		template <typename T>
-		typename std::enable_if<!std::is_base_of<LuaData, T>::value && !LuaValue::is_constructible<T>()>::type set(T &value) {
+		typename std::enable_if<!std::is_base_of<LuaData, T>::value>::type set(T &value) {
 			this->setValue([&](lua_State *state) {
 				LuaNativeValue::push<T>(state, this->runtime, value);
-			});
-		}
-
-		template <typename T>
-		typename std::enable_if<LuaValue::is_constructible<T>()>::type set(T &value) {
-			LuaValue val = LuaValue::create<T>(value);
-			this->setValue([&val](lua_State *state) {
-				val.push(state);
 			});
 		}
 	 protected:

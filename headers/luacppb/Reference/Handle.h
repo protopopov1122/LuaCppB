@@ -23,41 +23,17 @@ namespace LuaCppB {
 		LuaType getType();
 		LuaReferenceHandle operator[](const std::string &);
 		LuaReferenceHandle operator[](lua_Integer);
-		LuaReferenceHandle &operator=(LuaData &);
 		LuaReferenceHandle &operator=(const LuaReferenceHandle &);
 		LuaValue operator*();
-		
-		template <typename R, typename ... A>
-		LuaReferenceHandle &operator=(R (*fn)(A...)) {
-			NativeFunctionCall<LuaNativeValue, R, A...> call(fn, this->getRuntime());
-			this->ref->set(call);
-			return *this;
-		}
 
 		template <typename T>
-		typename std::enable_if<std::is_base_of<LuaData, T>::value || LuaValue::is_constructible<T>(), LuaReferenceHandle>::type
-			&operator=(T &value) {
+		LuaReferenceHandle &operator=(T &value) {
 			this->ref->set<T>(value);
 			return *this;
 		}
 
 		template <typename T>
-		typename std::enable_if<(std::is_base_of<LuaData, T>::value || LuaValue::is_constructible<T>()) && !std::is_reference<T>::value, LuaReferenceHandle>::type
-			&operator=(T &&value) {
-			this->ref->set<T>(value);
-			return *this;
-		}
-
-		template <typename T>
-		typename std::enable_if<!std::is_base_of<LuaData, T>::value && !LuaValue::is_constructible<T>(), LuaReferenceHandle>::type
-			&operator=(T &value) {
-			this->ref->set<T>(value);
-			return *this;
-		}
-
-		template <typename T>
-		typename std::enable_if<!std::is_base_of<LuaData, T>::value && !LuaValue::is_constructible<T>() && !std::is_reference<T>::value, LuaReferenceHandle>::type
-			&operator=(T &&value) {
+		LuaReferenceHandle &operator=(T &&value) {
 			this->ref->set<T>(value);
 			return *this;
 		}

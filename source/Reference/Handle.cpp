@@ -46,11 +46,6 @@ namespace LuaCppB {
     return type;
   }
 
-  LuaReferenceHandle &LuaReferenceHandle::operator=(LuaData &pushable) {
-    this->ref->set(pushable);
-    return *this;
-  }
-
   LuaReferenceHandle &LuaReferenceHandle::operator=(const LuaReferenceHandle &handle) {
     this->state = handle.state;
     handle.getReference().putOnTop([&](lua_State *state) {

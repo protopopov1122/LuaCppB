@@ -1,7 +1,7 @@
 #include "catch.hpp"
 #include "luacppb/Core/State.h"
 #include "luacppb/Reference/Reference.h"
-#include "luacppb/Invoke/Native.h"
+#include "luacppb/Invoke/Callable.h"
 #include "luacppb/Invoke/Continuation.h"
 #include "luacppb/Object/Object.h"
 
@@ -69,7 +69,7 @@ TEST_CASE("Native function call") {
     env.getClassRegistry().bind(factorCl);
     Factor factor(10);
     env["factor"] = factor;
-    env["callFactor"] = test_factor;
+    env["callFactor"] = NativeCallable(test_factor, env);
     env["callFactorRef"] = test_factor_ref;
     const std::string &CODE = "results = { callFactor(factor, 10), callFactorRef(factor, 20) }";
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
@@ -99,8 +99,8 @@ TEST_CASE("Native method call") {
                             "res3 = calc(2, 3)";
   LuaEnvironment env;
   Factor factor(10);
-  env["calc"] = NativeMethod<LuaNativeValue>::create(&factor, &Factor::calc, env);
-  env["get"] = NativeMethod<LuaNativeValue>::create(&factor, &Factor::get, env);
+  env["calc"] = NativeCallable(&factor, &Factor::calc, env);
+  env["get"] = NativeCallable(&factor, &Factor::get, env);
   env["set"] = NativeMethod<LuaNativeValue>::create(factor, &Factor::set, env); 
   REQUIRE((env["calc"].exists() && env["get"].exists() && env["set"].exists()));
   REQUIRE(env["calc"].getType() == LuaType::Function);
@@ -127,6 +127,21 @@ TEST_CASE("Invocable object call") {
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(env["result"][1].get<int>() == 120);
   REQUIRE(env["result"][2].get<int>() == 5040);
+}
+
+int test_callable_pass(int x) {
+  return x * 2;
+}
+
+TEST_CASE("Passible callable as parameter") {
+  const std::string &CODE = "function fn(x, y, z)\n"
+                            "    return x(100) - y(100) + z()\n"
+                            "end";
+  Factor fact(50);
+  LuaEnvironment env;
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  int res = env["fn"]([](int n) { return n * 10; }, test_callable_pass, NativeCallable(fact, &Factor::get, env));
+  REQUIRE(res == 850);
 }
 
 TEST_CASE("Lua function call") {

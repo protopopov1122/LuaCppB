@@ -6,11 +6,23 @@
 
 using namespace LuaCppB;
 
+void test_err(LuaState state) {
+  LuaError::Throw(state.getState(), "Error");
+}
+
 TEST_CASE("State") {
   LuaEnvironment env;
-  REQUIRE(env.execute("test()") != LuaStatusCode::Ok);
-  REQUIRE(env("return 2+2*2")().get<int>() == 6);
-  REQUIRE_FALSE(env("2+2*2").exists());
+  SECTION("Basic operations") {
+    REQUIRE(env.execute("test()") != LuaStatusCode::Ok);
+    REQUIRE(env("return 2+2*2")().get<int>() == 6);
+    REQUIRE_FALSE(env("2+2*2").exists());
+  }
+  SECTION("Error handling") {
+    env["test"] = test_err;
+    LuaError err;
+    env("return test()")().error(err);
+    REQUIRE(err.getError().get<std::string>().compare("Error") == 0);
+  }
 }
 
 TEST_CASE("Stack guard") {

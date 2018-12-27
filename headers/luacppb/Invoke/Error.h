@@ -19,6 +19,12 @@ namespace LuaCppB {
 
     bool operator==(LuaStatusCode) const;
     bool operator!=(LuaStatusCode) const;
+
+    template <typename T>
+    static void Throw(lua_State *state, T &value) {
+      LuaValue::create(value).push(state);
+      lua_error(state);
+    }
    private:
     LuaStatusCode status;
     LuaValue error;

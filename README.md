@@ -12,7 +12,6 @@ This repo contains the prototype of Lua-C++ bindings. Currently it has following
 
 TODO:
 * extend support of STL types.
-* simplify threading and coroutines.
 * perform refactoring, simplify API.
 
 ### Motivation

@@ -2,8 +2,10 @@
 #include "luacppb/Reference/Primary.h"
 #include "luacppb/Reference/Field.h"
 #include "luacppb/Object/Registry.h"
+#include "luacppb/Core/Stack.h"
 #include <cassert>
 #include <memory>
+#include <iostream>
 
 namespace LuaCppB {
 
@@ -37,6 +39,19 @@ namespace LuaCppB {
 		return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaStackReference>(*this, index));
 	}
 
+	LuaReferenceHandle LuaState::operator()(const std::string &code) {
+		int status = luaL_loadstring(this->state, code.c_str());
+		if (status == LUA_OK) {
+			Internal::LuaStack stack(this->state);
+			std::optional<LuaValue> value = stack.get();
+			stack.pop();
+			LuaFunction func = value.value_or(LuaValue()).get<LuaFunction>();
+			return func.ref(*this);
+		} else {
+			return LuaReferenceHandle();
+		}
+	}
+
 	LuaUniqueState::LuaUniqueState(lua_State *state)
 		: LuaState(state != nullptr ? state : luaL_newstate()) {}
 
@@ -51,11 +66,21 @@ namespace LuaCppB {
 		}
 	}
 
-	LuaStatusCode LuaEnvironment::load(const std::string &path) {
-		return static_cast<LuaStatusCode>(luaL_dofile(this->state, path.c_str()));
+	LuaError LuaEnvironment::load(const std::string &path) {
+		bool err = static_cast<bool>(luaL_dofile(this->state, path.c_str()));
+		if (err) {
+			return LuaError(LuaStatusCode::RuntimeError);
+		} else {
+			return LuaError();
+		}
 	}
 
-	LuaStatusCode LuaEnvironment::execute(const std::string &code) {
-		return static_cast<LuaStatusCode>(luaL_dostring(this->state, code.c_str()));
+	LuaError LuaEnvironment::execute(const std::string &code) {
+		bool err = static_cast<bool>(luaL_dostring(this->state, code.c_str()));
+		if (err) {
+			return LuaError(LuaStatusCode::RuntimeError);
+		} else {
+			return LuaError();
+		}
 	}
 }

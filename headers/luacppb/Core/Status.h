@@ -9,6 +9,7 @@ namespace LuaCppB {
     Ok = LUA_OK,
     Yield = LUA_YIELD,
     RuntimeError = LUA_ERRRUN,
+    SyntaxError = LUA_ERRSYNTAX,
     MemAllocError = LUA_ERRMEM,
     MsgHandlerError = LUA_ERRERR,
     GCMethodError = LUA_ERRGCMM

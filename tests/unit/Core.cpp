@@ -2,8 +2,16 @@
 #include "luacppb/Core/State.h"
 #include "luacppb/Core/StackGuard.h"
 #include "luacppb/Core/Stack.h"
+#include "luacppb/Reference/Handle.h"
 
 using namespace LuaCppB;
+
+TEST_CASE("State") {
+  LuaEnvironment env;
+  REQUIRE(env.execute("test()") != LuaStatusCode::Ok);
+  REQUIRE(env("return 2+2*2")().get<int>() == 6);
+  REQUIRE_FALSE(env("2+2*2").exists());
+}
 
 TEST_CASE("Stack guard") {
   LuaEnvironment env;

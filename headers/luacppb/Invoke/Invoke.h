@@ -14,16 +14,16 @@ namespace LuaCppB::Internal {
 		template <typename T, typename ... A>
 		static LuaFunctionCallResult invoke(T &ref, LuaCppRuntime &runtime, A &... args) {
 			std::vector<LuaValue> results;
-			LuaStatusCode status = LuaStatusCode::Ok;
+			LuaError error;
 			ref.putOnTop([&](lua_State *state) {
 				if (lua_isfunction(state, -1)) {
-					status = LuaFunctionCall::call<A...>(state, -1, runtime, results, args...);
+					error = LuaFunctionCall::call<A...>(state, -1, runtime, results, args...);
 				} else if (lua_isthread(state, -1)) {
 					LuaCoroutine coro(LuaThread(state, -1), runtime);
-					status = coro.call(results, args...);
+					error = coro.call(results, args...);
 				}
 			});
-			return LuaFunctionCallResult(results, status);
+			return LuaFunctionCallResult(results, error);
 		}
 
 		template <typename T, typename ... A>
@@ -34,8 +34,8 @@ namespace LuaCppB::Internal {
 				} else if (lua_isthread(state, -1)) {
           std::vector<LuaValue> results;
 					LuaCoroutine coro(LuaThread(state, -1), runtime);
-					LuaStatusCode status = coro.call(results, args...);
-          cont->call(state, runtime, status, results);
+					LuaError error = coro.call(results, args...);
+          cont->call(state, runtime, error.getStatus(), results);
 				}
 			});
 		}

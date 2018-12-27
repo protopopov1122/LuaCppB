@@ -244,33 +244,57 @@ TEST_CASE("Coroutines") {
   }
 }
 
+#define SHOULD_NOT_HAPPEN REQUIRE(false)
 
 void test_cont(LuaState env, int val) {
   LuaContinuation(env["fn"], env).call([](int i) {
     REQUIRE(i == 120);
     return i * 2;
+  }, [](auto) {
+    SHOULD_NOT_HAPPEN;
+  }, val);
+}
+
+void test_cont_error(LuaState env, int val) {
+  LuaContinuation(env["fn"], env).call([](int i) {
+    SHOULD_NOT_HAPPEN;
+  }, [](auto err) {
+    REQUIRE(err.hasError());
   }, val);
 }
 
 TEST_CASE("Continuations") {
-  const std::string &CODE = "function fn(x)\n"
-                            "    a = coroutine.yield()\n"
-                            "    return x + a\n"
-                            "end\n"
-                            "coro = coroutine.create(test)\n"
-                            "coroutine.resume(coro, 100)\n"
-                            "fin, res = coroutine.resume(coro, 20)";
   LuaEnvironment env;
-  env["test"] = test_cont;
-  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  REQUIRE(env["res"].get<int>() == 240);
+  SECTION("Successful continuation") {
+    const std::string &CODE = "function fn(x)\n"
+                              "    a = coroutine.yield()\n"
+                              "    return x + a\n"
+                              "end\n"
+                              "coro = coroutine.create(test)\n"
+                              "coroutine.resume(coro, 100)\n"
+                              "fin, res = coroutine.resume(coro, 20)";
+    env["test"] = test_cont;
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["res"].get<int>() == 240);
+  }
+  SECTION("Error in continuation") {
+    const std::string &CODE = "coro = coroutine.create(test)\n"
+                              "coroutine.resume(coro, 100)\n"
+                              "fin, res = coroutine.resume(coro, 20)";
+    env["test"] = test_cont_error;
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  }
 }
 
 void test_yield(LuaState env, int x) {
   LuaContinuation::yield(env.getState(), env, [x](LuaState env, int y) {
     LuaContinuation::yield(env.getState(), env, [x, y](int z) {
       return x + y + z;
+    }, [](auto) {
+      SHOULD_NOT_HAPPEN;
     }, x + y);
+  }, [](auto) {
+    SHOULD_NOT_HAPPEN;
   }, x);
 }
 

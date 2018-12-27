@@ -4,6 +4,7 @@
 #include "luacppb/Base.h"
 #include "luacppb/Core/Status.h"
 #include "luacppb/Core/Runtime.h"
+#include "luacppb/Invoke/Error.h"
 #include <string>
 #include <memory>
 
@@ -25,6 +26,7 @@ namespace LuaCppB {
 		
 		LuaReferenceHandle operator[](const std::string &);
 		LuaReferenceHandle operator[](lua_Integer);
+		LuaReferenceHandle operator()(const std::string &);
 	 protected:
 		lua_State *state;
 		std::shared_ptr<Internal::LuaRuntimeInfo> runtime;
@@ -39,8 +41,8 @@ namespace LuaCppB {
 	class LuaEnvironment : public LuaUniqueState {
 	 public:
 		LuaEnvironment(bool = true);
-		LuaStatusCode load(const std::string &);
-		LuaStatusCode execute(const std::string &);
+		LuaError load(const std::string &);
+		LuaError execute(const std::string &);
 	};
 }
 

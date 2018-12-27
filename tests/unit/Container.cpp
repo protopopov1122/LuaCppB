@@ -66,7 +66,7 @@ TEST_CASE("Vector") {
     SECTION("Unsupported") {
       const std::string &CODE = "vec[2] = 100\n";
       LuaEnvironment env;
-      std::vector<LuaEnvironment> vec;
+      std::vector<LuaType> vec;
       env["vec"] = vec;
       REQUIRE(env["vec"].exists());
       REQUIRE(env["vec"].getType() == LuaType::UserData);

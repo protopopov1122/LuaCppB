@@ -28,13 +28,17 @@ namespace LuaCppB {
 
 		template <typename T>
 		typename std::enable_if<!std::is_same<T, LuaReferenceHandle>::value, LuaReferenceHandle>::type &operator=(T &value) {
-			this->ref->set<T>(value);
+			if (this->ref) {
+				this->ref->set<T>(value);
+			}
 			return *this;
 		}
 
 		template <typename T>
 		typename std::enable_if<!std::is_same<T, LuaReferenceHandle>::value, LuaReferenceHandle>::type &operator=(T &&value) {
-			this->ref->set<T>(value);
+			if (this->ref) {
+				this->ref->set<T>(value);
+			}
 			return *this;
 		}
 
@@ -50,12 +54,22 @@ namespace LuaCppB {
 
 		template <typename ... A>
 		Internal::LuaFunctionCallResult operator()(A &... args) {
-			return Internal::LuaFunctionInvoke::invoke<Internal::LuaReference, A...>(*this->ref, this->getRuntime(), args...);
+			if (this->ref) {
+				return Internal::LuaFunctionInvoke::invoke<Internal::LuaReference, A...>(*this->ref, this->getRuntime(), args...);
+			} else {
+				std::vector<LuaValue> vec;
+				return Internal::LuaFunctionCallResult(vec, LuaError(LuaStatusCode::RuntimeError));
+			}
 		}
 
 		template <typename ... A>
-		Internal::LuaFunctionCallResult operator()(A &&... args) {
-			return Internal::LuaFunctionInvoke::invoke<Internal::LuaReference, A...>(*this->ref, this->getRuntime(), args...);
+		typename std::enable_if<(sizeof...(A) > 0), Internal::LuaFunctionCallResult>::type operator()(A &&... args) {
+			if (this->ref) {
+				return Internal::LuaFunctionInvoke::invoke<Internal::LuaReference, A...>(*this->ref, this->getRuntime(), args...);
+			} else {
+				std::vector<LuaValue> vec;
+				return Internal::LuaFunctionCallResult(vec, LuaError(LuaStatusCode::RuntimeError));
+			}
 		}
 	 private:
 	 	lua_State *state;

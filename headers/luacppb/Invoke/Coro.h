@@ -22,22 +22,28 @@ namespace LuaCppB {
     template <typename ... A>
     Internal::LuaFunctionCallResult operator()(A... args) const {
 			std::vector<LuaValue> result;
-			LuaStatusCode status = this->call<A...>(result, args...);
-      return Internal::LuaFunctionCallResult(result, status);
+			LuaError error = this->call<A...>(result, args...);
+      return Internal::LuaFunctionCallResult(result, error);
     }
 
     template <typename ... A>
-    LuaStatusCode call(std::vector<LuaValue> &result, A &... args) const {
+    LuaError call(std::vector<LuaValue> &result, A &... args) const {
       Internal::LuaStack stack(this->thread.toState());
       Internal::LuaFunctionArgument<Internal::LuaNativeValue, A...>::push(thread.toState(), this->runtime, args...);
       LuaStatusCode status = static_cast<LuaStatusCode>(lua_resume(thread.toState(), nullptr, sizeof...(args)));
-      int results = stack.getTop();
-      while (results-- > 0) {
-        result.push_back(LuaValue::peek(this->thread.toState()).value());
+      if (status == LuaStatusCode::Ok || status == LuaStatusCode::Yield) {
+        int results = stack.getTop();
+        while (results-- > 0) {
+          result.push_back(LuaValue::peek(this->thread.toState()).value());
+          stack.pop();
+        }
+        std::reverse(result.begin(), result.end());
+        return LuaError(status);
+      } else {
+        std::optional<LuaValue> value = stack.get();
         stack.pop();
+        return LuaError(status, value.value_or(LuaValue()));
       }
-      std::reverse(result.begin(), result.end());
-      return status;
     }
    private:
     

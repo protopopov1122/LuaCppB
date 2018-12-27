@@ -20,11 +20,19 @@ namespace LuaCppB {
   }
 
   LuaReferenceHandle LuaReferenceHandle::operator[](const std::string &name) {
-    return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaTableField>(*this, this->ref->getRuntime(), name));
+    if (this->ref) {
+      return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaTableField>(*this, this->ref->getRuntime(), name));
+    } else {
+      return LuaReferenceHandle();
+    }
   }
 
   LuaReferenceHandle LuaReferenceHandle::operator[](lua_Integer index) {
-    return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaArrayField>(*this, this->ref->getRuntime(), index));
+    if (this->ref) {
+      return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaArrayField>(*this, this->ref->getRuntime(), index));
+    } else {
+      return LuaReferenceHandle();
+    }
   }
 
   LuaValue LuaReferenceHandle::operator*() {
@@ -33,18 +41,22 @@ namespace LuaCppB {
 
   bool LuaReferenceHandle::exists() {
     bool exists = false;
-    this->ref->putOnTop([&](lua_State *state) {
-      Internal::LuaStack stack(state);
-      exists = !(stack.is<LuaType::None>() || stack.is<LuaType::Nil>());
-    });
+    if (this->ref) {
+      this->ref->putOnTop([&](lua_State *state) {
+        Internal::LuaStack stack(state);
+        exists = !(stack.is<LuaType::None>() || stack.is<LuaType::Nil>());
+      });
+    }
     return exists;
   }
 
   LuaType LuaReferenceHandle::getType() {
-    LuaType type = LuaType::Nil;
-    this->ref->putOnTop([&](lua_State *state) {
-      type = static_cast<LuaType>(lua_type(state, -1));
-    });
+    LuaType type = LuaType::None;
+    if (this->ref) {
+      this->ref->putOnTop([&](lua_State *state) {
+        type = static_cast<LuaType>(lua_type(state, -1));
+      });
+    }
     return type;
   }
 

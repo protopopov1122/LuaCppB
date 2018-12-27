@@ -32,7 +32,7 @@ namespace LuaCppB::Internal {
     }
   }
 
-  bool LuaUniqueRegistryHandle::isValid() const {
+  bool LuaUniqueRegistryHandle::hasValue() const {
     return this->state != nullptr;
   }
 
@@ -78,8 +78,8 @@ namespace LuaCppB::Internal {
     });
   }
 
-  bool LuaSharedRegistryHandle::isValid() const {
-    return this->handle != nullptr && this->handle->isValid();
+  bool LuaSharedRegistryHandle::hasValue() const {
+    return this->handle != nullptr && this->handle->hasValue();
   }
 
   bool LuaSharedRegistryHandle::get(std::function<void (lua_State *)> callback) const {

@@ -20,6 +20,7 @@ namespace LuaCppB {
 		LuaValue(LuaNumber n) : type(LuaType::Number), value(n) {}
 		LuaValue(LuaBoolean b) : type(LuaType::Boolean), value(b) {}
 		LuaValue(const LuaString &s) : type(LuaType::String), value(s) {}
+		LuaValue(LuaFunction f) : type(LuaType::Function), value(f) {}
 		LuaValue(LuaCFunction f) : type(LuaType::Function), value(f) {}
 		LuaValue(LuaTable t) : type(LuaType::Table), value(t) {}
 		LuaValue(void *ptr) : type(LuaType::LightUserData), value(ptr) {}
@@ -81,8 +82,12 @@ namespace LuaCppB {
 		template <typename T>
 		typename std::enable_if<std::is_same<T, LuaCFunction>::value, T>::type get(T defaultValue = nullptr) const {
 			if (this->type == LuaType::Function) {
-				assert(this->value.index() == 4);
-				return static_cast<T>(std::get<LuaCFunction>(this->value));
+				if (this->value.index() == 4) {
+					return static_cast<T>(std::get<LuaCFunction>(this->value));
+				} else {
+					assert(this->value.index() == 9);
+					return std::get<LuaFunction>(this->value).toCFunction();
+				}
 			} else {
 				return defaultValue;
 			}
@@ -147,6 +152,16 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
+		typename std::enable_if<std::is_same<T, LuaFunction>::value, T>::type get() const {
+			if (this->type == LuaType::Function) {
+				assert(this->value.index() == 9);
+				return std::get<LuaFunction>(this->value);
+			} else {
+				return LuaFunction();
+			}
+		}
+
+		template <typename T>
 		operator T () {
 			return this->get<T>();
 		}
@@ -172,8 +187,8 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
-		static typename std::enable_if<std::is_same<T, LuaCFunction_ptr>::value, LuaValue>::type create(T value) noexcept {
-			return LuaValue(LuaCFunction(value));
+		static typename std::enable_if<std::is_same<T, LuaCFunction>::value, LuaValue>::type create(T value) noexcept {
+			return LuaValue(value);
 		}
 
 		template <typename T>
@@ -187,12 +202,12 @@ namespace LuaCppB {
 				std::is_floating_point<T>::value ||
 				std::is_same<T, bool>::value ||
 				std::is_same<T, std::string>::value ||
-				std::is_same<T, LuaCFunction_ptr>::value ||
+				std::is_same<T, LuaCFunction>::value ||
 				std::is_same<T, const char *>::value;
 		}
 	 private:
 		LuaType type;
-	 	std::variant<LuaInteger, LuaNumber, LuaBoolean, LuaString, LuaCFunction, LuaTable, void *, LuaUserData, LuaThread> value;
+	 	std::variant<LuaInteger, LuaNumber, LuaBoolean, LuaString, LuaCFunction, LuaTable, void *, LuaUserData, LuaThread, LuaFunction> value;
 	};
 }
 

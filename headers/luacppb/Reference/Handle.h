@@ -27,13 +27,13 @@ namespace LuaCppB {
 		LuaValue operator*();
 
 		template <typename T>
-		LuaReferenceHandle &operator=(T &value) {
+		typename std::enable_if<!std::is_same<T, LuaReferenceHandle>::value, LuaReferenceHandle>::type &operator=(T &value) {
 			this->ref->set<T>(value);
 			return *this;
 		}
 
 		template <typename T>
-		LuaReferenceHandle &operator=(T &&value) {
+		typename std::enable_if<!std::is_same<T, LuaReferenceHandle>::value, LuaReferenceHandle>::type &operator=(T &&value) {
 			this->ref->set<T>(value);
 			return *this;
 		}

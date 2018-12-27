@@ -1,6 +1,7 @@
 #include "catch.hpp"
 #include "luacppb/Core/State.h"
 #include "luacppb/Value/Value.h"
+#include "luacppb/Reference/Handle.h"
 #include "luacppb/Core/StackGuard.h"
 #include "luacppb/Core/Stack.h"
 
@@ -12,7 +13,7 @@ TEST_CASE("Value constructors") {
   REQUIRE(LuaValue(LuaNumber(1.0)).getType() == LuaType::Number);
   REQUIRE(LuaValue(LuaBoolean(true)).getType() == LuaType::Boolean);
   REQUIRE(LuaValue(LuaString("Hello, world!")).getType() == LuaType::String);
-  REQUIRE(LuaValue(LuaCFunction(nullptr)).getType() == LuaType::Function);
+  REQUIRE(LuaValue(static_cast<LuaCFunction>(nullptr)).getType() == LuaType::Function);
   REQUIRE(LuaValue(LuaTable()).getType() == LuaType::Table);
 }
 
@@ -46,7 +47,7 @@ TEST_CASE("Value create method") {
     REQUIRE(value.get<std::string>().compare(str) == 0);
   }
   SECTION("CFunction") {
-    LuaCFunction_ptr fn = nullptr;
+    LuaCFunction fn = nullptr;
     LuaValue value = LuaValue::create(fn);
     REQUIRE(value.getType() == LuaType::Function);
     REQUIRE(value.get<LuaCFunction>() == fn);
@@ -81,9 +82,9 @@ TEST_CASE("Value peek method") {
     REQUIRE(canary.check(1));
   }
   SECTION("Function") {
-    LuaCFunction_ptr fn = nullptr;
+    LuaCFunction fn = nullptr;
     lua_pushcfunction(state, fn);
-    REQUIRE(((LuaCFunction_ptr) LuaValue::peek(state).value().get<LuaCFunction>()) == fn);
+    REQUIRE(((LuaCFunction) LuaValue::peek(state).value().get<LuaCFunction>()) == fn);
     REQUIRE(canary.check(1));
   }
   SECTION("Table") {
@@ -123,13 +124,15 @@ TEST_CASE("Value push method") {
     REQUIRE(str.compare(stack.toString()) == 0);
   }
   SECTION("Function") {
-    LuaCFunction_ptr fn = nullptr;
+    LuaCFunction fn = nullptr;
     LuaValue::create(fn).push(state);
     REQUIRE(lua_iscfunction(state, -1));
     REQUIRE(stack.toCFunction() == fn);
   }
   SECTION("Table") {
-    LuaValue(LuaTable::create(state)).push(state);
+    LuaTable table = LuaTable::create(state);
+    table.ref(env)["test"] = 100;
+    LuaValue(table).push(state);
     REQUIRE(lua_istable(state, -1));
   }
 }

@@ -70,18 +70,6 @@ namespace LuaCppB {
     return LuaString(stack.toString(index));
   }
 
-  LuaCFunction::LuaCFunction(LuaCFunction_ptr fn) : function(fn) {}
-  
-  void LuaCFunction::push(lua_State *state) const {
-    Internal::LuaStack stack(state);
-    stack.push(this->function);
-  }
-
-  LuaCFunction LuaCFunction::get(lua_State *state, int index) {
-    Internal::LuaStack stack(state);
-    return LuaCFunction(stack.toCFunction(index));
-  }
-
   LuaReferencedValue::LuaReferencedValue()
     : handle()  {}
 
@@ -106,11 +94,14 @@ namespace LuaCppB {
     stack.unref(ref);
   }
 
-  template <>
-  LuaReferenceHandle LuaReferencedValue::convert<LuaReferenceHandle>() {
+  bool LuaReferencedValue::hasValue() const {
+    return this->handle.hasValue();
+  }
+
+  LuaReferenceHandle LuaTable::ref(LuaCppRuntime &runtime) {
     LuaReferenceHandle handle;
     this->handle.get([&](lua_State *state) {
-      handle = LuaReferenceHandle(state, std::make_unique<Internal::LuaRegistryReference>(state, handle.getRuntime()));
+      handle = LuaReferenceHandle(state, std::make_unique<Internal::LuaRegistryReference>(state, runtime));
     });
     return handle;
   }
@@ -142,6 +133,14 @@ namespace LuaCppB {
   lua_State *LuaThread::toState() const {
     return this->LuaReferencedValue::toPointer<lua_State *>();
   }
+  
+  LuaStatusCode LuaThread::status() const {
+    LuaStatusCode status;
+    this->handle.get([&](lua_State *state) {
+      status = static_cast<LuaStatusCode>(lua_status(lua_tothread(state, -1)));
+    });
+    return status;
+  }
 
   LuaThread LuaThread::get(lua_State *state, int index) {
     return LuaThread(state, index);
@@ -153,5 +152,41 @@ namespace LuaCppB {
     LuaThread thread(state);
     stack.pop();
     return thread;
+  }
+
+  bool LuaFunction::isCFunction() const {
+    bool cfun = false;
+    this->handle.get([&](lua_State *state) {
+      cfun = static_cast<bool>(lua_iscfunction(state, -1));
+    });
+    return cfun;
+  }
+
+  LuaCFunction LuaFunction::toCFunction() const {
+    LuaCFunction fn = nullptr;
+    this->handle.get([&](lua_State *state) {
+      fn = lua_tocfunction(state, -1);
+    });
+    return fn;
+  }
+
+  LuaReferenceHandle LuaFunction::ref(LuaCppRuntime &runtime) {
+    LuaReferenceHandle handle;
+    this->handle.get([&](lua_State *state) {
+      handle = LuaReferenceHandle(state, std::make_unique<Internal::LuaRegistryReference>(state, runtime));
+    });
+    return handle;
+  }
+
+  LuaFunction LuaFunction::get(lua_State *state, int index) {
+    return LuaFunction(state, index);
+  }
+
+  LuaFunction LuaFunction::create(lua_State *state, LuaCFunction fn, int upvalues) {
+    Internal::LuaStack stack(state);
+    stack.push(fn, upvalues);
+    LuaFunction fun(state);
+    stack.pop();
+    return fun;
   }
 }

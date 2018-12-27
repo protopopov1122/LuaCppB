@@ -4,6 +4,8 @@
 #include "luacppb/Value/Base.h"
 #include "luacppb/Reference/Registry.h"
 #include "luacppb/Meta.h"
+#include "luacppb/Core/Runtime.h"
+#include "luacppb/Core/Status.h"
 #include <string>
 
 namespace LuaCppB {
@@ -65,19 +67,7 @@ namespace LuaCppB {
 		std::string string;
 	};
 
-	typedef int (*LuaCFunction_ptr)(lua_State *);
-
-	class LuaCFunction : public LuaValueBase {
-	 public:
-		LuaCFunction(LuaCFunction_ptr);
-		operator LuaCFunction_ptr() const {
-			return this->function;
-		}
-		void push(lua_State *) const override;
-		static LuaCFunction get(lua_State *, int = -1);
-	 private:
-		LuaCFunction_ptr function;
-	};
+	typedef int (*LuaCFunction)(lua_State *);
 
 	class LuaReferenceHandle;
 
@@ -88,11 +78,7 @@ namespace LuaCppB {
 		LuaReferencedValue(const LuaReferencedValue &);
 		
 		void push(lua_State *) const override;
-
-		template <typename T>
-		operator T() {
-			return this->convert<T>();
-		}
+		bool hasValue() const;
 
 	protected:
 		template <typename T>
@@ -105,21 +91,13 @@ namespace LuaCppB {
 			return res;
 		}
 
-	 private:
-		template <typename T>
-		typename std::enable_if<!std::is_same<T, LuaReferenceHandle>::value, T>::type convert() {
-			static_assert(Internal::always_false<T>::value , "");
-		}
-
-		template <typename T>
-		typename std::enable_if<std::is_same<T, LuaReferenceHandle>::value, T>::type convert();
-
 	 	Internal::LuaSharedRegistryHandle handle;
 	};
 
 	class LuaTable : public LuaReferencedValue {
 	 public:
 	 	using LuaReferencedValue::LuaReferencedValue;
+		LuaReferenceHandle ref(LuaCppRuntime &);
 		static LuaTable get(lua_State *, int = -1);
 		static LuaTable create(lua_State *);
 	};
@@ -140,8 +118,19 @@ namespace LuaCppB {
 	 public:
 		using LuaReferencedValue::LuaReferencedValue;
 		lua_State *toState() const;
+		LuaStatusCode status() const;
 		static LuaThread get(lua_State *, int = -1);
 		static LuaThread create(lua_State *);
+	};
+
+	class LuaFunction : public LuaReferencedValue {
+	 public:
+		using LuaReferencedValue::LuaReferencedValue;
+		LuaReferenceHandle ref(LuaCppRuntime &);
+		bool isCFunction() const;
+		LuaCFunction toCFunction() const;
+		static LuaFunction get(lua_State *, int = -1);
+		static LuaFunction create(lua_State *, LuaCFunction, int = 0);
 	};
 }
 

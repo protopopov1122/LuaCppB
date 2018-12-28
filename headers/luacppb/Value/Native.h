@@ -20,6 +20,7 @@ namespace LuaCppB::Internal {
                                   is_smart_pointer<T>::value ||
                                   is_instantiation<std::reference_wrapper, T>::value ||
                                   is_callable<T>::value ||
+                                  std::is_enum<T>::value ||
                                   Internal::LuaCppContainer::is_container<T>();
   };
 
@@ -42,6 +43,13 @@ namespace LuaCppB::Internal {
     static typename std::enable_if<LuaValue::is_constructible<T>()>::type
       push(lua_State *state, LuaCppRuntime &runtime, T &&value) {
       LuaValue::create<T>(value).push(state);
+    }
+    // Enum
+    template <typename T>
+    static typename std::enable_if<std::is_enum<T>::value>::type
+      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
+      using EnumType = typename std::underlying_type<T>::type;
+      LuaNativeValue::push(state, runtime, static_cast<EnumType>(value));
     }
     // Arbitrary objects
     template <typename T>

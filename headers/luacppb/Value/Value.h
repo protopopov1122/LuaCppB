@@ -162,6 +162,12 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
+		typename std::enable_if<std::is_enum<T>::value, T>::type get() const {
+			using EnumType = typename std::underlying_type<T>::type;
+			return static_cast<T>(this->get<EnumType>());
+		}
+
+		template <typename T>
 		operator T () {
 			return this->get<T>();
 		}

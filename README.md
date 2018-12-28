@@ -3,6 +3,7 @@
 This repo contains the prototype of Lua-C++ bindings. Currently it has following features:
 * support of scalar data types and strings.
 * access and modification of Lua variables an tables.
+* basic support of enums
 * transparent invocation of Lua functions.
 * C++ class and object binding to Lua.
 * transparent C++ object passing to/from Lua.

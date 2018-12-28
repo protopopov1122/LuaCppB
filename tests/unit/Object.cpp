@@ -234,3 +234,21 @@ TEST_CASE("Exception handling") {
   env.setExceptionHandler([](std::exception &ex) {});
   REQUIRE_NOTHROW(env.execute(CODE) != LuaStatusCode::Ok);
 }
+
+enum class EnumTest {
+  A = 1,
+  B = 2,
+  C = 3
+};
+
+TEST_CASE("Enum") {
+  const std::string &CODE = "res = A + B + C\n"
+                            "el = A + B";
+  LuaEnvironment env;
+  env["A"] = EnumTest::A;
+  env["B"] = EnumTest::B;
+  env["C"] = EnumTest::C;
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["res"].get<int>() == 6);
+  REQUIRE(env["el"].get<EnumTest>() == EnumTest::C);
+}

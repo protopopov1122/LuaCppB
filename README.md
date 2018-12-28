@@ -9,10 +9,7 @@ This repo contains the prototype of Lua-C++ bindings. Currently it has following
 * support of smart pointers.
 * support of some STL types - vectors, maps, pairs, tuples.
 * support of coroutines.
-
-TODO:
-* extend support of STL types.
-* perform refactoring, simplify API.
+* support of std::exception-based exception propagation and handlers
 
 ### Motivation
 Project inspired by two things:

@@ -202,6 +202,8 @@ namespace LuaCppB {
     public:
       LuaFunctionCallResult(std::vector<LuaValue> &result, LuaError err = LuaError())
         : result(result), errorVal(err) {}
+      LuaFunctionCallResult(LuaError err)
+        : result(), errorVal(err) {}
       LuaFunctionCallResult(const LuaFunctionCallResult &) = delete;
       LuaFunctionCallResult &operator=(const LuaFunctionCallResult &) = delete;
 
@@ -213,6 +215,10 @@ namespace LuaCppB {
       LuaFunctionCallResult &error(LuaError &error) {
         error = this->errorVal;
         return *this;
+      }
+
+      bool hasError() const {
+        return this->errorVal.hasError();
       }
 
       template <typename T>

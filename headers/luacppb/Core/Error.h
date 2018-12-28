@@ -10,11 +10,10 @@ namespace LuaCppB {
   enum class LuaCppBErrorCode {
     NotSpecified,
     InvalidState,
-    StateMismatch,
     StackOverflow,
     StackSizeMismatch,
-    NullPointer,
-    TypeCast
+    NullPointerDereference,
+    IncorrectTypeCast
   };
 
   class LuaCppBError : std::exception {

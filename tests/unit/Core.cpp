@@ -2,25 +2,29 @@
 #include "luacppb/Core/State.h"
 #include "luacppb/Core/StackGuard.h"
 #include "luacppb/Core/Stack.h"
+#include "luacppb/Core/Throw.h"
 #include "luacppb/Reference/Handle.h"
 
 using namespace LuaCppB;
 
 void test_err(LuaState state) {
-  LuaError::Throw(state.getState(), "Error");
+  LuaThrow(state.getState(), state, "Error");
 }
 
 TEST_CASE("State") {
   LuaEnvironment env;
   SECTION("Basic operations") {
     REQUIRE(env.execute("test()") != LuaStatusCode::Ok);
-    REQUIRE(env("return 2+2*2")().get<int>() == 6);
-    REQUIRE_FALSE(env("2+2*2").exists());
+    REQUIRE(env("2+2*2").get<int>() == 6);
+    REQUIRE_FALSE(env("2+2*2").hasError());
+    REQUIRE_FALSE(env("return 2+2*2", false).hasError());
+    REQUIRE(env("2+2*2", false).hasError());
+    REQUIRE(env("return 2+2*2", true).hasError());
   }
   SECTION("Error handling") {
     env["test"] = test_err;
     LuaError err;
-    env("return test()")().error(err);
+    env("test()").error(err);
     REQUIRE(err.getError().get<std::string>().compare("Error") == 0);
   }
 }

@@ -30,7 +30,7 @@ namespace LuaCppB {
 
 		C *get() {
 			if (std::type_index(typeid(C)) != this->objectType || (!std::is_const<C>::value && this->constant)) {
-				throw LuaCppBError("Type mismatch", LuaCppBErrorCode::TypeCast);
+				throw LuaCppBError("Type mismatch", LuaCppBErrorCode::IncorrectTypeCast);
 			}
 			switch (this->object.index()) {
 				case 0:

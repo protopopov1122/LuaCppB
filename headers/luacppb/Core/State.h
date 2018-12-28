@@ -13,6 +13,7 @@ namespace LuaCppB {
 	class LuaReferenceHandle;
 	namespace Internal {
 		class LuaCppClassRegistry;
+		class LuaFunctionCallResult;
 	}
 
 	class LuaState : public LuaCppRuntime {
@@ -26,7 +27,7 @@ namespace LuaCppB {
 		
 		LuaReferenceHandle operator[](const std::string &);
 		LuaReferenceHandle operator[](lua_Integer);
-		LuaReferenceHandle operator()(const std::string &);
+		Internal::LuaFunctionCallResult operator()(const std::string &, bool = true);
 	 protected:
 		lua_State *state;
 		std::shared_ptr<Internal::LuaRuntimeInfo> runtime;

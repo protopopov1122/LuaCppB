@@ -83,12 +83,9 @@ namespace LuaCppB {
     Internal::LuaStack stack(state);
     int ref = -1;
     handle.get([&](lua_State *handleState) {
-      if (state == handleState) {
-        stack.copy(-1);
-        ref = stack.ref();
-      } else {
-        throw LuaCppBError("Reference handler state must match requested state", LuaCppBErrorCode::StateMismatch);
-      }
+      Internal::LuaStack handleStack(handleState);
+      handleStack.copy(-1);
+      ref = handleStack.ref();
     });
     stack.getIndex<true>(LUA_REGISTRYINDEX, ref);
     stack.unref(ref);

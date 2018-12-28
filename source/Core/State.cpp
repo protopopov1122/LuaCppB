@@ -3,6 +3,7 @@
 #include "luacppb/Reference/Field.h"
 #include "luacppb/Object/Registry.h"
 #include "luacppb/Core/Stack.h"
+#include "luacppb/Invoke/Lua.h"
 #include <cassert>
 #include <memory>
 #include <iostream>
@@ -39,16 +40,20 @@ namespace LuaCppB {
 		return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaStackReference>(*this, index));
 	}
 
-	LuaReferenceHandle LuaState::operator()(const std::string &code) {
-		int status = luaL_loadstring(this->state, code.c_str());
-		if (status == LUA_OK) {
+	Internal::LuaFunctionCallResult LuaState::operator()(const std::string &code, bool preprendReturn) {
+		std::string exec(code);
+		if (preprendReturn) {
+			exec = "return (" + exec + ")";
+		}
+		LuaStatusCode status = static_cast<LuaStatusCode>(luaL_loadstring(this->state, exec.c_str()));
+		if (status == LuaStatusCode::Ok) {
 			Internal::LuaStack stack(this->state);
 			std::optional<LuaValue> value = stack.get();
 			stack.pop();
 			LuaFunction func = value.value_or(LuaValue()).get<LuaFunction>();
-			return func.ref(*this);
+			return func.ref(*this)();
 		} else {
-			return LuaReferenceHandle();
+			return Internal::LuaFunctionCallResult(LuaError(status));
 		}
 	}
 

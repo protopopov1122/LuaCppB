@@ -134,10 +134,10 @@ namespace LuaCppB {
 				if (ptr != nullptr) {
 					return *ptr->get();
 				} else {
-					throw LuaCppBError("Null pointer can't be dereferenced", LuaCppBErrorCode::NullPointer);
+					throw LuaCppBError("Null pointer can't be dereferenced", LuaCppBErrorCode::NullPointerDereference);
 				}
 			} else {
-				throw LuaCppBError("Type casting failed", LuaCppBErrorCode::TypeCast);
+				throw LuaCppBError("Type casting failed", LuaCppBErrorCode::IncorrectTypeCast);
 			}
 		}
 
@@ -197,13 +197,20 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
+		static typename std::enable_if<std::is_array<T>::value && std::is_same<typename std::remove_extent<T>::type, const char>::value, LuaValue>::type
+			create(T s) noexcept {
+			return LuaValue(LuaString(s));
+		}
+
+		template <typename T>
 		static constexpr bool is_constructible() noexcept {
 			return std::is_integral<T>::value ||
 				std::is_floating_point<T>::value ||
 				std::is_same<T, bool>::value ||
 				std::is_same<T, std::string>::value ||
 				std::is_same<T, LuaCFunction>::value ||
-				std::is_same<T, const char *>::value;
+				std::is_same<T, const char *>::value ||
+				std::is_array<T>::value && std::is_same<typename std::remove_extent<T>::type, const char>::value;
 		}
 	 private:
 		LuaType type;

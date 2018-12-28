@@ -77,6 +77,7 @@ namespace LuaCppB {
           handle->getResult(state, result);
           return handle->getContinuation().call(state, luaState, LuaError(status), result);
         } else {
+          LuaCppBNativeException::check(state);
           LuaStack stack(state);
           std::optional<LuaValue> value = stack.get();
           stack.pop();
@@ -108,6 +109,7 @@ namespace LuaCppB {
           std::reverse(result.begin(), result.end());
           return LuaError();
         } else {
+          LuaCppBNativeException::check(state);
           std::optional<LuaValue> value = stack.get();
           stack.pop();
           return LuaError(static_cast<LuaStatusCode>(status), value.value_or(LuaValue()));

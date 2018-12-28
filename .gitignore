@@ -34,3 +34,4 @@
 # Project-related
 bin
 tests/unit/catch.hpp
+lua-source

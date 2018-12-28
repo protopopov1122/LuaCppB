@@ -7,9 +7,11 @@
 
 using namespace LuaCppB;
 
+#ifdef LUACPPB_ERROR_SUPPORT
 void test_err(LuaState state) {
   LuaThrow(state.getState(), state, "Error");
 }
+#endif
 
 TEST_CASE("State") {
   LuaEnvironment env;
@@ -21,12 +23,14 @@ TEST_CASE("State") {
     REQUIRE(env("2+2*2", false).hasError());
     REQUIRE(env("return 2+2*2", true).hasError());
   }
+#ifdef LUACPPB_ERROR_SUPPORT
   SECTION("Error handling") {
     env["test"] = test_err;
     LuaError err;
     env("test()").error(err);
     REQUIRE(err.getError().get<std::string>().compare("Error") == 0);
   }
+#endif
 }
 
 TEST_CASE("Stack guard") {

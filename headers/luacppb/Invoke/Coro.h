@@ -7,6 +7,8 @@
 #include "luacppb/Value/Native.h"
 #include "luacppb/Invoke/Lua.h"
 
+#ifdef LUACPPB_COROUTINE_SUPPORT
+
 namespace LuaCppB {
 
   class LuaCoroutine {
@@ -51,5 +53,7 @@ namespace LuaCppB {
     LuaCppRuntime &runtime;
   };
 }
+
+#endif
 
 #endif

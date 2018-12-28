@@ -4,9 +4,9 @@
 #include "luacppb/Object/Registry.h"
 #include "luacppb/Core/Stack.h"
 #include "luacppb/Invoke/Lua.h"
+#include "luacppb/Invoke/Native.h"
 #include <cassert>
 #include <memory>
-#include <iostream>
 
 namespace LuaCppB {
 
@@ -73,6 +73,7 @@ namespace LuaCppB {
 
 	LuaError LuaEnvironment::load(const std::string &path) {
 		bool err = static_cast<bool>(luaL_dofile(this->state, path.c_str()));
+		Internal::LuaCppBNativeException::check(this->state);
 		if (err) {
 			return LuaError(LuaStatusCode::RuntimeError);
 		} else {
@@ -82,6 +83,7 @@ namespace LuaCppB {
 
 	LuaError LuaEnvironment::execute(const std::string &code) {
 		bool err = static_cast<bool>(luaL_dostring(this->state, code.c_str()));
+		Internal::LuaCppBNativeException::check(this->state);
 		if (err) {
 			return LuaError(LuaStatusCode::RuntimeError);
 		} else {

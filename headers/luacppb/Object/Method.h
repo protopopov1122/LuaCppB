@@ -47,23 +47,31 @@ namespace LuaCppB::Internal {
 		};
 
 		static int object_method_closure(lua_State *state) {
-			Internal::LuaStack stack(state);
-			LuaCppObjectMethodCallDescriptor<M> *descriptor = stack.toUserData<LuaCppObjectMethodCallDescriptor<M> *>(lua_upvalueindex(1));
-			LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
-			LuaCppObjectWrapper<C> *object = stack.toPointer<LuaCppObjectWrapper<C> *>(1);
-			return LuaCppObjectMethodCall<C, M, R, A...>::call(object->get(), descriptor->method, runtime, state);
+			try {
+				Internal::LuaStack stack(state);
+				LuaCppObjectMethodCallDescriptor<M> *descriptor = stack.toUserData<LuaCppObjectMethodCallDescriptor<M> *>(lua_upvalueindex(1));
+				LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
+				LuaCppObjectWrapper<C> *object = stack.toPointer<LuaCppObjectWrapper<C> *>(1);
+				return LuaCppObjectMethodCall<C, M, R, A...>::call(object->get(), descriptor->method, runtime, state);
+			} catch (std::exception &ex) {
+				return luacpp_handle_exception(state, std::current_exception());
+			}
 		};
 
 		static int class_method_closure(lua_State *state) {
-			Internal::LuaStack stack(state);
-			LuaCppObjectMethodCallDescriptor<M> *descriptor = stack.toUserData<LuaCppObjectMethodCallDescriptor<M> *>(lua_upvalueindex(1));
-			LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
-			std::string className = stack.toString(lua_upvalueindex(3));
-			LuaCppObjectWrapper<C> *object = stack.checkUserData<LuaCppObjectWrapper<C>>(1, className);
-			if (object) {
-				return LuaCppObjectMethodCall<C, M, R, A...>::call(object->get(), descriptor->method, runtime, state);
-			} else {
-				return 0;
+			try {
+				Internal::LuaStack stack(state);
+				LuaCppObjectMethodCallDescriptor<M> *descriptor = stack.toUserData<LuaCppObjectMethodCallDescriptor<M> *>(lua_upvalueindex(1));
+				LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
+				std::string className = stack.toString(lua_upvalueindex(3));
+				LuaCppObjectWrapper<C> *object = stack.checkUserData<LuaCppObjectWrapper<C>>(1, className);
+				if (object) {
+					return LuaCppObjectMethodCall<C, M, R, A...>::call(object->get(), descriptor->method, runtime, state);
+				} else {
+					return 0;
+				}
+			} catch (std::exception &ex) {
+				return luacpp_handle_exception(state, std::current_exception());
 			}
 		};
 

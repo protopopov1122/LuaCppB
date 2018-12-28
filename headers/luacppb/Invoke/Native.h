@@ -11,8 +11,24 @@
 #include <type_traits>
 #include <utility>
 #include <functional>
+#include <exception>
 
 namespace LuaCppB::Internal {
+
+
+	class LuaCppBNativeException {
+	 public:
+		LuaCppBNativeException(std::exception_ptr);
+
+		std::exception_ptr get();
+		static void process(lua_State *, std::exception_ptr);
+		static void check(lua_State *);
+	 private:
+	 	static constexpr auto LUACPPB_EXCEPTION_POINTER = "__luacppb_native_exception";
+		std::exception_ptr eptr;
+	};
+
+	int luacpp_handle_exception(lua_State *, std::exception_ptr);
 	
 	template <typename P, typename R, typename ... A>
 	class NativeFunctionCall : public LuaData {
@@ -39,10 +55,14 @@ namespace LuaCppB::Internal {
 		};
 
 		static int function_closure(lua_State *state) {
-			Internal::LuaStack stack(state);
-			F fn = stack.toPointer<F>(lua_upvalueindex(1));
-			LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
-			return NativeFunctionCall<P, R, A...>::call(fn, runtime, state);
+			try {
+				Internal::LuaStack stack(state);
+				F fn = stack.toPointer<F>(lua_upvalueindex(1));
+				LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
+				return NativeFunctionCall<P, R, A...>::call(fn, runtime, state);
+			} catch (std::exception &ex) {
+				return luacpp_handle_exception(state, std::current_exception());
+			}
 		};
 
 		F function;
@@ -92,10 +112,14 @@ namespace LuaCppB::Internal {
 		};
 
 		static int method_closure(lua_State *state) {
-			Internal::LuaStack stack(state);
-			NativeMethodDescriptor<C, M> *descriptor = stack.toUserData<NativeMethodDescriptor<C, M> *>(lua_upvalueindex(1));
-			LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
-			return NativeMethodCall<P, C, R, A...>::call(descriptor->object, descriptor->method, runtime, state);
+			try {
+				Internal::LuaStack stack(state);
+				NativeMethodDescriptor<C, M> *descriptor = stack.toUserData<NativeMethodDescriptor<C, M> *>(lua_upvalueindex(1));
+				LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
+				return NativeMethodCall<P, C, R, A...>::call(descriptor->object, descriptor->method, runtime, state);
+			} catch (std::exception &ex) {
+				return luacpp_handle_exception(state, std::current_exception());
+			}
 		};
 
 		C *object;
@@ -170,10 +194,14 @@ namespace LuaCppB::Internal {
 		}
 
 		static int invocable_closure(lua_State *state) {
-			Internal::LuaStack stack(state);
-			NativeInvocableDescriptor<T> *descriptor = stack.toUserData<NativeInvocableDescriptor<T> *>(lua_upvalueindex(1));
-			LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
-			return NativeInvocableCall<P, T, A...>::call(descriptor->invocable, runtime, state);
+			try {
+				Internal::LuaStack stack(state);
+				NativeInvocableDescriptor<T> *descriptor = stack.toUserData<NativeInvocableDescriptor<T> *>(lua_upvalueindex(1));
+				LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
+				return NativeInvocableCall<P, T, A...>::call(descriptor->invocable, runtime, state);
+			} catch (std::exception &ex) {
+				return luacpp_handle_exception(state, std::current_exception());
+			}
 		}
 
 		T invocable;

@@ -9,6 +9,8 @@
 #include "luacppb/Value/Native.h"
 #include <functional>
 
+#ifdef LUACPPB_COROUTINE_SUPPORT
+
 namespace LuaCppB {
 
   namespace Internal {
@@ -133,5 +135,7 @@ namespace LuaCppB {
     LuaCppRuntime &runtime;
   };
 }
+
+#endif
 
 #endif

@@ -16,7 +16,7 @@ namespace LuaCppB {
     IncorrectTypeCast
   };
 
-  class LuaCppBError : std::exception {
+  class LuaCppBError : public std::exception {
    public:
     LuaCppBError(const std::string &, LuaCppBErrorCode = LuaCppBErrorCode::NotSpecified);
     LuaCppBError(const char *, LuaCppBErrorCode = LuaCppBErrorCode::NotSpecified);

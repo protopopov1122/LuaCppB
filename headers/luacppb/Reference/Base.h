@@ -32,7 +32,7 @@ namespace LuaCppB::Internal {
 			});
 			return value.value_or(LuaValue());
 		}
-
+#ifdef LUACPPB_COROUTINE_SUPPORT
 		template <typename T>
 		typename std::enable_if<std::is_convertible<LuaValue, T>::value && !std::is_same<T, LuaValue>::value && !std::is_same<T, LuaCoroutine>::value, T>::type
 			get() {
@@ -52,6 +52,13 @@ namespace LuaCppB::Internal {
 			});
 			return coro;
 		}
+#else
+		template <typename T>
+		typename std::enable_if<std::is_convertible<LuaValue, T>::value && !std::is_same<T, LuaValue>::value, T>::type
+			get() {
+			return this->get<LuaValue>().get<T>();
+		}
+#endif
 
 		template <typename T>
 		typename std::enable_if<std::is_base_of<LuaData, T>::value>::type set(T value) {

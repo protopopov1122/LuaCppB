@@ -19,8 +19,10 @@ namespace LuaCppB::Internal {
 				if (lua_isfunction(state, -1)) {
 					error = LuaFunctionCall::call<A...>(state, -1, runtime, results, args...);
 				} else if (lua_isthread(state, -1)) {
+#ifdef LUACPPB_COROUTINE_SUPPORT
 					LuaCoroutine coro(LuaThread(state, -1), runtime);
 					error = coro.call(results, args...);
+#endif
 				}
 			});
 			return LuaFunctionCallResult(results, error);
@@ -32,10 +34,12 @@ namespace LuaCppB::Internal {
 				if (lua_isfunction(state, -1)) {
 					LuaFunctionCall::callK<A...>(state, -1, runtime, std::move(cont), args...);
 				} else if (lua_isthread(state, -1)) {
+#ifdef LUACPPB_COROUTINE_SUPPORT
           std::vector<LuaValue> results;
 					LuaCoroutine coro(LuaThread(state, -1), runtime);
 					LuaError error = coro.call(results, args...);
           cont->call(state, runtime, error.getStatus(), results);
+#endif
 				}
 			});
 		}

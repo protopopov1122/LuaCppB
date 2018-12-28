@@ -200,6 +200,8 @@ TEST_CASE("Lua function call") {
   }
 }
 
+#ifdef LUACPPB_COROUTINE_SUPPORT
+
 template <typename T>
 void test_coro(T &coro) {
   LuaStatusCode status = LuaStatusCode::Ok;
@@ -310,3 +312,5 @@ TEST_CASE("Yielding") {
   REQUIRE(env["r2"].get<int>() == 25);
   REQUIRE(env["res"].get<int>() == 30);
 }
+
+#endif

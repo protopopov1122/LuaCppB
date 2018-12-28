@@ -3,6 +3,8 @@
 
 #include "luacppb/Value/Native.h"
 
+#ifdef LUACPPB_ERROR_SUPPORT
+
 namespace LuaCppB {
 
   template <typename T>
@@ -12,5 +14,6 @@ namespace LuaCppB {
   }
 }
 
+#endif
 
 #endif

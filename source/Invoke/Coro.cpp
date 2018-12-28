@@ -1,5 +1,7 @@
 #include "luacppb/Invoke/Coro.h"
 
+#ifdef LUACPPB_COROUTINE_SUPPORT
+
 namespace LuaCppB {
 
   LuaCoroutine::LuaCoroutine(lua_State *state, int index, LuaCppRuntime &runtime)
@@ -30,3 +32,5 @@ namespace LuaCppB {
     return static_cast<LuaStatusCode>(lua_status(this->thread.toState()));
   }
 }
+
+#endif

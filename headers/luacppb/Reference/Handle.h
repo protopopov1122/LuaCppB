@@ -57,8 +57,7 @@ namespace LuaCppB {
 			if (this->ref) {
 				return Internal::LuaFunctionInvoke::invoke<Internal::LuaReference, A...>(*this->ref, this->getRuntime(), args...);
 			} else {
-				std::vector<LuaValue> vec;
-				return Internal::LuaFunctionCallResult(vec, LuaError(LuaStatusCode::RuntimeError));
+				return Internal::LuaFunctionCallResult(LuaError(LuaStatusCode::RuntimeError));
 			}
 		}
 
@@ -67,8 +66,7 @@ namespace LuaCppB {
 			if (this->ref) {
 				return Internal::LuaFunctionInvoke::invoke<Internal::LuaReference, A...>(*this->ref, this->getRuntime(), args...);
 			} else {
-				std::vector<LuaValue> vec;
-				return Internal::LuaFunctionCallResult(vec, LuaError(LuaStatusCode::RuntimeError));
+				return Internal::LuaFunctionCallResult(LuaError(LuaStatusCode::RuntimeError));
 			}
 		}
 	 private:

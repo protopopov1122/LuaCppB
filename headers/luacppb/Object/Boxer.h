@@ -16,12 +16,23 @@ namespace LuaCppB::Internal {
     virtual void wrap(lua_State *, const void *) = 0;
     virtual void wrapUnique(lua_State *, void *) = 0;
     virtual void wrapShared(lua_State *, std::shared_ptr<void>) = 0;
+    virtual std::string getClassName() = 0;
   };
 
   class LuaCppObjectBoxerRegistry {
    public:
     LuaCppObjectBoxerRegistry(lua_State *state)
       : state(state) {}
+    
+    template <typename T>
+    std::string getClassName() {
+      std::type_index idx = std::type_index(typeid(T));
+      if (this->wrappers.count(idx)) {
+        return this->wrappers[idx]->getClassName();
+      } else {
+        return "";
+      }
+    }
 
     template <typename T>
     bool canWrap() {

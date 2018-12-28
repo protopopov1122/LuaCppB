@@ -10,7 +10,7 @@
 
 namespace LuaCppB::Internal {
 
-  template <typename T>
+  template <typename T, typename P>
   class LuaCppClassObjectBoxer : public LuaCppObjectBoxer {
    public:
     LuaCppClassObjectBoxer(const std::string &className)
@@ -21,6 +21,9 @@ namespace LuaCppB::Internal {
       T *object = reinterpret_cast<T *>(raw_ptr);
       LuaCppObjectWrapper<T> *wrapper = stack.push<LuaCppObjectWrapper<T>>();
       new(wrapper) LuaCppObjectWrapper<T>(object);
+      if constexpr (!std::is_void<P>::value) {
+        wrapper->addParentType(std::type_index(typeid(P)));
+      }
       stack.setMetatable(this->className);
     }
 
@@ -29,6 +32,9 @@ namespace LuaCppB::Internal {
       const T *object = reinterpret_cast<const T *>(raw_ptr);
       LuaCppObjectWrapper<const T> *wrapper = stack.push<LuaCppObjectWrapper<const T>>();
       new(wrapper) LuaCppObjectWrapper<const T>(object);
+      if constexpr (!std::is_void<P>::value) {
+        wrapper->addParentType(std::type_index(typeid(P)));
+      }
       stack.setMetatable(this->className);
     }
 
@@ -37,6 +43,9 @@ namespace LuaCppB::Internal {
       std::unique_ptr<T> object = std::unique_ptr<T>(reinterpret_cast<T *>(raw_ptr));
       LuaCppObjectWrapper<T> *wrapper = stack.push<LuaCppObjectWrapper<T>>();
       new(wrapper) LuaCppObjectWrapper<T>(std::move(object));
+      if constexpr (!std::is_void<P>::value) {
+        wrapper->addParentType(std::type_index(typeid(P)));
+      }
       stack.setMetatable(this->className);
     }
 
@@ -45,7 +54,14 @@ namespace LuaCppB::Internal {
       std::shared_ptr<T> object = std::reinterpret_pointer_cast<T>(raw_object);
       LuaCppObjectWrapper<T> *wrapper = stack.push<LuaCppObjectWrapper<T>>();
       new(wrapper) LuaCppObjectWrapper<T>(object);
+      if constexpr (!std::is_void<P>::value) {
+        wrapper->addParentType(std::type_index(typeid(P)));
+      }
       stack.setMetatable(this->className);
+    }
+
+    std::string getClassName() override {
+      return this->className;
     }
    private:
     std::string className;
@@ -55,10 +71,10 @@ namespace LuaCppB::Internal {
    public:
     using LuaCppObjectBoxerRegistry::LuaCppObjectBoxerRegistry;
 
-    template <typename T>
-    void bind(LuaCppClass<T> &cl) {
+    template <typename T, typename P>
+    void bind(LuaCppClass<T, P> &cl) {
       cl.bind(this->state);
-      this->addBoxer<T>(std::make_shared<LuaCppClassObjectBoxer<T>>(cl.getClassName()));
+      this->addBoxer<T>(std::make_shared<LuaCppClassObjectBoxer<T, P>>(cl.getClassName()));
     }
   };
 }

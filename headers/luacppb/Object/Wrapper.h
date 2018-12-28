@@ -8,6 +8,7 @@
 #include <typeinfo>
 #include <typeindex>
 #include <type_traits>
+#include <algorithm>
 
 namespace LuaCppB {
 
@@ -17,19 +18,24 @@ namespace LuaCppB {
 		using Unique = std::unique_ptr<C>;
 		using Shared = std::shared_ptr<C>;
 	 public:
-	 	LuaCppObjectWrapper(Raw obj) : object(obj), objectType(typeid(C)), constant(std::is_const<C>::value) {}
-		LuaCppObjectWrapper(C &obj) : object(&obj), objectType(typeid(C)), constant(std::is_const<C>::value) {}
-	 	LuaCppObjectWrapper() : objectType(typeid(C)), constant(std::is_const<C>::value) {
+	 	LuaCppObjectWrapper(Raw obj) : object(obj), objectType({ typeid(C) }), constant(std::is_const<C>::value) {}
+		LuaCppObjectWrapper(C &obj) : object(&obj), objectType({ typeid(C) }), constant(std::is_const<C>::value) {}
+	 	LuaCppObjectWrapper() : objectType({ typeid(C) }), constant(std::is_const<C>::value) {
 		  this->object = std::unique_ptr<C>(reinterpret_cast<C *>(::operator new(sizeof(C))));
 		}
-		LuaCppObjectWrapper(Unique obj) : object(std::move(obj)), objectType(typeid(C)), constant(std::is_const<C>::value) {}
-		LuaCppObjectWrapper(Shared obj) : object(obj), objectType(typeid(C)), constant(std::is_const<C>::value) {}
+		LuaCppObjectWrapper(Unique obj) : object(std::move(obj)), objectType({ typeid(C) }), constant(std::is_const<C>::value) {}
+		LuaCppObjectWrapper(Shared obj) : object(obj), objectType({ typeid(C) }), constant(std::is_const<C>::value) {}
 		~LuaCppObjectWrapper() {
 			this->object = nullptr;
 		}
 
+		void addParentType(std::type_index idx) {
+			this->objectType.push_back(idx);
+		}
+
 		C *get() {
-			if (std::type_index(typeid(C)) != this->objectType || (!std::is_const<C>::value && this->constant)) {
+			if (std::find(this->objectType.begin(), this->objectType.end(), std::type_index(typeid(C))) == this->objectType.end() ||
+				(!std::is_const<C>::value && this->constant)) {
 				throw LuaCppBError("Type mismatch", LuaCppBErrorCode::IncorrectTypeCast);
 			}
 			switch (this->object.index()) {
@@ -45,7 +51,7 @@ namespace LuaCppB {
 		}
 	 private:
 		std::variant<Raw, Unique, Shared> object;
-		std::type_index objectType;
+		std::vector<std::type_index> objectType;
 		bool constant;
 	};
 }

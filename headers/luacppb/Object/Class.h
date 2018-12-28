@@ -17,7 +17,7 @@ namespace LuaCppB {
     return std::make_unique<C>(args...);
   }
 
-  template <typename C>
+  template <typename C, typename P = void>
   class LuaCppClass : public LuaData {
    public:
     LuaCppClass(const std::string &className, LuaCppRuntime &runtime)
@@ -34,6 +34,12 @@ namespace LuaCppB {
       Internal::LuaStack stack(state);
       if (stack.metatable(this->className)) {
         stack.pushTable();
+        if (!std::is_void<P>::value) {
+          std::string parentName = this->runtime.getObjectBoxerRegistry().getClassName<P>();
+          if (!parentName.empty()) {
+            luaL_setmetatable(state, parentName.c_str());
+          }
+        }
         for (auto it = this->methods.begin(); it != this->methods.end(); ++it) {
           it->second->push(state);
           stack.setField(-2, it->first);
@@ -41,7 +47,7 @@ namespace LuaCppB {
         stack.setField(-2, "__index");
         if constexpr (std::is_default_constructible<C>::value) {
           stack.push(this->className);
-          stack.push(&LuaCppClass<C>::newObject, 1);
+          stack.push(&LuaCppClass<C, P>::newObject, 1);
           stack.setField(-2, "new");
         }
         for (auto it = this->staticMethods.begin(); it != this->staticMethods.end(); ++it) {
@@ -49,7 +55,7 @@ namespace LuaCppB {
           stack.setField(-2, it->first);
         }
         stack.push(this->className);
-        stack.push(&LuaCppClass<C>::gcObject, 1);
+        stack.push(&LuaCppClass<C, P>::gcObject, 1);
         stack.setField(-2, "__gc");
       }
     }
@@ -83,6 +89,9 @@ namespace LuaCppB {
         LuaCppObjectWrapper<C> *object = stack.push<LuaCppObjectWrapper<C>>();
         new(object) LuaCppObjectWrapper<C>();
         new(object->get()) C();
+        if (!std::is_void<P>()) {
+          object->addParentType(std::type_index(typeid(P)));
+        }
         stack.setMetatable(className);
       } else {
         stack.push();

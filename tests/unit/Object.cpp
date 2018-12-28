@@ -36,7 +36,7 @@ class Arith {
   static std::shared_ptr<Arith> newSharedArith(int n) {
     return std::make_shared<Arith>(n);
   }
- private:
+ protected:
   static Arith global;
   int n;
 };
@@ -185,4 +185,36 @@ TEST_CASE("Costant object references") {
     REQUIRE_THROWS(env.execute(CODE) != LuaStatusCode::Ok);
   }
 #endif
+}
+
+class NArith : public Arith {
+ public:
+  using Arith::Arith;
+  int mul(int n) {
+    return this->n * n;
+  }
+};
+
+TEST_CASE("Inheritance") {
+  const std::string &CODE = "narith = NArith.new(100)\n"
+                            "result = { narith:mul(5), arith:add(35) }\n";
+  LuaEnvironment env;
+  LuaCppClass<Arith> arithCl("Arith", env);
+  arithCl.bind("add", &Arith::add);
+  arithCl.bind("sub", &Arith::sub);
+  arithCl.bind("set", &Arith::set);
+  arithCl.bind("new", &LuaCppConstructor<Arith, int>);
+  env.getClassRegistry().bind(arithCl);
+
+  LuaCppClass<NArith, Arith> narithCl("NArith", env);
+  narithCl.bind("mul", &NArith::mul);
+  narithCl.bind("new", &LuaCppConstructor<NArith, int>);
+  env.getClassRegistry().bind(narithCl);
+  env["NArith"] = narithCl;
+
+  NArith arith(10);
+  env["arith"] = arith;
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["result"][1].get<int>() == 500);
+  REQUIRE(env["result"][2].get<int>() == 45);
 }

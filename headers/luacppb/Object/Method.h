@@ -63,8 +63,7 @@ namespace LuaCppB::Internal {
 				Internal::LuaStack stack(state);
 				LuaCppObjectMethodCallDescriptor<M> *descriptor = stack.toUserData<LuaCppObjectMethodCallDescriptor<M> *>(lua_upvalueindex(1));
 				LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
-				std::string className = stack.toString(lua_upvalueindex(3));
-				LuaCppObjectWrapper<C> *object = stack.checkUserData<LuaCppObjectWrapper<C>>(1, className);
+				LuaCppObjectWrapper<C> *object = stack.toPointer<LuaCppObjectWrapper<C> *>(1);
 				if (object) {
 					return LuaCppObjectMethodCall<C, M, R, A...>::call(object->get(), descriptor->method, runtime, state);
 				} else {

@@ -16,6 +16,7 @@ namespace LuaCppB {
 	 	LuaReferenceHandle() : state(nullptr), ref(nullptr) {}
 		LuaReferenceHandle(lua_State *state, std::unique_ptr<Internal::LuaReference> ref) : state(state), ref(std::move(ref)) {}
 		LuaReferenceHandle(const LuaReferenceHandle &);
+		LuaReferenceHandle(LuaReferenceHandle &&);
 
 		Internal::LuaReference &getReference() const;
 		LuaCppRuntime &getRuntime() const;

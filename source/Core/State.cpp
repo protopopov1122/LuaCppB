@@ -3,6 +3,7 @@
 #include "luacppb/Reference/Field.h"
 #include "luacppb/Object/Registry.h"
 #include "luacppb/Core/Stack.h"
+#include "luacppb/Core/StackGuard.h"
 #include "luacppb/Invoke/Lua.h"
 #include "luacppb/Invoke/Native.h"
 #include <cassert>
@@ -71,23 +72,36 @@ namespace LuaCppB {
 		}
 	}
 
-	LuaError LuaEnvironment::load(const std::string &path) {
+	Internal::LuaFunctionCallResult LuaEnvironment::load(const std::string &path) {
+		Internal::LuaStackCleaner cleaner(this->state);
 		bool err = static_cast<bool>(luaL_dofile(this->state, path.c_str()));
 		Internal::LuaCppBNativeException::check(this->state);
-		if (err) {
-			return LuaError(LuaStatusCode::RuntimeError);
-		} else {
-			return LuaError();
-		}
+		return this->pollResult(err, cleaner.getDelta());
 	}
 
-	LuaError LuaEnvironment::execute(const std::string &code) {
+	Internal::LuaFunctionCallResult LuaEnvironment::execute(const std::string &code) {
+		Internal::LuaStackCleaner cleaner(this->state);
 		bool err = static_cast<bool>(luaL_dostring(this->state, code.c_str()));
 		Internal::LuaCppBNativeException::check(this->state);
+		return this->pollResult(err, cleaner.getDelta());
+	}
+
+	Internal::LuaFunctionCallResult LuaEnvironment::pollResult(bool err, int delta) {
+		std::vector<LuaValue> result;
+		while (delta-- > 0) {
+			result.push_back(LuaValue::peek(this->state, -1).value_or(LuaValue()));
+			lua_pop(this->state, 1);
+		}
 		if (err) {
-			return LuaError(LuaStatusCode::RuntimeError);
+			if (result.size() > 0) {
+				LuaError err(LuaStatusCode::RuntimeError, result.at(0));
+				return Internal::LuaFunctionCallResult(err);
+			} else {
+				return Internal::LuaFunctionCallResult(LuaError(LuaStatusCode::RuntimeError));	
+			}
 		} else {
-			return LuaError();
+			std::reverse(result.begin(), result.end());
+			return Internal::LuaFunctionCallResult(result);
 		}
 	}
 }

@@ -20,6 +20,7 @@ namespace LuaCppB::Internal {
     LuaUniqueRegistryHandle();
     LuaUniqueRegistryHandle(lua_State *, int = -1);
     LuaUniqueRegistryHandle(const LuaUniqueRegistryHandle &);
+    LuaUniqueRegistryHandle(LuaUniqueRegistryHandle &&);
     virtual ~LuaUniqueRegistryHandle();
 
     bool hasValue() const override;

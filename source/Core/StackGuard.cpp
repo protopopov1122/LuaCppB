@@ -49,4 +49,18 @@ namespace LuaCppB::Internal {
   LuaStackCanary LuaStackGuard::canary() const noexcept {
     return LuaStackCanary(this->state);
   }
+
+  LuaStackCleaner::LuaStackCleaner(lua_State *state)
+    : state(state), top(lua_gettop(state)) {}
+  
+  LuaStackCleaner::~LuaStackCleaner() {
+    int currentTop = lua_gettop(this->state);
+    if (currentTop > this->top) {
+      lua_pop(this->state, currentTop - this->top);
+    }
+  }
+
+  int LuaStackCleaner::getDelta() {
+    return lua_gettop(this->state) - this->top;
+  }
 }

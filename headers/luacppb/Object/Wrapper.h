@@ -8,7 +8,7 @@
 #include <typeinfo>
 #include <typeindex>
 #include <type_traits>
-#include <algorithm>
+#include <set>
 
 namespace LuaCppB {
 
@@ -30,11 +30,11 @@ namespace LuaCppB {
 		}
 
 		void addParentType(std::type_index idx) {
-			this->objectType.push_back(idx);
+			this->objectType.insert(idx);
 		}
 
 		C *get() {
-			if (std::find(this->objectType.begin(), this->objectType.end(), std::type_index(typeid(C))) == this->objectType.end() ||
+			if (this->objectType.count(std::type_index(typeid(C))) == 0 ||
 				(!std::is_const<C>::value && this->constant)) {
 				throw LuaCppBError("Type mismatch", LuaCppBErrorCode::IncorrectTypeCast);
 			}
@@ -51,7 +51,7 @@ namespace LuaCppB {
 		}
 	 private:
 		std::variant<Raw, Unique, Shared> object;
-		std::vector<std::type_index> objectType;
+		std::set<std::type_index> objectType;
 		bool constant;
 	};
 }

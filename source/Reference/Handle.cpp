@@ -11,6 +11,12 @@ namespace LuaCppB {
     });
   }
 
+  LuaReferenceHandle::LuaReferenceHandle(LuaReferenceHandle &&handle)
+    : state(handle.state), ref(std::move(handle.ref)) {
+    handle.state = nullptr;
+    handle.ref = nullptr;
+  }
+
   Internal::LuaReference &LuaReferenceHandle::getReference() const {
     return *this->ref;
   }

@@ -42,8 +42,10 @@ namespace LuaCppB {
 	class LuaEnvironment : public LuaUniqueState {
 	 public:
 		LuaEnvironment(bool = true);
-		LuaError load(const std::string &);
-		LuaError execute(const std::string &);
+		Internal::LuaFunctionCallResult load(const std::string &);
+		Internal::LuaFunctionCallResult execute(const std::string &);
+	 private:
+		Internal::LuaFunctionCallResult pollResult(bool, int);
 	};
 }
 

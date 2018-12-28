@@ -22,6 +22,7 @@ TEST_CASE("State") {
     REQUIRE_FALSE(env("return 2+2*2", false).hasError());
     REQUIRE(env("2+2*2", false).hasError());
     REQUIRE(env("return 2+2*2", true).hasError());
+    REQUIRE(env.execute("test()").hasError());
   }
 #ifdef LUACPPB_ERROR_SUPPORT
   SECTION("Error handling") {

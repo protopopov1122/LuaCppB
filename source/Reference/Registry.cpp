@@ -25,6 +25,12 @@ namespace LuaCppB::Internal {
     }
   }
 
+  LuaUniqueRegistryHandle::LuaUniqueRegistryHandle(LuaUniqueRegistryHandle &&handle)
+    : state(handle.state), ref(handle.ref) {
+    handle.state = nullptr;
+    handle.ref = 0;
+  }
+
   LuaUniqueRegistryHandle::~LuaUniqueRegistryHandle() {
     if (this->state) {
       Internal::LuaStack stack(this->state);

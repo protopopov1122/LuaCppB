@@ -18,8 +18,8 @@ namespace LuaCppB::Internal {
 			ref.putOnTop([&](lua_State *state) {
 				if (lua_isfunction(state, -1)) {
 					error = LuaFunctionCall::call<A...>(state, -1, runtime, results, args...);
-				} else if (lua_isthread(state, -1)) {
 #ifdef LUACPPB_COROUTINE_SUPPORT
+				} else if (lua_isthread(state, -1)) {
 					LuaCoroutine coro(LuaThread(state, -1), runtime);
 					error = coro.call(results, args...);
 #endif
@@ -33,8 +33,8 @@ namespace LuaCppB::Internal {
 			ref.putOnTop([&](lua_State *state) {
 				if (lua_isfunction(state, -1)) {
 					LuaFunctionCall::callK<A...>(state, -1, runtime, std::move(cont), args...);
-				} else if (lua_isthread(state, -1)) {
 #ifdef LUACPPB_COROUTINE_SUPPORT
+				} else if (lua_isthread(state, -1)) {
           std::vector<LuaValue> results;
 					LuaCoroutine coro(LuaThread(state, -1), runtime);
 					LuaError error = coro.call(results, args...);

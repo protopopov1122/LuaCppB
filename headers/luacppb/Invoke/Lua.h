@@ -223,6 +223,14 @@ namespace LuaCppB {
         return this->errorVal.hasError();
       }
 
+      bool operator==(LuaStatusCode code) const {
+        return this->errorVal.getStatus() == code;
+      }
+
+      bool operator!=(LuaStatusCode code) const {
+        return this->errorVal.getStatus() != code;
+      }
+
       template <typename T>
       T get() {
         return LuaFunctionCallResultGetter<T>::get(this->result);

@@ -30,6 +30,17 @@ namespace LuaCppB::Internal {
    private:
     lua_State *state;
   };
+
+  class LuaStackCleaner {
+   public:
+    LuaStackCleaner(lua_State *);
+    ~LuaStackCleaner();
+
+    int getDelta();
+   private:
+    lua_State *state;
+    int top;
+  };
 }
 
 #endif

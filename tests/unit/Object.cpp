@@ -173,6 +173,7 @@ TEST_CASE("Costant object references") {
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
     REQUIRE(env["res"].get<int>() == 15);
   }
+#ifdef LUACPPB_EXCEPTION_PROPAGATION
   SECTION("Class binding") {
     const std::string &CODE = "arith:set(5)\n"
                               "res = arith:add(5)";
@@ -183,4 +184,5 @@ TEST_CASE("Costant object references") {
     env["arith"] = cArith;
     REQUIRE_THROWS(env.execute(CODE) != LuaStatusCode::Ok);
   }
+#endif
 }

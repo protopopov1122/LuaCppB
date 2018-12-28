@@ -24,6 +24,7 @@ namespace LuaCppB::Internal {
 		static void process(lua_State *, std::exception_ptr);
 		static void check(lua_State *);
 	 private:
+	 	static int gc(lua_State *);
 	 	static constexpr auto LUACPPB_EXCEPTION_POINTER = "__luacppb_native_exception";
 		std::exception_ptr eptr;
 	};

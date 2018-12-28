@@ -218,3 +218,19 @@ TEST_CASE("Inheritance") {
   REQUIRE(env["result"][1].get<int>() == 500);
   REQUIRE(env["result"][2].get<int>() == 45);
 }
+
+TEST_CASE("Exception handling") {
+  const std::string &CODE = "arith:set(5)\n"
+                            "res = arith:add(5)";
+  LuaEnvironment env;
+  Arith arith(10);
+  const Arith &cArith = arith;
+  LuaCppClass<Arith> arithCl("Arith", env);
+  arithCl.bind("add", &Arith::add);
+  arithCl.bind("set", &Arith::set);
+  env.getClassRegistry().bind(arithCl);
+  env["arith"] = cArith;
+  REQUIRE_THROWS(env.execute(CODE) != LuaStatusCode::Ok);
+  env.setExceptionHandler([](std::exception &ex) {});
+  REQUIRE_NOTHROW(env.execute(CODE) != LuaStatusCode::Ok);
+}

@@ -24,6 +24,8 @@ namespace LuaCppB {
 		Internal::LuaCppClassRegistry &getClassRegistry();
 		Internal::LuaCppObjectBoxerRegistry &getObjectBoxerRegistry() override;
 		std::shared_ptr<Internal::LuaRuntimeInfo> &getRuntimeInfo() override;
+    void setExceptionHandler(std::function<void(std::exception &)>) override;
+    std::function<void(std::exception &)> getExceptionHandler() override;
 		
 		LuaReferenceHandle operator[](const std::string &);
 		LuaReferenceHandle operator[](lua_Integer);
@@ -31,6 +33,7 @@ namespace LuaCppB {
 	 protected:
 		lua_State *state;
 		std::shared_ptr<Internal::LuaRuntimeInfo> runtime;
+		std::function<void(std::exception &)> exception_handler;
 	};
 
 	class LuaUniqueState : public LuaState {

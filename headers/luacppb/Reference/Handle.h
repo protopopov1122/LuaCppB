@@ -29,16 +29,24 @@ namespace LuaCppB {
 
 		template <typename T>
 		typename std::enable_if<!std::is_same<T, LuaReferenceHandle>::value, LuaReferenceHandle>::type &operator=(T &value) {
-			if (this->ref) {
-				this->ref->set<T>(value);
+			try {
+				if (this->ref) {
+					this->ref->set<T>(value);
+				}
+			} catch (std::exception &ex) {
+				this->getRuntime().getExceptionHandler()(ex);
 			}
 			return *this;
 		}
 
 		template <typename T>
 		typename std::enable_if<!std::is_same<T, LuaReferenceHandle>::value, LuaReferenceHandle>::type &operator=(T &&value) {
-			if (this->ref) {
-				this->ref->set<T>(value);
+			try {
+				if (this->ref) {
+					this->ref->set<T>(value);
+				}
+			} catch (std::exception &ex) {
+				this->getRuntime().getExceptionHandler()(ex);
 			}
 			return *this;
 		}
@@ -55,20 +63,26 @@ namespace LuaCppB {
 
 		template <typename ... A>
 		Internal::LuaFunctionCallResult operator()(A &... args) {
-			if (this->ref) {
-				return Internal::LuaFunctionInvoke::invoke<Internal::LuaReference, A...>(*this->ref, this->getRuntime(), args...);
-			} else {
-				return Internal::LuaFunctionCallResult(LuaError(LuaStatusCode::RuntimeError));
+			try {
+				if (this->ref) {
+					return Internal::LuaFunctionInvoke::invoke<Internal::LuaReference, A...>(*this->ref, this->getRuntime(), args...);
+				}
+			} catch (std::exception &ex) {
+				this->getRuntime().getExceptionHandler()(ex);
 			}
+			return Internal::LuaFunctionCallResult(LuaError(LuaStatusCode::RuntimeError));
 		}
 
 		template <typename ... A>
 		typename std::enable_if<(sizeof...(A) > 0), Internal::LuaFunctionCallResult>::type operator()(A &&... args) {
-			if (this->ref) {
-				return Internal::LuaFunctionInvoke::invoke<Internal::LuaReference, A...>(*this->ref, this->getRuntime(), args...);
-			} else {
-				return Internal::LuaFunctionCallResult(LuaError(LuaStatusCode::RuntimeError));
+			try {
+				if (this->ref) {
+					return Internal::LuaFunctionInvoke::invoke<Internal::LuaReference, A...>(*this->ref, this->getRuntime(), args...);
+				}
+			} catch (std::exception &ex) {
+				this->getRuntime().getExceptionHandler()(ex);
 			}
+			return Internal::LuaFunctionCallResult(LuaError(LuaStatusCode::RuntimeError));
 		}
 	 private:
 	 	lua_State *state;

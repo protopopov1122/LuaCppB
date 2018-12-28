@@ -14,6 +14,9 @@ namespace LuaCppB {
 	LuaState::LuaState(lua_State *state, std::shared_ptr<Internal::LuaRuntimeInfo> runtime)
 		: state(state), runtime(runtime == nullptr ? std::make_shared<Internal::LuaRuntimeInfo>(std::make_shared<Internal::LuaCppClassRegistry>(state)) : runtime) {
 		assert(this->state != nullptr);
+		this->exception_handler = [](std::exception &ex) {
+			throw ex;
+		};
 	}
 
 	lua_State *LuaState::getState() const {
@@ -32,6 +35,14 @@ namespace LuaCppB {
 		return this->runtime;
 	}
 
+	void LuaState::setExceptionHandler(std::function<void(std::exception &)> eh) {
+		this->exception_handler = eh;
+	}
+  
+	std::function<void(std::exception &)> LuaState::getExceptionHandler() {
+		return this->exception_handler;
+	}
+
 	LuaReferenceHandle LuaState::operator[](const std::string &name) {
 		return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaGlobalVariable>(*this, name));
 	}
@@ -42,19 +53,24 @@ namespace LuaCppB {
 	}
 
 	Internal::LuaFunctionCallResult LuaState::operator()(const std::string &code, bool preprendReturn) {
-		std::string exec(code);
-		if (preprendReturn) {
-			exec = "return (" + exec + ")";
-		}
-		LuaStatusCode status = static_cast<LuaStatusCode>(luaL_loadstring(this->state, exec.c_str()));
-		if (status == LuaStatusCode::Ok) {
-			Internal::LuaStack stack(this->state);
-			std::optional<LuaValue> value = stack.get();
-			stack.pop();
-			LuaFunction func = value.value_or(LuaValue()).get<LuaFunction>();
-			return func.ref(*this)();
-		} else {
-			return Internal::LuaFunctionCallResult(LuaError(status));
+		try {
+			std::string exec(code);
+			if (preprendReturn) {
+				exec = "return (" + exec + ")";
+			}
+			LuaStatusCode status = static_cast<LuaStatusCode>(luaL_loadstring(this->state, exec.c_str()));
+			if (status == LuaStatusCode::Ok) {
+				Internal::LuaStack stack(this->state);
+				std::optional<LuaValue> value = stack.get();
+				stack.pop();
+				LuaFunction func = value.value_or(LuaValue()).get<LuaFunction>();
+				return func.ref(*this)();
+			} else {
+				return Internal::LuaFunctionCallResult(LuaError(status));
+			}
+		} catch (std::exception &ex) {
+			this->exception_handler(ex);
+			return Internal::LuaFunctionCallResult(LuaError(LuaStatusCode::RuntimeError));
 		}
 	}
 
@@ -73,17 +89,27 @@ namespace LuaCppB {
 	}
 
 	Internal::LuaFunctionCallResult LuaEnvironment::load(const std::string &path) {
-		Internal::LuaStackCleaner cleaner(this->state);
-		bool err = static_cast<bool>(luaL_dofile(this->state, path.c_str()));
-		Internal::LuaCppBNativeException::check(this->state);
-		return this->pollResult(err, cleaner.getDelta());
+		try {
+			Internal::LuaStackCleaner cleaner(this->state);
+			bool err = static_cast<bool>(luaL_dofile(this->state, path.c_str()));
+			Internal::LuaCppBNativeException::check(this->state);
+			return this->pollResult(err, cleaner.getDelta());
+		} catch (std::exception &ex) {
+			this->exception_handler(ex);
+			return Internal::LuaFunctionCallResult(LuaError());
+		}
 	}
 
 	Internal::LuaFunctionCallResult LuaEnvironment::execute(const std::string &code) {
-		Internal::LuaStackCleaner cleaner(this->state);
-		bool err = static_cast<bool>(luaL_dostring(this->state, code.c_str()));
-		Internal::LuaCppBNativeException::check(this->state);
-		return this->pollResult(err, cleaner.getDelta());
+		try {
+			Internal::LuaStackCleaner cleaner(this->state);
+			bool err = static_cast<bool>(luaL_dostring(this->state, code.c_str()));
+			Internal::LuaCppBNativeException::check(this->state);
+			return this->pollResult(err, cleaner.getDelta());
+		} catch (std::exception &ex) {
+			this->exception_handler(ex);
+			return Internal::LuaFunctionCallResult(LuaError(LuaStatusCode::RuntimeError));
+		}
 	}
 
 	Internal::LuaFunctionCallResult LuaEnvironment::pollResult(bool err, int delta) {

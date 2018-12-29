@@ -19,7 +19,8 @@ namespace LuaCppB::Internal {
 		                              std::is_same<T, LuaCoroutine>::value;
 	};
 #else
-	using LuaReferenceGetSpecialCase = LuaValueGetSpecialCase;
+	template <typename T>
+	using LuaReferenceGetSpecialCase = LuaValueGetSpecialCase<T>;
 #endif
 
 	class LuaReference {

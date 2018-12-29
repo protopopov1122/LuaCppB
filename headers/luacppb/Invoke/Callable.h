@@ -12,7 +12,12 @@ namespace LuaCppB {
   }
 
   template <typename C, typename M>
-  auto NativeCallable(C object, M method, LuaCppRuntime &runtime) -> decltype(Internal::NativeMethod<Internal::LuaNativeValue>::create(object, method, runtime)) {
+  auto NativeCallable(C &object, M method, LuaCppRuntime &runtime) -> decltype(Internal::NativeMethod<Internal::LuaNativeValue>::create(object, method, runtime)) {
+    return Internal::NativeMethod<Internal::LuaNativeValue>::create(object, method, runtime);
+  }
+  
+  template <typename C, typename M>
+  auto NativeCallable(C *object, M method, LuaCppRuntime &runtime) -> decltype(Internal::NativeMethod<Internal::LuaNativeValue>::create(object, method, runtime)) {
     return Internal::NativeMethod<Internal::LuaNativeValue>::create(object, method, runtime);
   }
 }

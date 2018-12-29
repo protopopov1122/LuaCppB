@@ -98,6 +98,33 @@ namespace LuaCppB::Internal {
    private:
     lua_State *state;
   };
+
+  
+  template <>
+  void LuaStack::setIndex<true>(int, int);
+  template <>
+  void LuaStack::getIndex<true>(int, int);
+  
+  template <>
+  bool LuaStack::is<LuaType::None>(int);
+  template <>
+  bool LuaStack::is<LuaType::Nil>(int);
+  template <>
+  bool LuaStack::is<LuaType::Number>(int);
+  template <>
+  bool LuaStack::is<LuaType::Boolean>(int);
+  template <>
+  bool LuaStack::is<LuaType::String>(int);
+  template <>
+  bool LuaStack::is<LuaType::Function>(int);
+  template <>
+  bool LuaStack::is<LuaType::Table>(int);
+  template <>
+  bool LuaStack::is<LuaType::LightUserData>(int);
+  template <>
+  bool LuaStack::is<LuaType::UserData>(int);
+  template <>
+  bool LuaStack::is<LuaType::Thread>(int);
 }
 
 #endif

@@ -12,6 +12,9 @@ This repo contains the prototype of Lua-C++ bindings. Currently it has following
 * support of coroutines.
 * support of std::exception-based exception propagation and handlers
 
+Supported platforms: Windows (MinGW only), Linux (GCC and Clang). \
+Project requires C++17-compliant compiler version.
+
 ### Motivation
 Project inspired by two things:
 * create own compact Lua-C++ bindings to use in my projects.

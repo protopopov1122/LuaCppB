@@ -23,6 +23,7 @@ namespace LuaCppB {
 		bool exists();
 		LuaType getType();
 		LuaReferenceHandle operator[](const std::string &);
+		LuaReferenceHandle operator[](const char *);
 		LuaReferenceHandle operator[](lua_Integer);
 		LuaReferenceHandle &operator=(const LuaReferenceHandle &);
 		LuaValue operator*();

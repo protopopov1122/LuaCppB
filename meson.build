@@ -1,7 +1,8 @@
-project('LuaCppB', 'cpp', default_options : ['cpp_std=c++17', 'warning_level=3'])
+project('LuaCppB', 'cpp', 'c', default_options : ['cpp_std=c++17', 'warning_level=3'])
 
-if meson.get_compiler('cpp').get_id() == 'gcc'
-  add_global_arguments('-Wno-unused-parameter', language : 'cpp')
+if meson.get_compiler('cpp').get_id() == 'gcc' or meson.get_compiler('cpp').get_id() == 'clang'
+  add_global_arguments('-Wno-unused-parameter', '-pedantic', language : 'cpp')
+  add_global_arguments('-x', 'c++', language : 'c')
 endif
 
 lib_src = [
@@ -35,39 +36,39 @@ else
   lua_header_dir = 'lua-source/lua-5.3.5/src'
 
   lua_src = [
-    lua_source_dir + '/ldblib.cc',
-    lua_source_dir + '/lmathlib.cc',
-    lua_source_dir + '/loslib.cc',
-    lua_source_dir + '/lvm.cc',
-    lua_source_dir + '/loadlib.cc',
-    lua_source_dir + '/lmem.cc',
-    lua_source_dir + '/lopcodes.cc',
-    lua_source_dir + '/lbaselib.cc',
-    lua_source_dir + '/ltable.cc',
-    lua_source_dir + '/ldump.cc',
-    lua_source_dir + '/liolib.cc',
-    lua_source_dir + '/lzio.cc',
-    lua_source_dir + '/lctype.cc',
-    lua_source_dir + '/lstring.cc',
-    lua_source_dir + '/lbitlib.cc',
-    lua_source_dir + '/llex.cc',
-    lua_source_dir + '/linit.cc',
-    lua_source_dir + '/ldebug.cc',
-    lua_source_dir + '/ldo.cc',
-    lua_source_dir + '/lauxlib.cc',
-    lua_source_dir + '/lcorolib.cc',
-    lua_source_dir + '/lutf8lib.cc',
-    lua_source_dir + '/lgc.cc',
-    lua_source_dir + '/lstate.cc',
-    lua_source_dir + '/lundump.cc',
-    lua_source_dir + '/ltablib.cc',
-    lua_source_dir + '/ltm.cc',
-    lua_source_dir + '/lparser.cc',
-    lua_source_dir + '/lobject.cc',
-    lua_source_dir + '/lcode.cc',
-    lua_source_dir + '/lfunc.cc',
-    lua_source_dir + '/lapi.cc',
-    lua_source_dir + '/lstrlib.cc'
+    lua_source_dir + '/ldblib.c',
+    lua_source_dir + '/lmathlib.c',
+    lua_source_dir + '/loslib.c',
+    lua_source_dir + '/lvm.c',
+    lua_source_dir + '/loadlib.c',
+    lua_source_dir + '/lmem.c',
+    lua_source_dir + '/lopcodes.c',
+    lua_source_dir + '/lbaselib.c',
+    lua_source_dir + '/ltable.c',
+    lua_source_dir + '/ldump.c',
+    lua_source_dir + '/liolib.c',
+    lua_source_dir + '/lzio.c',
+    lua_source_dir + '/lctype.c',
+    lua_source_dir + '/lstring.c',
+    lua_source_dir + '/lbitlib.c',
+    lua_source_dir + '/llex.c',
+    lua_source_dir + '/linit.c',
+    lua_source_dir + '/ldebug.c',
+    lua_source_dir + '/ldo.c',
+    lua_source_dir + '/lauxlib.c',
+    lua_source_dir + '/lcorolib.c',
+    lua_source_dir + '/lutf8lib.c',
+    lua_source_dir + '/lgc.c',
+    lua_source_dir + '/lstate.c',
+    lua_source_dir + '/lundump.c',
+    lua_source_dir + '/ltablib.c',
+    lua_source_dir + '/ltm.c',
+    lua_source_dir + '/lparser.c',
+    lua_source_dir + '/lobject.c',
+    lua_source_dir + '/lcode.c',
+    lua_source_dir + '/lfunc.c',
+    lua_source_dir + '/lapi.c',
+    lua_source_dir + '/lstrlib.c'
   ]
   lua = static_library('lua-cpp',
     lua_src,

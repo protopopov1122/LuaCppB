@@ -84,9 +84,9 @@ namespace LuaCppB::Internal {
 		NativeMethodCall(C *obj, M met, LuaCppRuntime &runtime) : object(obj), method(met), runtime(runtime) {}
 		NativeMethodCall(C &obj, M met, LuaCppRuntime &runtime) : object(&obj), method(met), runtime(runtime) {}
 		NativeMethodCall(const C *obj, Mc met, LuaCppRuntime &runtime)
-			: object(const_cast<C *>(obj)), method(Internal::NativeMethodWrapper(met).get()), runtime(runtime) {}
+			: object(const_cast<C *>(obj)), method(Internal::NativeMethodWrapper<C, R, A...>(met).get()), runtime(runtime) {}
 		NativeMethodCall(const C &obj, Mc met, LuaCppRuntime &runtime)
-			: object(const_cast<C *>(&obj)), method(Internal::NativeMethodWrapper(met).get()), runtime(runtime) {}
+			: object(const_cast<C *>(&obj)), method(Internal::NativeMethodWrapper<C, R, A...>(met).get()), runtime(runtime) {}
 		
 		void push(lua_State *state) const override {
 			Internal::LuaStack stack(state);

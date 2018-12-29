@@ -248,7 +248,7 @@ namespace LuaCppB {
 				std::is_same<T, std::string>::value ||
 				std::is_same<T, LuaCFunction>::value ||
 				std::is_same<T, const char *>::value ||
-				std::is_array<T>::value && std::is_same<typename std::remove_extent<T>::type, const char>::value;
+				(std::is_array<T>::value && std::is_same<typename std::remove_extent<T>::type, const char>::value);
 		}
 	 private:
 		LuaType type;

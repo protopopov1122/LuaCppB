@@ -33,6 +33,10 @@ namespace LuaCppB {
     }
   }
 
+  LuaReferenceHandle LuaReferenceHandle::operator[](const char *name)  {
+    return this->operator[](std::string(name));
+  }
+
   LuaReferenceHandle LuaReferenceHandle::operator[](lua_Integer index) {
     if (this->ref) {
       return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaArrayField>(*this, this->ref->getRuntime(), index));

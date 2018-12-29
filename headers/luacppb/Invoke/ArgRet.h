@@ -28,15 +28,6 @@ namespace LuaCppB::Internal {
 		static constexpr bool Virtual = true;
 	};
 
-	template <std::size_t I, typename T>
-	struct NativeFunctionArgument<I, T, typename std::enable_if<std::is_same<T, LuaReferenceHandle>::value>::type> {
-		static T get(lua_State *state, LuaCppRuntime &runtime) {
-			return LuaState(state, runtime.getRuntimeInfo())[I];
-		}
-
-		static constexpr bool Virtual = false;
-	};
-
 	template <typename P, typename T, typename E = void>
 	struct NativeFunctionResult {
 		static int set(lua_State *state, LuaCppRuntime &runtime, T &value) {

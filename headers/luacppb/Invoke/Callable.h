@@ -7,8 +7,8 @@
 namespace LuaCppB {
 
   template <typename F>
-  auto NativeCallable(F func, LuaCppRuntime &runtime) -> decltype(Internal::NativeInvocable<Internal::LuaNativeValue>::create(func, runtime)) {
-    return Internal::NativeInvocable<Internal::LuaNativeValue>::create(func, runtime);
+  auto NativeCallable(F &&func, LuaCppRuntime &runtime) -> decltype(Internal::NativeInvocable<Internal::LuaNativeValue>::create(func, runtime)) {
+    return Internal::NativeInvocable<Internal::LuaNativeValue>::create(std::forward<F>(func), runtime);
   }
 
   template <typename C, typename M>

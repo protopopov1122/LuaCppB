@@ -31,8 +31,9 @@ namespace LuaCppB::Internal {
 	template <typename P, typename T, typename E = void>
 	struct NativeFunctionResult {
 		static int set(lua_State *state, LuaCppRuntime &runtime, T &value) {
+			int top = lua_gettop(state);
 			P::push(state, runtime, value);
-			return 1;
+			return lua_gettop(state) - top;
 		}
 	};
 

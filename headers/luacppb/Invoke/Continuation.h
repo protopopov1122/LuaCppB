@@ -108,26 +108,14 @@ namespace LuaCppB {
       : handle(handle), runtime(runtime) {}
     
     template <typename F, typename ... A>
-    void call(F callback, std::function<void(LuaError)> errorHandler, A &... args) {
+    void call(F callback, std::function<void(LuaError)> errorHandler, A &&... args) {
       Internal::LuaFunctionInvoke::invokeK<Internal::LuaReference, A...>(handle.getReference(),
-        this->runtime, Internal::LuaContinuationHandlerType<F>::newHandler(callback, errorHandler), args...);
+        this->runtime, Internal::LuaContinuationHandlerType<F>::newHandler(callback, errorHandler), std::forward<A>(args)...);
     }
 
     template <typename F, typename ... A>
-    typename std::enable_if<(sizeof...(A) > 0)>::type
-      call(F callback, std::function<void(LuaError)> errorHandler, A &&... args) {
-      LuaContinuation::call<F, A...>(callback, errorHandler, args...);
-    }
-
-    template <typename F, typename ... A>
-    static void yield(lua_State *state, LuaCppRuntime &runtime, F callback, std::function<void(LuaError)> errorHandler, A &... args) {
-      Internal::LuaFunctionInvoke::yieldK<A...>(state, runtime, Internal::LuaContinuationHandlerType<F>::newHandler(callback, errorHandler), args...);
-    }
-
-    template <typename F, typename ... A>
-    static typename std::enable_if<(sizeof...(A) > 0)>::type
-      yield(lua_State *state, LuaCppRuntime &runtime, F callback, std::function<void(LuaError)> errorHandler, A &&... args) {
-      LuaContinuation::yield<F, A...>(state, runtime, callback, errorHandler, args...);
+    static void yield(lua_State *state, LuaCppRuntime &runtime, F callback, std::function<void(LuaError)> errorHandler, A &&... args) {
+      Internal::LuaFunctionInvoke::yieldK<A...>(state, runtime, Internal::LuaContinuationHandlerType<F>::newHandler(callback, errorHandler), std::forward<A>(args)...);
     }
    private:
 

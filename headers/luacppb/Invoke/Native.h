@@ -97,7 +97,7 @@ namespace LuaCppB::Internal {
 			stack.push(&NativeMethodCall<P, C, R, A...>::method_closure, 2);
 		}
 	 private:
-	 	static int call(C *object, M method, LuaCppRuntime &runtime, lua_State *state) {
+	 	static int call(C *object, M &&method, LuaCppRuntime &runtime, lua_State *state) {
 			std::tuple<A...> args = Internal::NativeFunctionArgumentsTuple<1,A...>::value(state, runtime);
 			if constexpr (std::is_void<R>::value) {
 				std::apply([object, method](A... args) {	
@@ -117,7 +117,7 @@ namespace LuaCppB::Internal {
 				Internal::LuaStack stack(state);
 				NativeMethodDescriptor<C, M> *descriptor = stack.toUserData<NativeMethodDescriptor<C, M> *>(lua_upvalueindex(1));
 				LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
-				return NativeMethodCall<P, C, R, A...>::call(descriptor->object, descriptor->method, runtime, state);
+				return NativeMethodCall<P, C, R, A...>::call(descriptor->object, std::forward<M>(descriptor->method), runtime, state);
 			} catch (std::exception &ex) {
 				return luacpp_handle_exception(state, std::current_exception());
 			}
@@ -173,7 +173,7 @@ namespace LuaCppB::Internal {
 	class NativeInvocableCall : public LuaData {
 		using R = typename std::invoke_result<T, A...>::type;
 	 public:
-	 	NativeInvocableCall(T inv, LuaCppRuntime &runtime) : invocable(inv), runtime(runtime) {}
+	 	NativeInvocableCall(T &&inv, LuaCppRuntime &runtime) : invocable(inv), runtime(runtime) {}
 
 		void push(lua_State *state) const {
 			Internal::LuaStack stack(state);
@@ -217,7 +217,7 @@ namespace LuaCppB::Internal {
 		using FunctionType = std::function<R(A...)>;
 		using Type = NativeInvocableCall<P, FunctionType, A...>;
 		static Type create(FunctionType && f, LuaCppRuntime &runtime) {
-			return Type(f, runtime);
+			return Type(std::forward<FunctionType>(f), runtime);
 		}
 	};
 
@@ -226,7 +226,7 @@ namespace LuaCppB::Internal {
 		using FunctionType = std::function<R(A...)>;
 		using Type = NativeInvocableCall<P, FunctionType, A...>;
 		static Type create(FunctionType && f, LuaCppRuntime &runtime) {
-			return Type(f, runtime);
+			return Type(std::forward<FunctionType>(f), runtime);
 		}
 	};
 
@@ -235,21 +235,23 @@ namespace LuaCppB::Internal {
 		using FunctionType = std::function<R(A...)>;
 		using Type = NativeInvocableCall<P, FunctionType, A...>;
 		static Type create(FunctionType && f, LuaCppRuntime &runtime) {
-			return Type(f, runtime);
+			return Type(std::forward<FunctionType>(f), runtime);
 		}
 	};
 
 	template <typename P>
 	class NativeInvocable {
+		template <typename R, typename ... A>
+		using FType = R(*)(A...);
 	 public:
 		template <typename R, typename ... A>
-		static NativeFunctionCall<P, R, A...> create(R(*func)(A...), LuaCppRuntime &runtime) {
-			return NativeFunctionCall<P, R, A...>(func, runtime);
+		static NativeFunctionCall<P, R, A...> create(FType<R, A...> func, LuaCppRuntime &runtime) {
+			return NativeFunctionCall<P, R, A...>(std::forward<FType<R, A...>>(func), runtime);
 		}
 
 	 	template <typename F>
 		static typename NativeInvocableCallBuilder<P, F>::Type create(F func, LuaCppRuntime &runtime) {
-			return NativeInvocableCallBuilder<P, F>::create(func, runtime);
+			return NativeInvocableCallBuilder<P, F>::create(std::forward<F>(func), runtime);
 		}
 	};
 }

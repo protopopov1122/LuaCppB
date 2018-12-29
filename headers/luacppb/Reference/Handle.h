@@ -1,6 +1,7 @@
 #ifndef LUACPPB_REFERENCE_HANDLE_H_
 #define LUACPPB_REFERENCE_HANDLE_H_
 
+#include "luacppb/Meta.h"
 #include "luacppb/Reference/Base.h"
 #include "luacppb/Value/Native.h"
 #include "luacppb/Invoke/Native.h"
@@ -72,7 +73,7 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
-		T get() {
+		typename std::enable_if<!Internal::is_instantiation<std::function, T>::value, T>::type get() {
 			try {
 				return this->ref->get<T>();
 			} catch (std::exception &ex) {
@@ -86,22 +87,10 @@ namespace LuaCppB {
 		}
 
 		template <typename ... A>
-		Internal::LuaFunctionCallResult operator()(A &... args) {
+		Internal::LuaFunctionCallResult operator()(A &&... args) const {
 			try {
 				if (this->ref) {
-					return Internal::LuaFunctionInvoke::invoke<Internal::LuaReference, A...>(*this->ref, this->getRuntime(), args...);
-				}
-			} catch (std::exception &ex) {
-				this->getRuntime().getExceptionHandler()(ex);
-			}
-			return Internal::LuaFunctionCallResult(LuaError(LuaStatusCode::RuntimeError));
-		}
-
-		template <typename ... A>
-		typename std::enable_if<(sizeof...(A) > 0), Internal::LuaFunctionCallResult>::type operator()(A &&... args) {
-			try {
-				if (this->ref) {
-					return Internal::LuaFunctionInvoke::invoke<Internal::LuaReference, A...>(*this->ref, this->getRuntime(), args...);
+					return Internal::LuaFunctionInvoke::invoke<Internal::LuaReference, A...>(*this->ref, this->getRuntime(), std::forward<A>(args)...);
 				}
 			} catch (std::exception &ex) {
 				this->getRuntime().getExceptionHandler()(ex);

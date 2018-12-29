@@ -21,7 +21,8 @@ namespace LuaCppB::Internal {
                                   is_instantiation<std::reference_wrapper, T>::value ||
                                   is_callable<T>::value ||
                                   std::is_enum<T>::value ||
-                                  Internal::LuaCppContainer::is_container<T>();
+                                  Internal::LuaCppContainer::is_container<T>() ||
+                                  std::is_same<T, LuaFunctionCallResult>::value;
   };
 
   class LuaNativeValue {
@@ -84,8 +85,14 @@ namespace LuaCppB::Internal {
     // Callables
     template <typename T>
     static typename std::enable_if<is_callable<T>::value>::type
-      push(lua_State *state, LuaCppRuntime &runtime, T value) {
+      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
       NativeInvocable<Internal::LuaNativeValue>::create(value, runtime).push(state);
+    }
+    // Function call result
+    template <typename T>
+    static typename std::enable_if<std::is_same<T, LuaFunctionCallResult>::value>::type
+      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
+      value.push(state);
     }
   };
 }

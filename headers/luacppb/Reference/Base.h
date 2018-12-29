@@ -72,7 +72,7 @@ namespace LuaCppB::Internal {
 #endif
 
 		template <typename T>
-		typename std::enable_if<std::is_base_of<LuaData, T>::value>::type set(T value) {
+		typename std::enable_if<std::is_base_of<LuaData, T>::value>::type set(T &value) {
 			this->setValue([&value](lua_State *state) {
 				value.push(state);
 			});

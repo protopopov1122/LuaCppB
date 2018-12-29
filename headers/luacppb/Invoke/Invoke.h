@@ -12,12 +12,12 @@ namespace LuaCppB::Internal {
   class LuaFunctionInvoke {
    public:
 		template <typename T, typename ... A>
-		static LuaFunctionCallResult invoke(T &ref, LuaCppRuntime &runtime, A &... args) {
+		static LuaFunctionCallResult invoke(T &ref, LuaCppRuntime &runtime, A &&... args) {
 			std::vector<LuaValue> results;
 			LuaError error;
 			ref.putOnTop([&](lua_State *state) {
 				if (lua_isfunction(state, -1)) {
-					error = LuaFunctionCall::call<A...>(state, -1, runtime, results, args...);
+					error = LuaFunctionCall::call<A...>(state, -1, runtime, results, std::forward<A>(args)...);
 #ifdef LUACPPB_COROUTINE_SUPPORT
 				} else if (lua_isthread(state, -1)) {
 					LuaCoroutine coro(LuaThread(state, -1), runtime);
@@ -29,10 +29,10 @@ namespace LuaCppB::Internal {
 		}
 
 		template <typename T, typename ... A>
-		static void invokeK(T &ref, LuaCppRuntime &runtime, std::unique_ptr<LuaFunctionContinuation> cont, A &... args) {
+		static void invokeK(T &ref, LuaCppRuntime &runtime, std::unique_ptr<LuaFunctionContinuation> cont, A &&... args) {
 			ref.putOnTop([&](lua_State *state) {
 				if (lua_isfunction(state, -1)) {
-					LuaFunctionCall::callK<A...>(state, -1, runtime, std::move(cont), args...);
+					LuaFunctionCall::callK<A...>(state, -1, runtime, std::move(cont), std::forward<A>(args)...);
 #ifdef LUACPPB_COROUTINE_SUPPORT
 				} else if (lua_isthread(state, -1)) {
           std::vector<LuaValue> results;
@@ -45,8 +45,8 @@ namespace LuaCppB::Internal {
 		}
 
 		template <typename ... A>
-		static void yieldK(lua_State *state, LuaCppRuntime &runtime, std::unique_ptr<LuaFunctionContinuation> cont, A &... args) {
-			LuaFunctionCall::yieldK<A...>(state, runtime, std::move(cont), args...);
+		static void yieldK(lua_State *state, LuaCppRuntime &runtime, std::unique_ptr<LuaFunctionContinuation> cont, A &&... args) {
+			LuaFunctionCall::yieldK<A...>(state, runtime, std::move(cont), std::forward<A>(args)...);
 		}
   };
 }

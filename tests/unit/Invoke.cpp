@@ -314,3 +314,15 @@ TEST_CASE("Yielding") {
 }
 
 #endif
+
+TEST_CASE("Bypassing function call result") {
+  const std::string &CODE = "function fn(x)\n"
+                            "    return x, x*2\n"
+                            "end\n"
+                            "r1, r2 = fn(2)";
+  LuaEnvironment env;
+  env["fn"] = [](int val, LuaState state) { return state[2](val); };
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["r1"].get<int>() == 2);
+  REQUIRE(env["r2"].get<int>() == 4);
+}

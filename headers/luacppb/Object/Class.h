@@ -32,9 +32,12 @@ namespace LuaCppB {
     
     void push(lua_State *state) const override {
       Internal::LuaStack stack(state);
+      std::string fullName = this->fullName();
       if (stack.metatable(this->className)) {
+        stack.push(fullName);
+        stack.setField(-2, "__name");
         stack.pushTable();
-        if (!std::is_void<P>::value) {
+        if constexpr (!std::is_void<P>::value) {
           std::string parentName = this->runtime.getObjectBoxerRegistry().getClassName<P>();
           if (!parentName.empty()) {
             luaL_setmetatable(state, parentName.c_str());
@@ -68,13 +71,13 @@ namespace LuaCppB {
     template <typename R, typename ... A>
     void bind(const std::string &key, R (C::*method)(A...)) {
       using M = R (C::*)(A...);
-      this->methods[key] = std::make_shared<Internal::LuaCppObjectMethodCall<C, M, R, A...>>(method, this->className, this->runtime);
+      this->methods[key] = std::make_shared<Internal::LuaCppObjectMethodCall<C, M, R, A...>>(method, this->fullName(), this->runtime);
     }
 
     template <typename R, typename ... A>
     void bind(const std::string &key, R (C::*method)(A...) const) {
       using M = R (C::*)(A...) const;
-      this->methods[key] = std::make_shared<Internal::LuaCppObjectMethodCall<const C, M, R, A...>>(method, this->className, this->runtime);
+      this->methods[key] = std::make_shared<Internal::LuaCppObjectMethodCall<const C, M, R, A...>>(method, this->fullName(), this->runtime);
     }
 
     template <typename R, typename ... A>
@@ -82,6 +85,14 @@ namespace LuaCppB {
       this->staticMethods[key] = std::make_shared<Internal::NativeFunctionCall<Internal::LuaNativeValue, R, A...>>(function, this->runtime);
     }
    private:
+    std::string fullName() const {
+      if constexpr (!std::is_void<P>::value) {
+        return this->runtime.getObjectBoxerRegistry().getClassName<P>() + "::" + this->className;
+      } else {
+        return this->className;
+      }
+    }
+  
     static int newObject(lua_State *state) {
       Internal::LuaStack stack(state);
       if constexpr (std::is_default_constructible<C>::value) {
@@ -89,7 +100,7 @@ namespace LuaCppB {
         LuaCppObjectWrapper<C> *object = stack.push<LuaCppObjectWrapper<C>>();
         new(object) LuaCppObjectWrapper<C>();
         new(object->get()) C();
-        if (!std::is_void<P>()) {
+        if constexpr (!std::is_void<P>()) {
           object->addParentType(std::type_index(typeid(P)));
         }
         stack.setMetatable(className);

@@ -4,6 +4,7 @@
 #include "luacppb/Reference/Handle.h"
 #include "luacppb/Object/Class.h"
 #include "luacppb/Object/Registry.h"
+#include <iostream>
 
 using namespace LuaCppB;
 
@@ -43,19 +44,38 @@ class Arith {
 
 Arith Arith::global(0);
 
+void object_extracting(Arith obj, const Arith &obj2, Arith *obj3) {
+  REQUIRE(obj.add(10) == 20);
+  REQUIRE(obj2.add(20) == 30);
+  REQUIRE(obj3->add(30) == 40);
+  REQUIRE(&obj2 == obj3);
+}
+
 TEST_CASE("Object binding") {
-  const std::string &CODE = "result = { arith:add(50), arith:sub(100) }";
   LuaEnvironment env;
   Arith arith(10);
   LuaCppObject aObj(arith, env);
   aObj.bind("add", &Arith::add);
   aObj.bind("sub", &Arith::sub);
   env["arith"] = aObj;
-  REQUIRE(env["arith"].exists());
-  REQUIRE(env["arith"].getType() == LuaType::UserData);
-  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  REQUIRE(env["result"][1].get<int>() == 60);
-  REQUIRE(env["result"][2].get<int>() == -90);
+  SECTION("Binding") {
+    const std::string &CODE = "result = { arith:add(50), arith:sub(100) }";
+    REQUIRE(env["arith"].exists());
+    REQUIRE(env["arith"].getType() == LuaType::UserData);
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["result"][1].get<int>() == 60);
+    REQUIRE(env["result"][2].get<int>() == -90);
+  }
+  SECTION("Object extracting") {
+    const std::string &CODE = "test(arith, arith, arith)";
+    const Arith obj = env["arith"];
+    Arith &obj2 = env["arith"];
+    REQUIRE(obj.add(10) == 20);
+    REQUIRE(obj2.add(20) == 30);
+    REQUIRE(&obj2 == &arith);
+    env["test"] = object_extracting;
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  }
 }
 
 TEST_CASE("Class manual binding") {

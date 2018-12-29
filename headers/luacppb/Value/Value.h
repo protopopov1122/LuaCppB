@@ -13,6 +13,17 @@
 
 namespace LuaCppB {
 
+	namespace Internal {
+		template <typename T>
+		struct LuaValueGetSpecialCase {
+			static constexpr bool value = std::is_same<T, std::string>::value ||
+																		std::is_same<T, LuaTable>::value ||
+																		std::is_same<T, LuaUserData>::value ||
+																		std::is_same<T, LuaThread>::value ||
+																		std::is_same<T, LuaFunction>::value;
+		};
+	}
+
 	class LuaValue : public LuaData {
 	 public:
 		LuaValue() : type(LuaType::Nil) {}
@@ -142,6 +153,22 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
+		typename std::enable_if<std::is_class<T>::value && !Internal::LuaValueGetSpecialCase<T>::value, T>::type get() const {
+			using V = typename std::remove_reference<T>::type;
+			if (this->type == LuaType::UserData) {
+				assert(this->value.index() == 7);
+				LuaCppObjectWrapper<V> *ptr = std::get<LuaUserData>(this->value).toPointer<LuaCppObjectWrapper<V> *>();
+				if (ptr != nullptr) {
+					return *ptr->get();
+				} else {
+					throw LuaCppBError("Null pointer can't be dereferenced", LuaCppBErrorCode::NullPointerDereference);
+				}
+			} else {
+				throw LuaCppBError("Type casting failed", LuaCppBErrorCode::IncorrectTypeCast);
+			}
+		}
+
+		template <typename T>
 		typename std::enable_if<std::is_same<T, LuaThread>::value, T>::type get() const {
 			if (this->type == LuaType::Thread) {
 				assert(this->value.index() == 8);
@@ -167,9 +194,14 @@ namespace LuaCppB {
 			return static_cast<T>(this->get<EnumType>());
 		}
 
-		template <typename T>
+		template <typename T, typename Type = typename std::enable_if<!std::is_class<T>::value, T>::type>
 		operator T () {
-			return this->get<T>();
+			return this->get<Type>();
+		}
+
+		template <typename T, typename Type = typename std::enable_if<std::is_class<T>::value, T>::type>
+		operator T& () {
+			return this->get<Type &>();
 		}
 
 		template <typename T>

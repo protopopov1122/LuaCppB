@@ -12,6 +12,16 @@
 
 namespace LuaCppB::Internal {
 
+#ifdef LUACPPB_COROUTINE_SUPPORT
+	template <typename T>
+	struct LuaReferenceGetSpecialCase {
+		static constexpr bool value = LuaValueGetSpecialCase<T>::value ||
+		                              std::is_same<T, LuaCoroutine>::value;
+	};
+#else
+	using LuaReferenceGetSpecialCase = LuaValueGetSpecialCase;
+#endif
+
 	class LuaReference {
 	 public:
 	 	LuaReference(LuaCppRuntime &runtime) : runtime(runtime) {}

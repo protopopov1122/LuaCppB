@@ -53,7 +53,16 @@ namespace LuaCppB {
 
 		template <typename T, typename Type = typename std::enable_if<!std::is_class<T>::value || Internal::LuaReferenceGetSpecialCase<T>::value, T>::type>
 		operator T () {
-			return this->ref->get<T>();
+			try {
+				return this->ref->get<T>();
+			} catch (std::exception &ex) {
+				if constexpr (std::is_default_constructible<T>::value) {
+					this->getRuntime().getExceptionHandler()(ex);
+					return T{};
+				} else {
+					throw;
+				}
+			}
 		}
 
 		template <typename T, typename Type = typename std::enable_if<std::is_class<T>::value && !Internal::LuaReferenceGetSpecialCase<T>::value, T>::type>
@@ -63,7 +72,16 @@ namespace LuaCppB {
 
 		template <typename T>
 		T get() {
-			return this->ref->get<T>();
+			try {
+				return this->ref->get<T>();
+			} catch (std::exception &ex) {
+				if constexpr (std::is_default_constructible<T>::value) {
+					this->getRuntime().getExceptionHandler()(ex);
+					return T{};
+				} else {
+					throw;
+				}
+			}
 		}
 
 		template <typename ... A>

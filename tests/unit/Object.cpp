@@ -4,7 +4,7 @@
 #include "luacppb/Reference/Handle.h"
 #include "luacppb/Object/Class.h"
 #include "luacppb/Object/Registry.h"
-#include <iostream>
+#include "luacppb/Object/Bind.h"
 
 using namespace LuaCppB;
 
@@ -271,4 +271,35 @@ TEST_CASE("Enum") {
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(env["res"].get<int>() == 6);
   REQUIRE(env["el"].get<EnumTest>() == EnumTest::C);
+}
+
+TEST_CASE("Object binder") {
+  const std::string &CODE = "r1 = arith:sub(5)\n"
+                            "arith:set(20)\n"
+                            "r2 = ptr:add(10)";
+  LuaEnvironment env;
+  Arith arith(10);
+  const Arith *ptr = &arith;
+  env["ptr"] = ObjectBinder::bind(ptr, env, "add", &Arith::add);
+  env["arith"] = ObjectBinder::bind(arith, env, "add", &Arith::add, "sub", &Arith::sub, "set", &Arith::set);
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["r1"].get<int>() == 5);
+  REQUIRE(env["r2"].get<int>() == 30);
+}
+
+TEST_CASE("Class binder") {
+  const std::string &CODE = "arith = Arith.new(50)\n"
+                            "r1 = arith:add(4)\n"
+                            "arith:set(100)\n"
+                            "r2 = arith:sub(5)\n"
+                            "r3 = narith:mul(5)";
+  LuaEnvironment env;
+  env["Arith"] = ClassBinder<Arith>::bind(env, "add", &Arith::add, "sub", &Arith::sub, "set", &Arith::set, "new", &Arith::newArith);
+  env["Narith"] = ClassBinder<NArith, Arith>::bind(env, "mul", &NArith::mul);
+  NArith narith(60);
+  env["narith"] = narith;
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["r1"].get<int>() == 54);
+  REQUIRE(env["r2"].get<int>() == 95);
+  REQUIRE(env["r3"].get<int>() == 300);
 }

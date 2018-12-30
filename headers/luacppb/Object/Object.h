@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <sstream>
 #include <typeinfo>
+#include <atomic>
 
 namespace LuaCppB {
 
@@ -16,7 +17,7 @@ namespace LuaCppB {
    public:
     LuaCppObject(T *obj, LuaCppRuntime &runtime) : object(obj), runtime(runtime) {
       std::stringstream ss;
-      ss << "$object$" << typeid(T).name() << '@' << this->object;
+      ss << "$object" << (LuaCppObject::nextIdentifier++) << '$' << typeid(T).name() << '@' << this->object;
       this->className = ss.str();
     }
     LuaCppObject(T &obj, LuaCppRuntime &runtime) : LuaCppObject(&obj, runtime) {}
@@ -62,7 +63,12 @@ namespace LuaCppB {
     std::map<std::string, std::shared_ptr<LuaData>> methods;
     LuaCppRuntime &runtime;
     std::string className;
+
+    static std::atomic<uint64_t> nextIdentifier;
   };
+
+  template <typename T>
+  std::atomic<uint64_t> LuaCppObject<T>::nextIdentifier(0);
 }
 
 #endif

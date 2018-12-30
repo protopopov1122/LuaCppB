@@ -4,6 +4,8 @@
 #include "luacppb/Core/Stack.h"
 #include "luacppb/Core/Throw.h"
 #include "luacppb/Reference/Handle.h"
+#include <fstream>
+#include <cstdio>
 
 using namespace LuaCppB;
 
@@ -23,6 +25,10 @@ TEST_CASE("State") {
     REQUIRE(env("2+2*2", false).hasError());
     REQUIRE(env("return 2+2*2", true).hasError());
     REQUIRE(env.execute("test()").hasError());
+    LuaError err;
+    env.execute("x=2+2*2").error(err);
+    REQUIRE(err == LuaStatusCode::Ok);
+    REQUIRE_FALSE(err != LuaStatusCode::Ok);
   }
 #ifdef LUACPPB_ERROR_SUPPORT
   SECTION("Error handling") {
@@ -180,4 +186,24 @@ TEST_CASE("Stack") {
     stack.pop(3);
     REQUIRE(stack.getTop() == 0);
   }
+}
+
+#include <iostream>
+
+TEST_CASE("Loading from file") {
+  const std::string &CODE = "function fn(x)\n"
+                            "   return x * x\n"
+                            "end";
+  const std::string &filename = "__test__.lua";
+  std::ofstream os(filename);
+  os << CODE << std::endl;
+  os.flush();
+  REQUIRE(os.good());
+  os.close();
+
+  LuaEnvironment env;
+  LuaError err;
+  REQUIRE(env.load(filename) == LuaStatusCode::Ok);
+  REQUIRE(env["fn"](5).get<int>() == 25);
+  REQUIRE(remove(filename.c_str()) == 0);
 }

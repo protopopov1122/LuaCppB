@@ -236,6 +236,8 @@ TEST_CASE("Coroutines") {
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
     LuaCoroutine coro = env["cfn"];
     REQUIRE(coro.getStatus() == LuaStatusCode::Ok);
+    LuaThread thread = env["cfn"];
+    REQUIRE(thread.status() == LuaStatusCode::Ok);
     test_coro(coro);
   }
   SECTION("Implicit coroutine invocation") {
@@ -243,6 +245,17 @@ TEST_CASE("Coroutines") {
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
     auto coro = env["cfn"];
     test_coro(coro);
+  }
+  SECTION("Dead coroutine invocation") {
+    REQUIRE(env.execute(BASE) == LuaStatusCode::Ok);
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    auto coro = env["cfn"];
+    coro(100);
+    coro(50);
+    coro(300);
+    int val = coro(0);
+    REQUIRE(val == 450);
+    REQUIRE(coro(100).hasError());
   }
 }
 
@@ -265,6 +278,14 @@ void test_cont_error(LuaState env, int val) {
   }, val);
 }
 
+void test_cont_coro(LuaState env, int val) {
+  LuaContinuation(env["coro"], env).call([val](LuaState env) {
+    LuaContinuation(env["coro"], env).call([val](int res) {
+      REQUIRE(res == val * 2);
+    }, [](auto) {}, val);
+  }, [](auto) {}, val);
+}
+
 TEST_CASE("Continuations") {
   LuaEnvironment env;
   SECTION("Successful continuation") {
@@ -284,6 +305,16 @@ TEST_CASE("Continuations") {
                               "coroutine.resume(coro, 100)\n"
                               "fin, res = coroutine.resume(coro, 20)";
     env["test"] = test_cont_error;
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  }
+  SECTION("Resuming coroutine from continuation") {
+    const std::string &CODE = "coro = coroutine.create(function(x)\n"
+                              "    y = coroutine.yield()\n"
+                              "    return x + y\n"
+                              "end)\n"
+                              "c2 = coroutine.create(test)\n"
+                              "coroutine.resume(c2, 100)";
+    env["test"] = test_cont_coro;
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   }
 }

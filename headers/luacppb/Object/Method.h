@@ -15,7 +15,6 @@ namespace LuaCppB::Internal {
 	template <typename C, typename M, typename R, typename ... A>
 	class LuaCppObjectMethodCall : public LuaData {
 	 public:
-		LuaCppObjectMethodCall(M met, LuaCppRuntime &runtime) : method(met), className(), runtime(runtime) {}
 		LuaCppObjectMethodCall(M met, const std::string &cName, LuaCppRuntime &runtime) : method(met), className(cName), runtime(runtime) {}
 
 		void push(lua_State *state) const override {
@@ -23,12 +22,8 @@ namespace LuaCppB::Internal {
 			LuaCppObjectMethodCallDescriptor<M> *descriptor = stack.push<LuaCppObjectMethodCallDescriptor<M>>();
 			descriptor->method = this->method;
 			stack.push(&this->runtime);
-			if (this->className.has_value()) {
-				stack.push(this->className.value());
-				stack.push(&LuaCppObjectMethodCall<C, M, R, A...>::class_method_closure, 3);
-			} else {
-				stack.push(&LuaCppObjectMethodCall<C, M, R, A...>::object_method_closure, 2);
-			}
+			stack.push(this->className);
+			stack.push(&LuaCppObjectMethodCall<C, M, R, A...>::class_method_closure, 3);
 		}
 	 private:
 	 	static int call(C *object, M method, LuaCppRuntime &runtime, lua_State *state) {
@@ -42,18 +37,6 @@ namespace LuaCppB::Internal {
 				return NativeFunctionResult<Internal::LuaNativeValue, R>::set(state, runtime, std::apply([object, method](A... args) {	
 					return (object->*method)(args...);
 				}, args));
-			}
-		};
-
-		static int object_method_closure(lua_State *state) {
-			try {
-				Internal::LuaStack stack(state);
-				LuaCppObjectMethodCallDescriptor<M> *descriptor = stack.toUserData<LuaCppObjectMethodCallDescriptor<M> *>(lua_upvalueindex(1));
-				LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
-				LuaCppObjectWrapper<C> *object = stack.toPointer<LuaCppObjectWrapper<C> *>(1);
-				return LuaCppObjectMethodCall<C, M, R, A...>::call(object->get(), descriptor->method, runtime, state);
-			} catch (std::exception &ex) {
-				return luacpp_handle_exception(state, std::current_exception());
 			}
 		};
 
@@ -92,7 +75,7 @@ namespace LuaCppB::Internal {
 		}
 
 		M method;
-		std::optional<std::string> className;
+		std::string className;
 		LuaCppRuntime &runtime;
 	};
 }

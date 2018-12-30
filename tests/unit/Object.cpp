@@ -79,26 +79,35 @@ TEST_CASE("Object binding") {
 }
 
 TEST_CASE("Class manual binding") {
-  const std::string &CODE = "a = Arith.build(55)"
-                            "x = a:add(5)\n"
-                            "a2 = Arith.new()\n"
-                            "a2:set(50)\n"
-                            "result = { x, a2:sub(20) }";
   LuaEnvironment env;
-  LuaCppClass<Arith> arith(env);
-  arith.bind("add", &Arith::add);
-  arith.bind("sub", &Arith::sub);
-  arith.bind("set", &Arith::set);
-  arith.bind("build", &LuaCppConstructor<Arith, int>);
-  env["Arith"] = arith;
-  env.getClassRegistry().bind(arith);
-  REQUIRE(env["Arith"].exists());
-  REQUIRE(env["Arith"].getType() == LuaType::Table);
-  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  REQUIRE(env["a"].exists());
-  REQUIRE(env["a"].getType() == LuaType::UserData);
-  REQUIRE(env["result"][1].get<int>() == 60);
-  REQUIRE(env["result"][2].get<int>() == 30);
+  SECTION("Class binding") {
+    const std::string &CODE = "a = Arith.build(55)"
+                              "x = a:add(5)\n"
+                              "a2 = Arith.new()\n"
+                              "a2:set(50)\n"
+                              "result = { x, a2:sub(20) }";
+    LuaCppClass<Arith> arith(env);
+    arith.bind("add", &Arith::add);
+    arith.bind("sub", &Arith::sub);
+    arith.bind("set", &Arith::set);
+    arith.bind("build", &LuaCppConstructor<Arith, int>);
+    env["Arith"] = arith;
+    env.getClassRegistry().bind(arith);
+    REQUIRE(env["Arith"].exists());
+    REQUIRE(env["Arith"].getType() == LuaType::Table);
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["a"].exists());
+    REQUIRE(env["a"].getType() == LuaType::UserData);
+    REQUIRE(env["result"][1].get<int>() == 60);
+    REQUIRE(env["result"][2].get<int>() == 30);
+  }
+  SECTION("Unbound class assignment") {
+    const std::string &CODE = "res = arith == nil";
+    Arith arith(100);
+    env["arith"] = arith;
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["res"].get<bool>());
+  }
 }
 
 void test_object_from_invocable(LuaEnvironment &env, const std::string &CODE) {

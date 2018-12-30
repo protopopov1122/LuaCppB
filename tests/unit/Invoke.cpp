@@ -315,7 +315,7 @@ TEST_CASE("Yielding") {
 
 #endif
 
-#if !defined(__clang_major__) || (__clang_major__ > 6)
+#if !defined(__clang_major__)
 TEST_CASE("Bypassing function call result") {
   const std::string &CODE = "function fn(x)\n"
                             "    return x, x*2\n"

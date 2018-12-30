@@ -12,7 +12,7 @@ This repo contains the prototype of Lua-C++ bindings. Currently it has following
 * support of coroutines.
 * support of std::exception-based exception propagation and handlers
 
-Supported platforms: Windows (MinGW only), Linux (GCC and Clang). \
+Supported platforms: Windows (MinGW only), Linux (GCC and Clang), macOS(Clang), FreeBSD (Clang and GCC) & OpenBSD (Clang). \
 Project requires C++17-compliant compiler version.
 
 ### Motivation

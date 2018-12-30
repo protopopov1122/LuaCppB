@@ -181,7 +181,7 @@ TEST_CASE("Map") {
 TEST_CASE("Optional") {
   const std::string &CODE = "res = { type(x) == 'string', type(y) == 'nil' }";
   LuaEnvironment env;
-#if !defined(__clang_major__) || (__clang_major__ > 6)
+#if !defined(__clang_major__)
   env["x"] = std::optional("Hello, world!");
 #else
   env["x"] = std::optional<std::string>("Hello, world!");

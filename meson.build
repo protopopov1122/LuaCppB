@@ -32,8 +32,9 @@ if get_option('system_lua')
     link_with: [LuaCppBLib],
     dependencies: lua)
 else
-  lua_source_dir = 'lua-source/lua-5.3.5/src'
-  lua_header_dir = 'lua-source/lua-5.3.5/src'
+  lua_version = '5.3.5'
+  lua_source_dir = 'lua-source/lua-' + lua_version + '/src'
+  lua_header_dir = 'lua-source/lua-' + lua_version + '/src'
 
   lua_src = [
     lua_source_dir + '/ldblib.c',

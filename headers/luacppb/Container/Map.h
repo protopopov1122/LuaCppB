@@ -63,9 +63,6 @@ namespace LuaCppB::Internal {
         stack.push(&runtime);
         stack.push(&LuaCppMap<P>::map_pairs<M>, 1);
         stack.setField(-2, "__pairs");
-        stack.push(&runtime);
-        stack.push(&LuaCppMap<P>::map_ipairs<M>, 1);
-        stack.setField(-2, "__ipairs");
         stack.push(&LuaCppMap<P>::map_gc<M>);
         stack.setField(-2, "__gc");
       }
@@ -142,16 +139,6 @@ namespace LuaCppB::Internal {
     }
 
     template <typename M>
-    static int map_ipairs(lua_State *state) {
-      Internal::LuaStack stack(state);
-      stack.copy(lua_upvalueindex(1));
-      stack.push(&LuaCppMap<P>::map_iiter<M>, 1);
-      stack.copy(1);
-      stack.push();
-      return 3;
-    }
-
-    template <typename M>
     static int map_iter(lua_State *state) {
       using Handle = LuaCppObjectWrapper<M>;
       using K = typename M::key_type;
@@ -167,30 +154,6 @@ namespace LuaCppB::Internal {
         K key = stack.get(2).value_or(LuaValue()).get<K>();
         iter = map->find(key);
         iter++;
-      }
-      if (iter != map->end()) {
-        P::push(state, runtime, iter->first);
-        P::push(state, runtime, iter->second);
-        return 2;
-      } else {
-        return 0;
-      }
-    }
-
-    template <typename M>
-    static int map_iiter(lua_State *state) {
-      using Handle = LuaCppObjectWrapper<M>;
-      Internal::LuaStack stack(state);
-      LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(1));
-      Handle *handle = stack.toPointer<Handle *>(1);
-      M *map = handle->get();
-      if (map == nullptr) {
-        return 0;
-      }
-      std::size_t index = stack.toInteger(2);
-      typename M::const_iterator iter = map->begin();
-      while (index--) {
-        ++iter;
       }
       if (iter != map->end()) {
         P::push(state, runtime, iter->first);

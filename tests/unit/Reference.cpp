@@ -1,6 +1,7 @@
 #include "catch.hpp"
 #include "luacppb/Core/State.h"
 #include "luacppb/Reference/Handle.h"
+#include "luacppb/Reference/Primary.h"
 
 using namespace LuaCppB;
 
@@ -89,3 +90,32 @@ TEST_CASE("Arrays") {
   }
 }
 
+TEST_CASE("Stack reference") {
+  LuaEnvironment env;
+  Internal::LuaStack stack(env.getState());
+  stack.push(100);
+  Internal::LuaStackReference ref(env, -1);
+  REQUIRE(ref.putOnTop([](lua_State *state) {
+    REQUIRE(lua_tointeger(state, -1) == 100);
+  }));
+  REQUIRE_FALSE(ref.setValue([](lua_State *state) {
+    REQUIRE(false);
+  }));
+}
+
+TEST_CASE("Registry reference") {
+  LuaEnvironment env;
+  Internal::LuaStack stack(env.getState());
+  stack.push(100);
+  REQUIRE_THROWS(Internal::LuaRegistryReference(nullptr, env, -1));
+  Internal::LuaRegistryReference ref(env.getState(), env, -1);
+  REQUIRE(ref.putOnTop([](lua_State *state) {
+    REQUIRE(lua_tointeger(state, -1) == 100);
+  }));
+  REQUIRE(ref.setValue([](lua_State *state) {
+    lua_pushinteger(state, 200);
+  }));
+  REQUIRE(ref.putOnTop([](lua_State *state) {
+    REQUIRE(lua_tointeger(state, -1) == 200);
+  }));
+}

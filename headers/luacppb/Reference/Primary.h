@@ -10,11 +10,7 @@ namespace LuaCppB::Internal {
 	class LuaGlobalVariable : public LuaReference {
 	 public:
 		LuaGlobalVariable(LuaState &state, const std::string &name)
-			: LuaReference(state), state(state.getState()), name(name) {
-			if (this->state == nullptr) {
-				throw LuaCppBError("Lua state can't be null", LuaCppBErrorCode::InvalidState);
-			}
-		}
+			: LuaReference(state), state(state.getState()), name(name) {}
 	
 		bool putOnTop(std::function<void (lua_State *)>) override;
 		bool setValue(std::function<void (lua_State *)>) override;
@@ -25,11 +21,7 @@ namespace LuaCppB::Internal {
 
 	class LuaStackReference : public LuaReference {
 	 public:
-		LuaStackReference(LuaState &state, int index) : LuaReference(state), state(state.getState()), index(index) {
-			if (this->state == nullptr) {
-				throw LuaCppBError("Lua state can't be null", LuaCppBErrorCode::InvalidState);
-			}
-		}
+		LuaStackReference(LuaState &state, int index) : LuaReference(state), state(state.getState()), index(index) {}
 
 		bool putOnTop(std::function<void (lua_State *)>) override;
 		bool setValue(std::function<void (lua_State *)> gen) override;

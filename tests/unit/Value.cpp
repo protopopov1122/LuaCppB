@@ -92,6 +92,16 @@ TEST_CASE("Value peek method") {
     REQUIRE(LuaValue::peek(state).value().getType() == LuaType::Table);
     REQUIRE(canary.check(1));
   }
+  SECTION("Peeking wrong index") {
+    REQUIRE_THROWS(LuaValue::peek(state, 1000));
+  }
+  SECTION("Light userdata") {
+    int value = 100;
+    LuaValue(static_cast<void *>(&value)).push(state);
+    auto data = LuaValue::peek(state).value();
+    REQUIRE(data.getType() == LuaType::LightUserData);
+    REQUIRE(canary.check(1));
+  }
 }
 
 TEST_CASE("Value push method") {
@@ -128,11 +138,29 @@ TEST_CASE("Value push method") {
     LuaValue::create(fn).push(state);
     REQUIRE(lua_iscfunction(state, -1));
     REQUIRE(stack.toCFunction() == fn);
+    LuaFunction func = LuaValue::peek(state).value().get<LuaFunction>();
+    stack.pop();
+    LuaValue(func).push(state);
   }
   SECTION("Table") {
     LuaTable table = LuaTable::create(state);
     table.ref(env)["test"] = 100;
     LuaValue(table).push(state);
     REQUIRE(lua_istable(state, -1));
+  }
+  SECTION("Light userdata") {
+    int value = 100;
+    LuaValue(static_cast<void *>(&value)).push(state);
+    REQUIRE(lua_islightuserdata(state, -1));
+  }
+  SECTION("Userdata") {
+    auto udata = LuaUserData::create(state, 100);
+    LuaValue(udata).push(state);
+    REQUIRE(lua_isuserdata(state, -1));
+  }
+  SECTION("Thread") {
+    auto thread = LuaThread::create(state);
+    LuaValue(thread).push(state);
+    REQUIRE(lua_isthread(state, -1));
   }
 }

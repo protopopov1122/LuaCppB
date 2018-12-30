@@ -240,6 +240,20 @@ TEST_CASE("Coroutines") {
     REQUIRE(thread.status() == LuaStatusCode::Ok);
     test_coro(coro);
   }
+  SECTION("Copying coroutine") {
+    REQUIRE(env.execute(BASE) == LuaStatusCode::Ok);
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    LuaCoroutine coroOrig = env["cfn"];
+    LuaCoroutine coro(coroOrig);
+    REQUIRE(coro.getStatus() == LuaStatusCode::Ok);
+  }
+  SECTION("Building coroutine from LuaThread") {
+    REQUIRE(env.execute(BASE) == LuaStatusCode::Ok);
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    LuaThread thread = env["cfn"];
+    LuaCoroutine coro(thread, env);
+    REQUIRE(coro.getStatus() == LuaStatusCode::Ok);
+  }
   SECTION("Implicit coroutine invocation") {
     REQUIRE(env.execute(BASE) == LuaStatusCode::Ok);
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
@@ -376,4 +390,18 @@ TEST_CASE("Lambda wrapping") {
   std::function<int(int, int)> mul = LuaLambda(env["mul"]);
   std::function<std::string(int)> tostr = LuaLambda(env["tostr"]);
   REQUIRE(tostr(sum(2, mul(2, 2))).compare("=6") == 0);
+}
+
+void test_wrong_type_cast(LuaEnvironment *env) {}
+
+TEST_CASE("Invoke with exception ignoring") {
+  LuaEnvironment env;
+  Factor factor(10);
+  LuaCppClass<Factor> factorCl("Factor", env);
+  env.getClassRegistry().bind(factorCl);
+  env["factor"] = factor;
+  env["fn"] = test_wrong_type_cast;
+  env.setExceptionHandler([](auto &ex) {});
+  REQUIRE(env["fn"](factor).hasError());
+  REQUIRE(env["fn"](factor) == LuaStatusCode::RuntimeError);
 }

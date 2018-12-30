@@ -207,3 +207,61 @@ TEST_CASE("Loading from file") {
   REQUIRE(env["fn"](5).get<int>() == 25);
   REQUIRE(remove(filename.c_str()) == 0);
 }
+
+TEST_CASE("Registry handles") {
+  LuaEnvironment env;
+  Internal::LuaStack stack(env.getState());
+  SECTION("Unique handle") {
+    Internal::LuaUniqueRegistryHandle empty;
+    REQUIRE_FALSE(empty.hasValue());
+    REQUIRE_FALSE(Internal::LuaUniqueRegistryHandle(empty).hasValue());
+    REQUIRE_FALSE(Internal::LuaUniqueRegistryHandle(std::move(empty)).hasValue());
+    stack.push(100);
+    Internal::LuaUniqueRegistryHandle handle(env.getState(), -1);
+    REQUIRE(handle.hasValue());
+    REQUIRE(Internal::LuaUniqueRegistryHandle(handle).hasValue());
+    handle.get([](lua_State *state) {
+      REQUIRE(lua_tointeger(state, -1) == 100);
+    });
+    handle.set([](lua_State *state) {
+      lua_pushinteger(state, 200);
+    });
+    handle.get([](lua_State *state) {
+      REQUIRE(lua_tointeger(state, -1) == 200);
+    });
+  }
+  SECTION("Shared registry handle") {
+    Internal::LuaSharedRegistryHandle empty;
+    REQUIRE_FALSE(empty.hasValue());
+    REQUIRE_FALSE(Internal::LuaSharedRegistryHandle(empty).hasValue());
+    REQUIRE_FALSE(empty.get([](lua_State *state) {
+      REQUIRE(false);
+    }));
+    REQUIRE_FALSE(empty.set([](lua_State *state) {
+      REQUIRE(false);
+    }));
+    stack.push(100);
+    Internal::LuaSharedRegistryHandle handle(env.getState(), -1);
+    REQUIRE(handle.hasValue());
+    Internal::LuaUniqueRegistryHandle uniqHandle(env.getState(), -1);
+    REQUIRE(Internal::LuaSharedRegistryHandle(uniqHandle).hasValue());
+    REQUIRE(handle.get([](lua_State *state) {
+      REQUIRE(lua_tointeger(state, -1) == 100);
+    }));
+    REQUIRE(handle.set([](lua_State *state) {
+      lua_pushinteger(state, 200);
+    }));
+    REQUIRE(handle.get([](lua_State *state) {
+      REQUIRE(lua_tointeger(state, -1) == 200);
+    }));
+  }
+}
+
+TEST_CASE("Exception") {
+  try {
+    throw LuaCppBError("Test", LuaCppBErrorCode::StackOverflow);
+  } catch (LuaCppBError &ex) {
+    REQUIRE(std::string("Test").compare(ex.what()) == 0);
+    REQUIRE(ex.getErrorCode() == LuaCppBErrorCode::StackOverflow);
+  }
+}

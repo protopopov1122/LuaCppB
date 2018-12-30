@@ -102,9 +102,12 @@ TEST_CASE("Class manual binding") {
     REQUIRE(env["result"][2].get<int>() == 30);
   }
   SECTION("Unbound class assignment") {
-    const std::string &CODE = "res = arith == nil";
+    const std::string &CODE = "res = arith == nil and parith == nil and uarith == nil and sarith == nil";
     Arith arith(100);
     env["arith"] = arith;
+    env["parith"] = &arith;
+    env["uarith"] = std::make_unique<Arith>(100);
+    env["sarith"] = std::make_shared<Arith>(100);
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
     REQUIRE(env["res"].get<bool>());
   }

@@ -61,7 +61,7 @@ namespace LuaCppB::Internal {
     template <typename T>
     void wrap(lua_State *state, std::shared_ptr<T> object) {
       if (this->canWrap<T>()) {
-        this->wrappers[typeid(T)]->wrapShared(state, std::reinterpret_pointer_cast<void >(object));
+        this->wrappers[typeid(T)]->wrapShared(state, std::static_pointer_cast<void >(object));
       }
     }
    protected:

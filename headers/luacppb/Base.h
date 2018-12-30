@@ -32,4 +32,6 @@ extern "C" {
 
 #endif
 
+#include <cstddef>
+
 #endif

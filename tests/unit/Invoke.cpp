@@ -315,6 +315,7 @@ TEST_CASE("Yielding") {
 
 #endif
 
+#if !defined(__clang_major__) || (__clang_major__ > 6)
 TEST_CASE("Bypassing function call result") {
   const std::string &CODE = "function fn(x)\n"
                             "    return x, x*2\n"
@@ -326,6 +327,7 @@ TEST_CASE("Bypassing function call result") {
   REQUIRE(env["r1"].get<int>() == 2);
   REQUIRE(env["r2"].get<int>() == 4);
 }
+#endif
 
 TEST_CASE("Lambda wrapping") {
   const std::string &CODE = "function sum(x, y)\n"

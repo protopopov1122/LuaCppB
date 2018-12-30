@@ -51,7 +51,7 @@ namespace LuaCppB::Internal {
 
     void wrapShared(lua_State *state, std::shared_ptr<void> raw_object) override {
       Internal::LuaStack stack(state);
-      std::shared_ptr<T> object = std::reinterpret_pointer_cast<T>(raw_object);
+      std::shared_ptr<T> object = std::static_pointer_cast<T>(raw_object);
       LuaCppObjectWrapper<T> *wrapper = stack.push<LuaCppObjectWrapper<T>>();
       new(wrapper) LuaCppObjectWrapper<T>(object);
       if constexpr (!std::is_void<P>::value) {

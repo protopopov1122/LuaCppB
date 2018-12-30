@@ -20,6 +20,10 @@ namespace LuaCppB {
   auto NativeCallable(C *object, M method, LuaCppRuntime &runtime) -> decltype(Internal::NativeMethod<Internal::LuaNativeValue>::create(object, method, runtime)) {
     return Internal::NativeMethod<Internal::LuaNativeValue>::create(object, method, runtime);
   }
+
+  Internal::LuaLambdaHandle<LuaReferenceHandle> LuaLambda(LuaReferenceHandle &&ref) {
+    return Internal::LuaLambdaHandle<LuaReferenceHandle>(std::forward<LuaReferenceHandle>(ref));
+  }
 }
 
 #endif

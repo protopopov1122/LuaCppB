@@ -326,3 +326,21 @@ TEST_CASE("Bypassing function call result") {
   REQUIRE(env["r1"].get<int>() == 2);
   REQUIRE(env["r2"].get<int>() == 4);
 }
+
+TEST_CASE("Lambda wrapping") {
+  const std::string &CODE = "function sum(x, y)\n"
+                            "    return x + y\n"
+                            "end\n"
+                            "function mul(x, y)\n"
+                            "    return x * y\n"
+                            "end\n"
+                            "function tostr(x)\n"
+                            "    return '=' .. x\n"
+                            "end";
+  LuaEnvironment env;
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  std::function<int(int, int)> sum = LuaLambda(env["sum"]);
+  std::function<int(int, int)> mul = LuaLambda(env["mul"]);
+  std::function<std::string(int)> tostr = LuaLambda(env["tostr"]);
+  REQUIRE(tostr(sum(2, mul(2, 2))).compare("=6") == 0);
+}

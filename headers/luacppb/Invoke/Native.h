@@ -49,9 +49,8 @@ namespace LuaCppB::Internal {
 			if constexpr (std::is_void<R>::value) {
 				std::apply(function, args);
 				return 0;
-			} else {				
-				R result = std::apply(function, args);
-				return Internal::NativeFunctionResult<P, R>::set(state, runtime, result);
+			} else {
+				return Internal::NativeFunctionResult<P, R>::set(state, runtime, std::apply(function, args));
 			}
 		};
 
@@ -105,10 +104,9 @@ namespace LuaCppB::Internal {
 				}, args);
 				return 0;
 			} else {
-				R result = std::apply([object, method](A... args) {	
+				return Internal::NativeFunctionResult<P, R>::set(state, runtime, std::apply([object, method](A... args) {	
 					return (object->*method)(args...);
-				}, args);
-				return Internal::NativeFunctionResult<P, R>::set(state, runtime, result);
+				}, args));
 			}
 		};
 
@@ -189,8 +187,7 @@ namespace LuaCppB::Internal {
 				std::apply(invocable, args);
 				return 0;
 			} else {
-				R result = std::apply(invocable, args);
-				return Internal::NativeFunctionResult<P, R>::set(state, runtime, result);
+				return Internal::NativeFunctionResult<P, R>::set(state, runtime, std::apply(invocable, args));
 			}
 		}
 

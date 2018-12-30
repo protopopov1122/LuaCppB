@@ -61,8 +61,7 @@ namespace LuaCppB {
               std::apply(this->callback, args);
               return 0;
           } else {
-            R value = std::apply(this->callback, args);
-            return Internal::NativeFunctionResult<Internal::LuaNativeValue, R>::set(state, runtime, value);
+            return Internal::NativeFunctionResult<Internal::LuaNativeValue, R>::set(state, runtime, std::apply(this->callback, args));
           }
         } else {
           this->errorHandler(error);

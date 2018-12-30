@@ -30,7 +30,7 @@ namespace LuaCppB::Internal {
 
 	template <typename P, typename T, typename E = void>
 	struct NativeFunctionResult {
-		static int set(lua_State *state, LuaCppRuntime &runtime, T &value) {
+		static int set(lua_State *state, LuaCppRuntime &runtime, T &&value) {
 			int top = lua_gettop(state);
 			P::push(state, runtime, value);
 			return lua_gettop(state) - top;
@@ -39,7 +39,7 @@ namespace LuaCppB::Internal {
 
 	template <typename P, typename T>
 	struct NativeFunctionResult<P, T, typename std::enable_if<is_instantiation<std::pair, T>::value>::type> {
-		static int set(lua_State *state, LuaCppRuntime &runtime, T &value) {
+		static int set(lua_State *state, LuaCppRuntime &runtime, T &&value) {
 			P::push(state, runtime, value.first);
 			P::push(state, runtime, value.second);
 			return 2;
@@ -48,19 +48,19 @@ namespace LuaCppB::Internal {
 
 	template <typename P, std::size_t I, typename T>
 	struct NativeFunctionResult_Tuple {
-		static void push(lua_State *state, LuaCppRuntime &runtime, T &value) {
+		static void push(lua_State *state, LuaCppRuntime &runtime, T &&value) {
 			Internal::LuaStack stack(state);
 			if constexpr (I < std::tuple_size<T>::value) {
 				P::push(state, runtime, std::get<I>(value));
-				NativeFunctionResult_Tuple<P, I + 1, T>::push(state, runtime, value);
+				NativeFunctionResult_Tuple<P, I + 1, T>::push(state, runtime, std::forward<T>(value));
 			}
 		}
 	};
 
 	template <typename P, typename T>
 	struct NativeFunctionResult<P, T, typename std::enable_if<is_instantiation<std::tuple, T>::value>::type> {
-		static int set(lua_State *state, LuaCppRuntime &runtime, T &value) {
-			NativeFunctionResult_Tuple<P, 0, T>::push(state, runtime, value);
+		static int set(lua_State *state, LuaCppRuntime &runtime, T &&value) {
+			NativeFunctionResult_Tuple<P, 0, T>::push(state, runtime, std::forward<T>(value));
 			return std::tuple_size<T>::value;
 		}
 	};

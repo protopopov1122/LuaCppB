@@ -297,18 +297,19 @@ TEST_CASE("Object binder") {
 }
 
 TEST_CASE("Class binder") {
-  const std::string &CODE = "arith = Arith.new(50)\n"
+  const std::string &CODE = "temp = NArith.new(100)\n"
+                            "arith = Arith.new(50)\n"
                             "r1 = arith:add(4)\n"
                             "arith:set(100)\n"
                             "r2 = arith:sub(5)\n"
-                            "r3 = narith:mul(5)";
+                            "r3 = narith:mul(5) + temp:sub(5)";
   LuaEnvironment env;
   env["Arith"] = ClassBinder<Arith>::bind(env, "add", &Arith::add, "sub", &Arith::sub, "set", &Arith::set, "new", &Arith::newArith);
-  env["Narith"] = ClassBinder<NArith, Arith>::bind(env, "mul", &NArith::mul);
+  env["NArith"] = ClassBinder<NArith, Arith>::bind("NArith", env, "mul", &NArith::mul, "new", &LuaCppConstructor<NArith, int>);
   NArith narith(60);
   env["narith"] = narith;
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(env["r1"].get<int>() == 54);
   REQUIRE(env["r2"].get<int>() == 95);
-  REQUIRE(env["r3"].get<int>() == 300);
+  REQUIRE(env["r3"].get<int>() == 395);
 }

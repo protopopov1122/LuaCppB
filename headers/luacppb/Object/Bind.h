@@ -2,6 +2,7 @@
 #define LUACPPB_OBJECT_BIND_H_
 
 #include "luacppb/Object/Class.h"
+#include "luacppb/Core/State.h"
 
 namespace LuaCppB {
 
@@ -59,9 +60,17 @@ namespace LuaCppB {
   template <typename C, typename P = void>
   class ClassBinder {
    public:
-    template <typename S, typename ... T>
-    static LuaCppClass<C, P> bind(S &state, T &&... methods) {
+    template <typename ... T>
+    static LuaCppClass<C, P> bind(LuaState &state, T &&... methods) {
       LuaCppClass<C, P> cl(state);
+      Internal::ClassBinder_Impl<LuaCppClass<C, P>, T...>::bind(cl, std::forward<T>(methods)...);
+      state.getClassRegistry().bind(cl);
+      return cl;
+    }
+
+    template <typename ... T>
+    static LuaCppClass<C, P> bind(const std::string &name, LuaState &state, T &&... methods) {
+      LuaCppClass<C, P> cl(name, state);
       Internal::ClassBinder_Impl<LuaCppClass<C, P>, T...>::bind(cl, std::forward<T>(methods)...);
       state.getClassRegistry().bind(cl);
       return cl;

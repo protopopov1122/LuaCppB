@@ -1,11 +1,7 @@
 #include "catch.hpp"
-#include "luacppb/Core/State.h"
-#include "luacppb/Core/StackGuard.h"
-#include "luacppb/Core/Stack.h"
-#include "luacppb/Core/Throw.h"
-#include "luacppb/Reference/Handle.h"
 #include <fstream>
 #include <cstdio>
+#include "luacppb/LuaCppB.h"
 
 using namespace LuaCppB;
 
@@ -260,6 +256,7 @@ TEST_CASE("Registry handles") {
 TEST_CASE("Exception") {
   try {
     throw LuaCppBError("Test", LuaCppBErrorCode::StackOverflow);
+    REQUIRE(false);
   } catch (LuaCppBError &ex) {
     REQUIRE(std::string("Test").compare(ex.what()) == 0);
     REQUIRE(ex.getErrorCode() == LuaCppBErrorCode::StackOverflow);

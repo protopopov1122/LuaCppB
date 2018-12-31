@@ -1,20 +1,18 @@
 #include "catch.hpp"
-#include "luacppb/Core/State.h"
-#include "luacppb/Reference/Primary.h"
-#include "luacppb/Reference/Field.h"
-#include "luacppb/Reference/Handle.h"
-#include "luacppb/Invoke/Callable.h"
-#include "luacppb/Invoke/Continuation.h"
-#include "luacppb/Object/Object.h"
+#include "luacppb/LuaCppB.h"
 
 using namespace LuaCppB;
 
-float test_quad_fn(float x) {
+float test_function_call1(float x) {
   return x * x;
 }
 
-bool test_invert(bool b) {
+bool test_function_call2(bool b) {
   return !b;
+}
+
+int test_function_call3(int x) {
+  return x * 2;
 }
 
 class Factor {
@@ -36,28 +34,30 @@ class Factor {
   int factor;
 };
 
-float test_factor(Factor *factor, float n) {
+float test_object_pointer_passing(Factor *factor, float n) {
   return factor->calc(n, n);
 }
 
-float test_factor_ref(const Factor &factor, float n) {
+float test_object_reference_passing(const Factor &factor, float n) {
   return factor.calc(n, n);
 }
 
-std::pair<int, int> test_calc(int n) {
+std::pair<int, int> test_pair_returning(int n) {
   return std::make_pair(n, n*n);
 }
 
-std::tuple<int, int, int> test_calc_tuple(int n) {
+std::tuple<int, int, int> test_tuple_returning(int n) {
   return std::make_tuple(n, n*n, n*n*n);
 }
+
+void test_unsupported_object_wrap(LuaEnvironment *env) {}
 
 TEST_CASE("Native function call") {
   LuaEnvironment env;
   SECTION("Function call") {
     const std::string &CODE = "results = { quad(16), invert(false) }";
-    env["quad"] = test_quad_fn;
-    env["invert"] = test_invert;
+    env["quad"] = test_function_call1;
+    env["invert"] = test_function_call2;
     REQUIRE(env["quad"].exists());
     REQUIRE(env["quad"].getType() == LuaType::Function);
     REQUIRE(env["invert"].exists());
@@ -65,32 +65,6 @@ TEST_CASE("Native function call") {
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
     REQUIRE(env["results"][1].get<float>() == 256.0f);
     REQUIRE(env["results"][2].get<bool>());
-  }
-  SECTION("Passing C++ object as parameters") {
-    LuaCppClass<Factor> factorCl("Factor", env);
-    env.getClassRegistry().bind(factorCl);
-    Factor factor(10);
-    env["factor"] = factor;
-    env["callFactor"] = NativeCallable(test_factor, env);
-    env["callFactorRef"] = test_factor_ref;
-    const std::string &CODE = "results = { callFactor(factor, 10), callFactorRef(factor, 20) }";
-    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-    REQUIRE(env["results"][1].get<float>() == 200.0f);
-    REQUIRE(env["results"][2].get<float>() == 400.0f);
-  }
-  SECTION("Returning std::pair") {
-    const std::string &CODE = "x, y = calc(5)\n"
-                              "sum = x + y";
-    env["calc"] = test_calc;
-    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-    REQUIRE(env["sum"].get<int>() == 30);
-  }
-  SECTION("Returning std::tuple") {
-    const std::string &CODE = "x, y, z = calc(5)\n"
-                              "sum = x + y - z";
-    env["calc"] = test_calc_tuple;
-    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-    REQUIRE(env["sum"].get<int>() == -95);
   }
 }
 
@@ -131,19 +105,91 @@ TEST_CASE("Invocable object call") {
   REQUIRE(env["result"][2].get<int>() == 5040);
 }
 
-int test_callable_pass(int x) {
-  return x * 2;
+TEST_CASE("Passing C++ object as parameters") {
+  LuaEnvironment env;
+  LuaCppClass<Factor> factorCl("Factor", env);
+  env.getClassRegistry().bind(factorCl);
+  Factor factor(10);
+  env["factor"] = factor;
+  env["callFactor"] = NativeCallable(test_object_pointer_passing, env);
+  env["callFactorRef"] = test_object_reference_passing;
+  const std::string &CODE = "results = { callFactor(factor, 10), callFactorRef(factor, 20) }";
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["results"][1].get<float>() == 200.0f);
+  REQUIRE(env["results"][2].get<float>() == 400.0f);
 }
 
-TEST_CASE("Passible callable as parameter") {
+TEST_CASE("Passing callable as parameter") {
   const std::string &CODE = "function fn(x, y, z)\n"
                             "    return x(100) - y(100) + z()\n"
                             "end";
   Factor fact(50);
   LuaEnvironment env;
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  int res = env["fn"]([](int n) { return n * 10; }, test_callable_pass, NativeCallable(fact, &Factor::get, env));
+  int res = env["fn"]([](int n) { return n * 10; }, test_function_call3, NativeCallable(fact, &Factor::get, env));
   REQUIRE(res == 850);
+}
+
+TEST_CASE("Returning std::pair") {
+  LuaEnvironment env;
+  const std::string &CODE = "x, y = calc(5)\n"
+                            "sum = x + y";
+  env["calc"] = test_pair_returning;
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["sum"].get<int>() == 30);
+}
+
+TEST_CASE("Returning std::tuple") {
+  LuaEnvironment env;
+  const std::string &CODE = "x, y, z = calc(5)\n"
+                            "sum = x + y - z";
+  env["calc"] = test_tuple_returning;
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["sum"].get<int>() == -95);
+}
+
+#if !defined(__clang_major__)
+TEST_CASE("Bypassing Lua function call result") {
+  const std::string &CODE = "function fn(x)\n"
+                            "    return x, x*2\n"
+                            "end\n"
+                            "r1, r2 = fun(2, fn)";
+  LuaEnvironment env;
+  env["fun"] = [](int val, LuaState state) { return state[2](val); };
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["r1"].get<int>() == 2);
+  REQUIRE(env["r2"].get<int>() == 4);
+}
+#endif
+
+TEST_CASE("Lambda wrapping") {
+  const std::string &CODE = "function sum(x, y)\n"
+                            "    return x + y\n"
+                            "end\n"
+                            "function mul(x, y)\n"
+                            "    return x * y\n"
+                            "end\n"
+                            "function tostr(x)\n"
+                            "    return '=' .. x\n"
+                            "end";
+  LuaEnvironment env;
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  std::function<int(int, int)> sum = LuaLambda(env["sum"]);
+  std::function<int(int, int)> mul = LuaLambda(env["mul"]);
+  std::function<std::string(int)> tostr = LuaLambda(env["tostr"]);
+  REQUIRE(tostr(sum(2, mul(2, 2))).compare("=6") == 0);
+}
+
+TEST_CASE("Invocation with exception ignoring") {
+  LuaEnvironment env;
+  Factor factor(10);
+  LuaCppClass<Factor> factorCl("Factor", env);
+  env.getClassRegistry().bind(factorCl);
+  env["factor"] = factor;
+  env["fn"] = test_unsupported_object_wrap;
+  env.setExceptionHandler([](auto &ex) {});
+  REQUIRE(env["fn"](factor).hasError());
+  REQUIRE(env["fn"](factor) == LuaStatusCode::RuntimeError);
 }
 
 TEST_CASE("Lua function call") {
@@ -198,210 +244,4 @@ TEST_CASE("Lua function call") {
     REQUIRE(std::get<1>(res) == 5);
     REQUIRE(std::get<2>(res) == 25);
   }
-}
-
-#ifdef LUACPPB_COROUTINE_SUPPORT
-
-template <typename T>
-void test_coro(T &coro) {
-  LuaStatusCode status = LuaStatusCode::Ok;
-  int r1 = coro(100).status(status);
-  REQUIRE(status == LuaStatusCode::Yield);
-  REQUIRE(r1 == 100);
-  int r2 = coro(200);
-  REQUIRE(r2 == 300);
-  int res = coro(0);
-  REQUIRE(res == 300);
-}
-
-TEST_CASE("Coroutines") {
-  const std::string &BASE = "fn = function(a)\n"
-                            "    sum = a\n"
-                            "    while a ~= 0 do\n"
-                            "        a = coroutine.yield(sum)\n"
-                            "        sum = sum + a\n"
-                            "    end\n"
-                            "    return sum\n"
-                            "end";
-  const std::string &CODE = "cfn = coroutine.create(fn)";
-  LuaEnvironment env;
-  SECTION("Creating coroutine") {
-    REQUIRE(env.execute(BASE) == LuaStatusCode::Ok);
-    LuaCoroutine coro = env["fn"];
-    REQUIRE(coro.getStatus() == LuaStatusCode::Ok);
-    test_coro(coro);
-  }
-  SECTION("Explicit coroutine invocation") {
-    REQUIRE(env.execute(BASE) == LuaStatusCode::Ok);
-    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-    LuaCoroutine coro = env["cfn"];
-    REQUIRE(coro.getStatus() == LuaStatusCode::Ok);
-    LuaThread thread = env["cfn"];
-    REQUIRE(thread.status() == LuaStatusCode::Ok);
-    test_coro(coro);
-  }
-  SECTION("Copying coroutine") {
-    REQUIRE(env.execute(BASE) == LuaStatusCode::Ok);
-    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-    LuaCoroutine coroOrig = env["cfn"];
-    LuaCoroutine coro(coroOrig);
-    REQUIRE(coro.getStatus() == LuaStatusCode::Ok);
-  }
-  SECTION("Building coroutine from LuaThread") {
-    REQUIRE(env.execute(BASE) == LuaStatusCode::Ok);
-    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-    LuaThread thread = env["cfn"];
-    LuaCoroutine coro(thread, env);
-    REQUIRE(coro.getStatus() == LuaStatusCode::Ok);
-  }
-  SECTION("Implicit coroutine invocation") {
-    REQUIRE(env.execute(BASE) == LuaStatusCode::Ok);
-    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-    auto coro = env["cfn"];
-    test_coro(coro);
-  }
-  SECTION("Dead coroutine invocation") {
-    REQUIRE(env.execute(BASE) == LuaStatusCode::Ok);
-    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-    auto coro = env["cfn"];
-    coro(100);
-    coro(50);
-    coro(300);
-    int val = coro(0);
-    REQUIRE(val == 450);
-    REQUIRE(coro(100).hasError());
-  }
-}
-
-#define SHOULD_NOT_HAPPEN REQUIRE(false)
-
-void test_cont(LuaState env, int val) {
-  LuaContinuation(env["fn"], env).call([](int i) {
-    REQUIRE(i == 120);
-    return i * 2;
-  }, [](auto) {
-    SHOULD_NOT_HAPPEN;
-  }, val);
-}
-
-void test_cont_error(LuaState env, int val) {
-  LuaContinuation(env["fn"], env).call([](int i) {
-    SHOULD_NOT_HAPPEN;
-  }, [](auto err) {
-    REQUIRE(err.hasError());
-  }, val);
-}
-
-void test_cont_coro(LuaState env, int val) {
-  LuaContinuation(env["coro"], env).call([val](LuaState env) {
-    LuaContinuation(env["coro"], env).call([val](int res) {
-      REQUIRE(res == val * 2);
-    }, [](auto) {}, val);
-  }, [](auto) {}, val);
-}
-
-TEST_CASE("Continuations") {
-  LuaEnvironment env;
-  SECTION("Successful continuation") {
-    const std::string &CODE = "function fn(x)\n"
-                              "    a = coroutine.yield()\n"
-                              "    return x + a\n"
-                              "end\n"
-                              "coro = coroutine.create(test)\n"
-                              "coroutine.resume(coro, 100)\n"
-                              "fin, res = coroutine.resume(coro, 20)";
-    env["test"] = test_cont;
-    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-    REQUIRE(env["res"].get<int>() == 240);
-  }
-  SECTION("Error in continuation") {
-    const std::string &CODE = "coro = coroutine.create(test)\n"
-                              "coroutine.resume(coro, 100)\n"
-                              "fin, res = coroutine.resume(coro, 20)";
-    env["test"] = test_cont_error;
-    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  }
-  SECTION("Resuming coroutine from continuation") {
-    const std::string &CODE = "coro = coroutine.create(function(x)\n"
-                              "    y = coroutine.yield()\n"
-                              "    return x + y\n"
-                              "end)\n"
-                              "c2 = coroutine.create(test)\n"
-                              "coroutine.resume(c2, 100)";
-    env["test"] = test_cont_coro;
-    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  }
-}
-
-void test_yield(LuaState env, int x) {
-  LuaContinuation::yield(env.getState(), env, [x](LuaState env, int y) {
-    LuaContinuation::yield(env.getState(), env, [x, y](int z) {
-      return x + y + z;
-    }, [](auto) {
-      SHOULD_NOT_HAPPEN;
-    }, x + y);
-  }, [](auto) {
-    SHOULD_NOT_HAPPEN;
-  }, x);
-}
-
-TEST_CASE("Yielding") {
-  const std::string &CODE = "co = coroutine.wrap(fn)\n"
-                            "r1 = co(10)\n"
-                            "r2 = co(15)\n"
-                            "res = co(5)";
-  LuaEnvironment env;
-  env["fn"] = test_yield;
-  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  REQUIRE(env["r1"].get<int>() == 10);
-  REQUIRE(env["r2"].get<int>() == 25);
-  REQUIRE(env["res"].get<int>() == 30);
-}
-
-#endif
-
-#if !defined(__clang_major__)
-TEST_CASE("Bypassing function call result") {
-  const std::string &CODE = "function fn(x)\n"
-                            "    return x, x*2\n"
-                            "end\n"
-                            "r1, r2 = fun(2, fn)";
-  LuaEnvironment env;
-  env["fun"] = [](int val, LuaState state) { return state[2](val); };
-  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  REQUIRE(env["r1"].get<int>() == 2);
-  REQUIRE(env["r2"].get<int>() == 4);
-}
-#endif
-
-TEST_CASE("Lambda wrapping") {
-  const std::string &CODE = "function sum(x, y)\n"
-                            "    return x + y\n"
-                            "end\n"
-                            "function mul(x, y)\n"
-                            "    return x * y\n"
-                            "end\n"
-                            "function tostr(x)\n"
-                            "    return '=' .. x\n"
-                            "end";
-  LuaEnvironment env;
-  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  std::function<int(int, int)> sum = LuaLambda(env["sum"]);
-  std::function<int(int, int)> mul = LuaLambda(env["mul"]);
-  std::function<std::string(int)> tostr = LuaLambda(env["tostr"]);
-  REQUIRE(tostr(sum(2, mul(2, 2))).compare("=6") == 0);
-}
-
-void test_wrong_type_cast(LuaEnvironment *env) {}
-
-TEST_CASE("Invoke with exception ignoring") {
-  LuaEnvironment env;
-  Factor factor(10);
-  LuaCppClass<Factor> factorCl("Factor", env);
-  env.getClassRegistry().bind(factorCl);
-  env["factor"] = factor;
-  env["fn"] = test_wrong_type_cast;
-  env.setExceptionHandler([](auto &ex) {});
-  REQUIRE(env["fn"](factor).hasError());
-  REQUIRE(env["fn"](factor) == LuaStatusCode::RuntimeError);
 }

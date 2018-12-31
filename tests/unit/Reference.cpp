@@ -1,7 +1,5 @@
 #include "catch.hpp"
-#include "luacppb/Core/State.h"
-#include "luacppb/Reference/Handle.h"
-#include "luacppb/Reference/Primary.h"
+#include "luacppb/LuaCppB.h"
 
 using namespace LuaCppB;
 

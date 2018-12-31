@@ -1,10 +1,5 @@
 #include "catch.hpp"
-#include "luacppb/Core/State.h"
-#include "luacppb/Object/Object.h"
-#include "luacppb/Reference/Handle.h"
-#include "luacppb/Object/Class.h"
-#include "luacppb/Object/Registry.h"
-#include "luacppb/Object/Bind.h"
+#include "luacppb/LuaCppB.h"
 
 using namespace LuaCppB;
 
@@ -42,13 +37,51 @@ class Arith {
   int n;
 };
 
+class NArith : public Arith {
+ public:
+  using Arith::Arith;
+  int mul(int n) {
+    return this->n * n;
+  }
+};
+
 Arith Arith::global(0);
 
-void object_extracting(Arith obj, const Arith &obj2, Arith *obj3) {
+void test_object_as_argument(Arith obj, const Arith &obj2, Arith *obj3) {
   REQUIRE(obj.add(10) == 20);
   REQUIRE(obj2.add(20) == 30);
   REQUIRE(obj3->add(30) == 40);
   REQUIRE(&obj2 == obj3);
+}
+
+void test_object_from_invocable(LuaEnvironment &env, const std::string &CODE) {
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["arith"].exists());
+  REQUIRE(env["arith"].getType() == LuaType::UserData);
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["result"][1].get<int>() == 50);
+  REQUIRE(env["result"][2].get<int>() == -100);
+}
+
+void test_object_return_from_invocable(LuaEnvironment &env) {
+  const std::string &CODE = "arith = getArith()\n"
+                            "result = { arith:add(50), arith:sub(100) }";
+  test_object_from_invocable(env, CODE);
+}
+
+void test_object_build_from_invocable(LuaEnvironment &env) {
+  const std::string &CODE = "arith = getArith(0)\n"
+                            "result = { arith:add(50), arith:sub(100) }";
+  test_object_from_invocable(env, CODE);
+}
+
+void test_object_smart_pointer(LuaEnvironment &env) {
+  const std::string &CODE = "result = { arith:add(50), arith:sub(100) }";
+  REQUIRE(env["arith"].exists());
+  REQUIRE(env["arith"].getType() == LuaType::UserData);
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["result"][1].get<int>() == 60);
+  REQUIRE(env["result"][2].get<int>() == -90);
 }
 
 TEST_CASE("Object binding") {
@@ -73,7 +106,7 @@ TEST_CASE("Object binding") {
     REQUIRE(obj.add(10) == 20);
     REQUIRE(obj2.add(20) == 30);
     REQUIRE(&obj2 == &arith);
-    env["test"] = object_extracting;
+    env["test"] = test_object_as_argument;
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   }
 }
@@ -113,34 +146,28 @@ TEST_CASE("Class manual binding") {
   }
 }
 
-void test_object_from_invocable(LuaEnvironment &env, const std::string &CODE) {
-  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  REQUIRE(env["arith"].exists());
-  REQUIRE(env["arith"].getType() == LuaType::UserData);
-  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  REQUIRE(env["result"][1].get<int>() == 50);
-  REQUIRE(env["result"][2].get<int>() == -100);
-}
+TEST_CASE("Inheritance") {
+  const std::string &CODE = "narith = NArith.new(100)\n"
+                            "result = { narith:mul(5), arith:add(35) }\n";
+  LuaEnvironment env;
+  LuaCppClass<Arith> arithCl("Arith", env);
+  arithCl.bind("add", &Arith::add);
+  arithCl.bind("sub", &Arith::sub);
+  arithCl.bind("set", &Arith::set);
+  arithCl.bind("new", &LuaCppConstructor<Arith, int>);
+  env.getClassRegistry().bind(arithCl);
 
-void test_object_return_from_invocable(LuaEnvironment &env) {
-  const std::string &CODE = "arith = getArith()\n"
-                            "result = { arith:add(50), arith:sub(100) }";
-  test_object_from_invocable(env, CODE);
-}
+  LuaCppClass<NArith, Arith> narithCl("NArith", env);
+  narithCl.bind("mul", &NArith::mul);
+  narithCl.bind("new", &LuaCppConstructor<NArith, int>);
+  env.getClassRegistry().bind(narithCl);
+  env["NArith"] = narithCl;
 
-void test_object_build_from_invocable(LuaEnvironment &env) {
-  const std::string &CODE = "arith = getArith(0)\n"
-                            "result = { arith:add(50), arith:sub(100) }";
-  test_object_from_invocable(env, CODE);
-}
-
-void test_object_smart_pointer(LuaEnvironment &env) {
-  const std::string &CODE = "result = { arith:add(50), arith:sub(100) }";
-  REQUIRE(env["arith"].exists());
-  REQUIRE(env["arith"].getType() == LuaType::UserData);
+  NArith arith(10);
+  env["arith"] = arith;
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  REQUIRE(env["result"][1].get<int>() == 60);
-  REQUIRE(env["result"][2].get<int>() == -90);
+  REQUIRE(env["result"][1].get<int>() == 500);
+  REQUIRE(env["result"][2].get<int>() == 45);
 }
 
 TEST_CASE("Object opaque binding") {
@@ -217,38 +244,6 @@ TEST_CASE("Costant object references") {
     REQUIRE_THROWS(env.execute(CODE) != LuaStatusCode::Ok);
   }
 #endif
-}
-
-class NArith : public Arith {
- public:
-  using Arith::Arith;
-  int mul(int n) {
-    return this->n * n;
-  }
-};
-
-TEST_CASE("Inheritance") {
-  const std::string &CODE = "narith = NArith.new(100)\n"
-                            "result = { narith:mul(5), arith:add(35) }\n";
-  LuaEnvironment env;
-  LuaCppClass<Arith> arithCl("Arith", env);
-  arithCl.bind("add", &Arith::add);
-  arithCl.bind("sub", &Arith::sub);
-  arithCl.bind("set", &Arith::set);
-  arithCl.bind("new", &LuaCppConstructor<Arith, int>);
-  env.getClassRegistry().bind(arithCl);
-
-  LuaCppClass<NArith, Arith> narithCl("NArith", env);
-  narithCl.bind("mul", &NArith::mul);
-  narithCl.bind("new", &LuaCppConstructor<NArith, int>);
-  env.getClassRegistry().bind(narithCl);
-  env["NArith"] = narithCl;
-
-  NArith arith(10);
-  env["arith"] = arith;
-  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  REQUIRE(env["result"][1].get<int>() == 500);
-  REQUIRE(env["result"][2].get<int>() == 45);
 }
 
 TEST_CASE("Exception handling") {

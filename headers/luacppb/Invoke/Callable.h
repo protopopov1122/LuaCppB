@@ -1,6 +1,8 @@
 #ifndef LUACPPB_INVOKE_CALLABLE_H_
 #define LUACPPB_INVOKE_CALLABLE_H_
 
+#include "luacppb/Invoke/Lua.h"
+#include "luacppb/Reference/Handle.h"
 #include "luacppb/Invoke/Native.h"
 #include "luacppb/Value/Native.h"
 
@@ -21,9 +23,7 @@ namespace LuaCppB {
     return Internal::NativeMethod<Internal::LuaNativeValue>::create(object, method, runtime);
   }
 
-  Internal::LuaLambdaHandle<LuaReferenceHandle> LuaLambda(LuaReferenceHandle &&ref) {
-    return Internal::LuaLambdaHandle<LuaReferenceHandle>(std::forward<LuaReferenceHandle>(ref));
-  }
+  Internal::LuaLambdaHandle<LuaReferenceHandle> LuaLambda(LuaReferenceHandle &&);
 }
 
 #endif

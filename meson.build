@@ -12,13 +12,13 @@ lib_src = [
   'source/Core/Error.cpp', 'source/Core/StackGuard.cpp',
   'source/Core/Stack.cpp', 'source/Invoke/Coro.cpp',
   'source/Core/RuntimeInfo.cpp', 'source/Invoke/Lua.cpp',
-  'source/Invoke/Native.cpp'
+  'source/Invoke/Native.cpp', 'source/Invoke/Callable.cpp'
 ]
 
 tests_src = [
   'tests/unit/main.cpp', 'tests/unit/Core.cpp', 'tests/unit/Reference.cpp',
   'tests/unit/Value.cpp', 'tests/unit/Invoke.cpp', 'tests/unit/Object.cpp',
-  'tests/unit/Container.cpp'
+  'tests/unit/Container.cpp', 'tests/unit/Coro.cpp'
 ]
 
 if get_option('system_lua')

@@ -22,4 +22,4 @@ Project inspired by two things:
 
 ### Author & License
 Project author: Jevgenijs Protopopovs \
-License: currently the project has no license, in future it will be licensed under some sort of permissive license.
+Project is licensed under the terms of MIT license. See LICENSE and NOTICE files.

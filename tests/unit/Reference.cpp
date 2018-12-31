@@ -3,6 +3,18 @@
 
 using namespace LuaCppB;
 
+class TestClass {};
+class TestClass2 {};
+class TestClass3 {
+ public:
+  TestClass3() = delete;
+  TestClass3(int i) {}
+
+  TestClass3 *get() {
+    return this;
+  }
+};
+
 const std::string &CODE = "globalVariable = 42\n"
                           "table = {\n"
                           "    x = 100,\n"
@@ -116,4 +128,30 @@ TEST_CASE("Registry reference") {
   REQUIRE(ref.putOnTop([](lua_State *state) {
     REQUIRE(lua_tointeger(state, -1) == 200);
   }));
+}
+
+TEST_CASE("Object getting") {
+  LuaEnvironment env;
+  ClassBinder<TestClass>::bind(env);
+  TestClass obj;
+  env["obj"] = obj;
+  REQUIRE(static_cast<TestClass *>(env["obj"]) == &obj);
+  REQUIRE_THROWS(static_cast<TestClass2 *>(env["obj"]) == nullptr);
+  REQUIRE_THROWS(static_cast<TestClass3 &>(env["obj"]).get() == nullptr);
+  REQUIRE(env["obj"].get<TestClass *>() == &obj);
+  REQUIRE_THROWS(env["obj"].get<TestClass2 *>() == nullptr);
+  REQUIRE_THROWS(env["obj"].get<TestClass3 &>().get() == nullptr);
+  env.setExceptionHandler([](auto&) {});
+  REQUIRE(static_cast<TestClass2 *>(env["obj"]) == nullptr);
+  REQUIRE_THROWS(static_cast<TestClass3 &>(env["obj"]).get() != nullptr);
+  REQUIRE(env["obj"].get<TestClass2 *>() == nullptr);
+  REQUIRE_THROWS(env["obj"].get<TestClass3 &>().get() == nullptr);
+}
+
+TEST_CASE("Object assignment") {
+  LuaEnvironment env;
+  ClassBinder<TestClass>::bind(env);
+  REQUIRE_NOTHROW(env["obj"] = TestClass());
+  REQUIRE_NOTHROW(env["obj2"] = TestClass2());
+  REQUIRE(env["obj2"].get<LuaValue>().getType() == LuaType::Nil);
 }

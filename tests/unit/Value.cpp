@@ -3,6 +3,14 @@
 
 using namespace LuaCppB;
 
+int test_sample_function(lua_State *state) {
+  return 0;
+}
+
+int test_sample_function2(lua_State *state) {
+  return 0;
+}
+
 TEST_CASE("Value constructors") {
   REQUIRE(LuaValue().getType() == LuaType::Nil);
   REQUIRE(LuaValue(LuaInteger(1)).getType() == LuaType::Number);
@@ -106,17 +114,25 @@ TEST_CASE("Value push method") {
   Internal::LuaStack stack(state);
   SECTION("Nil") {
     LuaValue().push(state);
+    LuaNil().push(state);
     REQUIRE(lua_isnil(state, -1));
+    REQUIRE(lua_isnil(state, -2));
   }
   SECTION("Integer") {
     LuaValue::create(100).push(state);
     REQUIRE(lua_isinteger(state, -1));
     REQUIRE(stack.toInteger() == 100);
+    LuaValue(LuaInteger()).push(state);
+    REQUIRE(lua_isinteger(state, -1));
+    REQUIRE(stack.toInteger() == 0);
   }
   SECTION("Number") {
     LuaValue::create(3.14).push(state);
     REQUIRE(lua_isnumber(state, -1));
     REQUIRE(stack.toNumber() == 3.14);
+    LuaValue(LuaNumber()).push(state);
+    REQUIRE(lua_isnumber(state, -1));
+    REQUIRE(stack.toNumber() == 0.0);
   }
   SECTION("Boolean") {
     LuaValue::create(true).push(state);
@@ -134,7 +150,7 @@ TEST_CASE("Value push method") {
     LuaValue::create(fn).push(state);
     REQUIRE(lua_iscfunction(state, -1));
     REQUIRE(stack.toCFunction() == fn);
-    LuaFunction func = LuaValue::peek(state).value().get<LuaFunction>();
+    LuaFunction func = LuaValue::peek(state).value();
     stack.pop();
     LuaValue(func).push(state);
   }
@@ -158,5 +174,74 @@ TEST_CASE("Value push method") {
     auto thread = LuaThread::create(state);
     LuaValue(thread).push(state);
     REQUIRE(lua_isthread(state, -1));
+  }
+}
+
+TEST_CASE("Value get method") {
+  LuaEnvironment env;
+  SECTION("Integer") {
+    REQUIRE(LuaValue::create(10).get<int>() == 10);
+    REQUIRE(LuaValue().get<int>(100) == 100);
+  }
+  SECTION("Number") {
+    REQUIRE(LuaValue::create(3.14).get<float>() == 3.14f);
+    REQUIRE(LuaValue().get<float>(2.1828) == 2.1828f);
+  }
+  SECTION("Boolean") {
+    REQUIRE_FALSE(LuaValue::create(false).get<bool>());
+    REQUIRE(LuaValue().get<bool>(true));
+  }
+  SECTION("String") {
+    REQUIRE(LuaValue::create("Hello").get<std::string>().compare("Hello") == 0);
+    REQUIRE(LuaValue().get<std::string>("world").compare("world") == 0);
+  }
+  SECTION("CFunction") {
+    REQUIRE(LuaValue::create(test_sample_function).get<LuaCFunction>() == test_sample_function);
+    REQUIRE(LuaValue().get<LuaCFunction>(test_sample_function2) == test_sample_function2);
+  }
+  SECTION("Function") {
+    REQUIRE(LuaValue(LuaFunction::create(env.getState(), test_sample_function, 0)).get<LuaFunction>().hasValue());
+    REQUIRE_FALSE(LuaValue().get<LuaFunction>().hasValue());
+  }
+}
+
+TEST_CASE("Value types get method") {
+  LuaEnvironment env;
+  Internal::LuaStack stack(env.getState());
+  lua_State *state = env.getState();
+  SECTION("Nil") {
+    REQUIRE_NOTHROW(LuaNil::get(state));
+  }
+  SECTION("Integer") {
+    stack.push(10);
+    REQUIRE(LuaInteger::get(state) == 10);
+  }
+  SECTION("Integer") {
+    stack.push(3.14);
+    REQUIRE(LuaNumber::get(state) == 3.14);
+  }
+  SECTION("Boolean") {
+    stack.push(true);
+    REQUIRE(LuaBoolean::get(state));
+  }
+  SECTION("String") {
+    stack.push(std::string("Hello"));
+    REQUIRE(std::string("Hello").compare(LuaString::get(state)) == 0);
+  }
+  SECTION("Table") {
+    stack.pushTable();
+    REQUIRE(LuaTable::get(state).hasValue());
+  }
+  SECTION("Userdata") {
+    stack.push<int>();
+    REQUIRE(LuaUserData::get(state).hasValue());
+  }
+  SECTION("Thread") {
+    LuaThread::create(state).push(state);
+    REQUIRE(LuaThread::get(state).hasValue());
+  }
+  SECTION("Function") {
+    LuaFunction::create(state, test_sample_function, 0).push(state);
+    REQUIRE(LuaFunction::get(state).isCFunction());
   }
 }

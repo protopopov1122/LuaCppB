@@ -11,6 +11,11 @@ namespace LuaCppB {
   void LuaValue::push(lua_State *state) const {
     Internal::LuaStack stack(state);
     switch (this->type) {
+      case LuaType::None:
+        break;
+      case LuaType::Nil:
+        lua_pushnil(state);
+        break;
       case LuaType::Number:
         assert(this->value.index() == 0 || this->value.index() == 1);
         if (this->value.index() == 0) {
@@ -50,8 +55,6 @@ namespace LuaCppB {
       case LuaType::Thread:
         assert(this->value.index() == 8);
         std::get<LuaThread>(this->value).push(state);
-      default:
-        break;
     } 
   }
 

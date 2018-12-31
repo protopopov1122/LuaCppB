@@ -147,19 +147,20 @@ TEST_CASE("Class manual binding") {
 }
 
 TEST_CASE("Inheritance") {
-  const std::string &CODE = "narith = NArith.new(100)\n"
-                            "result = { narith:mul(5), arith:add(35) }\n";
+  const std::string &CODE = "narith = NArith.build(100)\n"
+                            "narith2 = NArith.new()\n"
+                            "result = { narith:mul(5), arith:add(35), narith2:mul(6) }\n";
   LuaEnvironment env;
   LuaCppClass<Arith> arithCl("Arith", env);
   arithCl.bind("add", &Arith::add);
   arithCl.bind("sub", &Arith::sub);
   arithCl.bind("set", &Arith::set);
-  arithCl.bind("new", &LuaCppConstructor<Arith, int>);
+  arithCl.bind("build", &LuaCppConstructor<Arith, int>);
   env.getClassRegistry().bind(arithCl);
 
   LuaCppClass<NArith, Arith> narithCl("NArith", env);
   narithCl.bind("mul", &NArith::mul);
-  narithCl.bind("new", &LuaCppConstructor<NArith, int>);
+  narithCl.bind("build", &LuaCppConstructor<NArith, int>);
   env.getClassRegistry().bind(narithCl);
   env["NArith"] = narithCl;
 
@@ -168,6 +169,7 @@ TEST_CASE("Inheritance") {
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(env["result"][1].get<int>() == 500);
   REQUIRE(env["result"][2].get<int>() == 45);
+  REQUIRE(env["result"][3].get<int>() == 60);
 }
 
 TEST_CASE("Object opaque binding") {

@@ -194,12 +194,12 @@ namespace LuaCppB {
 			return static_cast<T>(this->get<EnumType>());
 		}
 
-		template <typename T, typename Type = typename std::enable_if<!std::is_class<T>::value, T>::type>
+		template <typename T, typename Type = typename std::enable_if<!std::is_class<T>::value || Internal::LuaValueGetSpecialCase<T>::value, T>::type>
 		operator T () {
 			return this->get<Type>();
 		}
 
-		template <typename T, typename Type = typename std::enable_if<std::is_class<T>::value, T>::type>
+		template <typename T, typename Type = typename std::enable_if<std::is_class<T>::value && !Internal::LuaValueGetSpecialCase<T>::value, T>::type>
 		operator T& () {
 			return this->get<Type &>();
 		}

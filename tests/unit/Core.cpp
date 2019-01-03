@@ -124,6 +124,7 @@ TEST_CASE("Stack") {
       REQUIRE(value.has_value());
       REQUIRE(value.value().getType() == stack.getType());
       REQUIRE(STR.compare(value.value().get<std::string>()) == 0);
+      REQUIRE(STR.compare(value.value().get<const std::string &>()) == 0);
     }
     SECTION("Function") {
       stack.push(stack_test_fn);

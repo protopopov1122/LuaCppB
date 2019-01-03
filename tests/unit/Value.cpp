@@ -194,6 +194,8 @@ TEST_CASE("Value get method") {
   SECTION("String") {
     REQUIRE(LuaValue::create("Hello").get<std::string>().compare("Hello") == 0);
     REQUIRE(LuaValue().get<std::string>("world").compare("world") == 0);
+    REQUIRE(LuaValue::create("Hello").get<const std::string &>().compare("Hello") == 0);
+    REQUIRE(LuaValue().get<const std::string &>("world").compare("world") == 0);
   }
   SECTION("CFunction") {
     REQUIRE(LuaValue::create(test_sample_function).get<LuaCFunction>() == test_sample_function);

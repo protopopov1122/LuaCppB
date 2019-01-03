@@ -22,6 +22,12 @@ namespace LuaCppB {
 																		std::is_same<T, LuaThread>::value ||
 																		std::is_same<T, LuaFunction>::value;
 		};
+
+		template <typename T, typename E = typename std::enable_if<std::is_reference<T>::value>::type>
+		struct LuaValueGetSpecialRef {
+			using V = typename std::remove_reference<T>::type;
+			static constexpr bool value = std::is_const<V>::value && std::is_same<typename std::remove_cv<V>::type, std::string>::value;
+		};
 	}
 
 	class LuaValue : public LuaData {
@@ -90,6 +96,16 @@ namespace LuaCppB {
 			}
 		}
 
+		template <typename T, typename V = typename std::remove_reference<T>::type>
+		typename std::enable_if<std::is_reference<T>::value && std::is_same<V, const std::string>::value, T>::type get(const T &defaultValue = "") const {
+			if (this->type == LuaType::String) {
+				assert(this->value.index() == 3);
+				return static_cast<T>(std::get<LuaString>(this->value));
+			} else {
+				return defaultValue;
+			}
+		}
+
 		template <typename T>
 		typename std::enable_if<std::is_same<T, LuaCFunction>::value, T>::type get(T defaultValue = nullptr) const {
 			if (this->type == LuaType::Function) {
@@ -137,7 +153,7 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
-		typename std::enable_if<std::is_reference<T>::value && std::is_class<typename std::remove_reference<T>::type>::value, T>::type get() const {
+		typename std::enable_if<std::is_reference<T>::value && std::is_class<typename std::remove_reference<T>::type>::value && !Internal::LuaValueGetSpecialRef<T>::value, T>::type get() const {
 			using V = typename std::remove_reference<T>::type;
 			if (this->type == LuaType::UserData) {
 				assert(this->value.index() == 7);

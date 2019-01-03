@@ -236,11 +236,6 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
-		static typename std::enable_if<std::is_same<T, std::string>::value, LuaValue>::type create(const T &value) noexcept {
-			return LuaValue(LuaString(value));
-		}
-
-		template <typename T>
 		static typename std::enable_if<std::is_same<T, LuaCFunction>::value, LuaValue>::type create(T value) noexcept {
 			return LuaValue(value);
 		}
@@ -257,13 +252,19 @@ namespace LuaCppB {
 		}
 
 		template <typename T>
+		static typename std::enable_if<std::is_same<typename std::remove_cv<typename std::remove_reference<T>::type>::type, std::string>::value, LuaValue>::type
+			create(T s) noexcept {
+			return LuaValue(LuaString(s));
+		}
+
+		template <typename T>
 		static constexpr bool is_constructible() noexcept {
 			return std::is_integral<T>::value ||
 				std::is_floating_point<T>::value ||
 				std::is_same<T, bool>::value ||
-				std::is_same<T, std::string>::value ||
 				std::is_same<T, LuaCFunction>::value ||
 				std::is_same<T, const char *>::value ||
+				(std::is_same<typename std::remove_cv<typename std::remove_reference<T>::type>::type, std::string>::value) ||
 				(std::is_array<T>::value && std::is_same<typename std::remove_extent<T>::type, const char>::value);
 		}
 	 private:

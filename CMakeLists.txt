@@ -13,6 +13,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_LIST_DIR}/cmake/")
 find_package(LuaCppB REQUIRED)
 
 if (LUACPPB)
+	# Build unit tests
 	file(GLOB_RECURSE LUACPPB_UNIT_SRC ${CMAKE_SOURCE_DIR}/tests/unit/*.cpp)
 	add_executable(lcppbunit ${LUACPPB_UNIT_SRC})
 	if (LUACPPB_CUSTOM_LUA)
@@ -20,4 +21,14 @@ if (LUACPPB)
 	endif (LUACPPB_CUSTOM_LUA)
 	target_include_directories(lcppbunit PUBLIC ${CMAKE_SOURCE_DIR}/tests/unit ${LUACPPB_HEADERS})
 	target_link_libraries(lcppbunit luacppb luacppb_lua)
+  # Build examples
+	file(GLOB_RECURSE LUACPPB_EXAMPLES_SRC ${CMAKE_SOURCE_DIR}/examples/*.cpp)
+	add_executable(lcppbexamples ${LUACPPB_EXAMPLES_SRC})
+	if (LUACPPB_CUSTOM_LUA)
+		target_include_directories(lcppbexamples PUBLIC ${LUACPPB_LUA_HEADERS})
+	endif (LUACPPB_CUSTOM_LUA)
+	target_include_directories(lcppbexamples PUBLIC ${LUACPPB_HEADERS})
+	target_link_libraries(lcppbexamples luacppb luacppb_lua)
+	add_custom_target(lcppbexamples-src ALL
+		COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/examples/lua ${CMAKE_BINARY_DIR})
 endif (LUACPPB)

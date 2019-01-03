@@ -17,8 +17,7 @@ Project requires C++17-compliant compiler version.
 
 ### Examples
 
-Currently the only source of examples are unit tests. See `*.cpp` files in `tests/unit` directory. \
-I'll prepare more meaningful examples soon.
+Example preparation is in progress, see `examples`. You can also consult the unit tests. See `*.cpp` files in `tests/unit` directory.
 
 ### Building
 

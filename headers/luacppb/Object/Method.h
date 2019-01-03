@@ -36,7 +36,7 @@ namespace LuaCppB::Internal {
 				}, args);
 				return 0;
 			} else {
-				return NativeFunctionResult<Internal::LuaNativeValue, R>::set(state, runtime, std::apply([object, method](A... args) {	
+				return NativeFunctionResult<Internal::LuaNativeValue, R>::set(state, runtime, std::apply([object, method](A... args)->R {	
 					return (object->*method)(args...);
 				}, args));
 			}

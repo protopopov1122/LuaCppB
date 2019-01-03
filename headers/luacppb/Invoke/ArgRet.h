@@ -8,7 +8,6 @@
 #include <type_traits>
 #include <tuple>
 #include <array>
-#include <iostream>
 
 namespace LuaCppB::Internal {
 

@@ -1,6 +1,7 @@
 #include "catch.hpp"
 #include <fstream>
 #include <cstdio>
+#include <iostream>
 #include "luacppb/LuaCppB.h"
 
 using namespace LuaCppB;
@@ -184,8 +185,6 @@ TEST_CASE("Stack") {
     REQUIRE(stack.getTop() == 0);
   }
 }
-
-#include <iostream>
 
 TEST_CASE("Loading from file") {
   const std::string &CODE = "function fn(x)\n"

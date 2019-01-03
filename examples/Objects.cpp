@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include "luacppb/LuaCppB.h"
+#include <iostream>
 
 using namespace LuaCppB;
 
@@ -45,6 +46,7 @@ class PersonHandle {
 };
 
 void object_examples(int argc, const char **argv) {
+  std::cout << "Objects: " << std::endl;
   LuaEnvironment env;
   env["Person"] = ClassBinder<Person>::bind(env,
     "new", &LuaCppConstructor<Person, const std::string &, unsigned int>,

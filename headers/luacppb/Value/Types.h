@@ -7,6 +7,7 @@
 #include "luacppb/Core/Runtime.h"
 #include "luacppb/Core/Status.h"
 #include <string>
+#include <sstream>
 
 namespace LuaCppB {
 
@@ -107,6 +108,39 @@ namespace LuaCppB {
 	 	using LuaReferencedValue::LuaReferencedValue;
 		static LuaUserData get(lua_State *, int = -1);
 		static LuaUserData create(lua_State *, std::size_t);
+
+		template <typename T>
+		static std::string getCustomName(uint64_t idx) {
+      std::stringstream ss;
+      ss << "$custom_udata_" << typeid(T).name() << '$' << idx;
+      return ss.str();
+		}
+
+		template <typename T>
+		T *getCustomData() const {
+			T *pointer = nullptr;
+			this->handle.get([&](lua_State *state) {
+				if (!lua_isuserdata(state, -1)) {
+					return;
+				}
+				
+				lua_getmetatable(state, -1);
+				if (lua_istable(state, -1)) {
+					lua_getfield(state, -1, "__name");
+					std::string className(lua_tostring(state, -1));
+					lua_pop(state, 1);
+
+					std::stringstream ss;
+					ss << "$custom_udata_" << typeid(T).name();
+					std::string userClassName(ss.str());
+					if (className.compare(0, userClassName.size(), userClassName) == 0) {
+						pointer = static_cast<T *>(lua_touserdata(state, -2));
+					}
+				}
+				lua_pop(state, 1);
+			});
+			return pointer;
+		}
 
 		template <typename T>
 		T toPointer() const {

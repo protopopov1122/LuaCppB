@@ -18,6 +18,7 @@
 #include "luacppb/Object/Object.h"
 #include "luacppb/Object/Class.h"
 #include "luacppb/Object/Bind.h"
+#include "luacppb/Value/UserData.h"
 #include "luacppb/Core/Status.h"
 #include "luacppb/Core/Throw.h"
 #include "luacppb/Core/StackGuard.h"

@@ -145,8 +145,14 @@ namespace LuaCppB {
 			using V = typename std::remove_pointer<T>::type;
 			if (this->type == LuaType::UserData) {
 				assert(this->value.index() == 7);
-				LuaCppObjectWrapper<V> *ptr = std::get<LuaUserData>(this->value).toPointer<LuaCppObjectWrapper<V> *>();
-				return ptr->get();
+				const LuaUserData &data = std::get<LuaUserData>(this->value);
+				V *custom_udata = data.getCustomData<V>();
+				if (custom_udata) {
+					return custom_udata;
+				} else {
+					LuaCppObjectWrapper<V> *ptr = data.toPointer<LuaCppObjectWrapper<V> *>();
+					return ptr->get();
+				}
 			} else {
 				return defaultValue;
 			}
@@ -157,11 +163,17 @@ namespace LuaCppB {
 			using V = typename std::remove_reference<T>::type;
 			if (this->type == LuaType::UserData) {
 				assert(this->value.index() == 7);
-				LuaCppObjectWrapper<V> *ptr = std::get<LuaUserData>(this->value).toPointer<LuaCppObjectWrapper<V> *>();
-				if (ptr != nullptr) {
-					return *ptr->get();
+				const LuaUserData &data = std::get<LuaUserData>(this->value);
+				V *custom_udata = data.getCustomData<V>();
+				if (custom_udata) {
+					return *custom_udata;
 				} else {
-					throw LuaCppBError("Null pointer can't be dereferenced", LuaCppBErrorCode::NullPointerDereference);
+					LuaCppObjectWrapper<V> *ptr = std::get<LuaUserData>(this->value).toPointer<LuaCppObjectWrapper<V> *>();
+					if (ptr != nullptr) {
+						return *ptr->get();
+					} else {
+						throw LuaCppBError("Null pointer can't be dereferenced", LuaCppBErrorCode::NullPointerDereference);
+					}
 				}
 			} else {
 				throw LuaCppBError("Type casting failed", LuaCppBErrorCode::IncorrectTypeCast);

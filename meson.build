@@ -18,7 +18,7 @@ lib_src = [
 tests_src = [
   'tests/unit/main.cpp', 'tests/unit/Core.cpp', 'tests/unit/Reference.cpp',
   'tests/unit/Value.cpp', 'tests/unit/Invoke.cpp', 'tests/unit/Object.cpp',
-  'tests/unit/Container.cpp', 'tests/unit/Coro.cpp'
+  'tests/unit/Container.cpp', 'tests/unit/Coro.cpp', 'tests/unit/UserData.cpp'
 ]
 
 if get_option('system_lua')

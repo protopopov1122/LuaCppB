@@ -208,3 +208,37 @@ env.setExceptionHandler([](std::exception &ex) {
   throw ex;  // Just rethrow it. The default behavior
 });
 ```
+
+#### Custom userdata types
+`LuaCppB` supports custom userdata type definitions. Currently this feature is experimental. You should use `CustomUserDataClass` to build userdata metatable and then use method `CustomUserDataClass::create` to instantiate `CustomUserData` objects. These objects can be implicitly converted into appropriate pointers and references, as well as passed to Lua. Example:
+```C++
+CustomUserDataClass<SomeType> udClass(env);
+udClass.setDefaultConstructor([](SomeType &obj) {
+  // You can assign a default constructor to your type.
+  // The default constructor is optional.
+  // For example, it could initialize objects.
+  // The default "default constructor" just do nothing
+  new(&obj) SomeType();
+});
+// Then you may bind metamethods to your userdata type
+// Metamethods can be bound by name
+udClass.bind("__add", [](SomeType &obj, int x) {
+  return obj + x;
+});
+// Or using enumetation (currently there are only few constants assigned to metamethods)
+udClass.bind(LuaMetamethod::GC, [](SomeType &obj) {
+  // Finalizer could properly destroy object
+  obj.~SomeType();
+  ::operator delete(&obj, &obj);
+});
+// Then you instantiate your userdata's
+auto ud1 = udClass.create(env.getState());                    // Uses default constructor
+auto ud2 = udClass.create(env.getState(), [](auto& obj) {})   // Uses custom constructor
+// Convert them to pointers or references
+SomeType *st1 = ud1;
+SomeType &st2 = ud2;  // Or vice versa. You can also use get method
+// And pass them to Lua in the usual way
+env["data"] = ud1;
+env["fn"](ud2);
+```
+> **WARNING** You are responsible for proper resource initialization and finalizaton. Lua only allocates and deallocates memory. For example, you should use placement new & delete operators. It's recommended to attach appropriate default constructors to your types and implement `__gc` methods.

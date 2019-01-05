@@ -1,5 +1,9 @@
 ## LuaCppB manual
 This manual describes `LuaCppB` library usage.
+### Installation
+`LuaCppB` library requires integration into build system. Module for CMake is prepared in the `cmake` directory. Use unit test build script `CMakeLists.txt` as an example.
+
+You should also enable custom build of Lua - download and unpack Lua sources, specify source directory in `cmake` module arguments. This enables Lua continuation support and error throwing mechanism.
 ### Preparations
 Before using LuaCppB you should include the header `luacppb/LuaCppB.h`:
 ```C++
@@ -13,9 +17,10 @@ int main(int argc, const char **argv) {
   lcb::LuaEnvironment env;
 }
 ```
-This environment object holds raw Lua state which can be retrieved using `getState` method.
+This environment object holds raw Lua state and should not be destructed until you finished work with Lua. Raw Lua state can be retrieved using `getState` method.
 
 ### Usage
+Namespace `LuaCppB` is omitted to simplify code examples. You should use `using namespace` statement or define an alias (e.g. `namespace lcb = LuaCppB;`).
 #### Running Lua code
 There are several ways to run Lua code:
 * loading from file - use `env.load("path to file")`.
@@ -36,9 +41,25 @@ int sum = env["sum"]; // Implicitly converting the value of Lua global to intege
 std::cout << env["name"].get<const std::string &>() << std::endl; // Explicit conversion is possible then type deduction may not work
 env["flag"] = true; // Setting boolean as the value of Lua global name
 std::vector<int> &vec = env["table"]["arrays"][1]; // Getting the value from nested tables
-auto fn = env[1]; // Referencing the value directly from Lua stack; read-only reference
+auto fn = env[1]; // Referencing the value directly from Lua stack; read-only reference. Sometimes it's useful to get raw access to function arguments
 ```
 If the reference is not converted to some C++ types, it will be stored as an instance of `LuaReferenceHandle` class.
+
+#### Lua values
+Most C++ values are implicitly converted to Lua equivalents. However for some complex values you will need wrapper classes:
+* Tables - creating new table objects are performed with following calls:
+  ```C++
+  auto table = LuaTable::create(env.getState());  // Creating new table
+  // Then you can assign it to any reference
+  env["table"] = table;
+  // Or create reference to this table
+  auto ref = table.ref(env);
+  ```
+* Threads:
+  ```C++
+  auto thread = LuaThread::create(env.getState());
+  env["thread"] = thread;
+  ```
 
 #### Calling C++ from Lua and vice versa
 C++ functions (as well as lambdas and object methods) are treated as the first-class objects. It means, that they can be assigned to any `LuaCppB` reference (except read-only stack references), or passed as an argument while calling Lua function. You can use special `NativeCallable` function (which is strictly necessary while dealing with object methods) or directly pass them to Lua. Examples:
@@ -113,7 +134,26 @@ LuaCoroutine coro = env["coro"];          // Or use a special wrapper class
 int also_yielded_result = coro(5);
 LuaStatusCode status = coro.getStatus();  // Retrieving coroutine status
 ```
-C++ continuations and yielding - **TODO: DOCUMENT IT**
+`LuaCppB` support continuations in the native code. There are two functions which operate with continuations: `LuaContinuation::call` and `LuaContinuation::yield`.
+
+> **Warning!** Invocation of continuation-related functions should be the last statement in the surrouning function. Execution of statements after it is not guaranteed and you should not rely on that. **Moreover**, most likely the call stack will be unwound and those functions will never return. **Also**, note that these function can not be called in the context of the main thread (read about Lua threading).
+
+You can call Lua function (which may of may not yield) and setup success and failure callbacks:
+```C++
+LuaContinuation(env["fn"], env)       // Specify the function you are calling and Lua environment
+  .call([](int result) {
+    // On success
+  }, [](LuaError &error) {
+    // On failure
+  }, 1, 2, 3);                        // Function arguments
+```
+You can also yield from C++ function:
+```C++
+LuaContinuation::yield(env, [](int argument) {   // Arguments are optional
+  // On resume
+  // You can return values there
+}, 1, 2, 3);                                     // Values you are yielding
+```
 
 #### Lua error handling
 Lua errors can be handled, using `LuaError` class. It provides status code (represented by enum `LuaStatusCode`) and additional error information. You can retrieve error object shortly after running Lua code:
@@ -141,7 +181,16 @@ if (env["fn"](5) != LuaStatusCode::Ok) {
   // Do something
 }
 ```
-Status code list: **TODO**
+Status code list (integer representations of status codes are equal to corresponding `LUA_*` contants):
+* `LuaStatusCode::Ok` - execution finished succesfully.
+* `LuaStatusCode::Yield` - coroutine yielded (but not finished).
+* `LuaStatusCode::RuntimeError` - Lua runtime error.
+* `LuaStatusCode::SyntaxError` - Lua syntax error.
+* `LuaStatusCode::MemAllocError` - memory allocation error.
+* `LuaStatusCode::MsgHandlerError` - error occured while processing previous error in the message handler (should not occur unless you are writing custom message handler).
+* `LuaStatusCode::GCMethodError` - error occured during `__gc` method execution (should not occur unless you are implementing custom userdata).
+
+
 You can throw Lua errors using `LuaThrow` function:
 ```C++
 int function(LuaState env, int x) {

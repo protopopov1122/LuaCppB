@@ -7,10 +7,10 @@
 
 namespace LuaCppB {
 
-  template <typename T>
-  void LuaThrow(lua_State *state, LuaCppRuntime &runtime, T &&value) {
-    Internal::LuaNativeValue::push(state, runtime, value);
-    lua_error(state);
+  template <typename S, typename T>
+  void LuaThrow(S &env, T &&value) {
+    Internal::LuaNativeValue::push(env.getState(), env, value);
+    lua_error(env.getState());
   }
 }
 

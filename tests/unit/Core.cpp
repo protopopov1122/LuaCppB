@@ -8,7 +8,7 @@ using namespace LuaCppB;
 
 #ifdef LUACPPB_ERROR_SUPPORT
 void test_err(LuaState state) {
-  LuaThrow(state.getState(), state, "Error");
+  LuaThrow(state, "Error");
 }
 #endif
 

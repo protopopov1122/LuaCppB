@@ -112,9 +112,9 @@ namespace LuaCppB {
         this->runtime, Internal::LuaContinuationHandlerType<F>::newHandler(callback, errorHandler), std::forward<A>(args)...);
     }
 
-    template <typename F, typename ... A>
-    static void yield(lua_State *state, LuaCppRuntime &runtime, F callback, std::function<void(LuaError)> errorHandler, A &&... args) {
-      Internal::LuaFunctionInvoke::yieldK<A...>(state, runtime, Internal::LuaContinuationHandlerType<F>::newHandler(callback, errorHandler), std::forward<A>(args)...);
+    template <typename S, typename F, typename ... A>
+    static void yield(S &env, F callback, std::function<void(LuaError)> errorHandler, A &&... args) {
+      Internal::LuaFunctionInvoke::yieldK<A...>(env.getState(), env, Internal::LuaContinuationHandlerType<F>::newHandler(callback, errorHandler), std::forward<A>(args)...);
     }
    private:
 

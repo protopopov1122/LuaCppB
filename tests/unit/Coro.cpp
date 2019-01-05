@@ -137,8 +137,8 @@ TEST_CASE("Continuations") {
 }
 
 void test_yield(LuaState env, int x) {
-  LuaContinuation::yield(env.getState(), env, [x](LuaState env, int y) {
-    LuaContinuation::yield(env.getState(), env, [x, y](int z) {
+  LuaContinuation::yield(env, [x](LuaState env, int y) {
+    LuaContinuation::yield(env, [x, y](int z) {
       return x + y + z;
     }, [](auto) {
       SHOULD_NOT_HAPPEN;

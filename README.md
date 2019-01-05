@@ -13,11 +13,13 @@ This repo contains the prototype of Lua-C++ bindings. Currently it has following
 * support of std::exception-based exception propagation and handlers.
 
 Supported platforms: Windows (MinGW only), Linux (GCC and Clang), macOS(Clang), FreeBSD (Clang and GCC) & OpenBSD (Clang). \
-Project requires C++17-compliant compiler version.
+Project requires C++17-compliant compiler version. It uses RTTI and exceptions.
 
-### Examples
+### Documentation & examples
 
-Example preparation is in progress, see `examples`. You can also consult the unit tests. See `*.cpp` files in `tests/unit` directory.
+[Brief manual](MANUAL.md)
+
+Example preparation is in progress. You can also consult the unit tests. See `*.cpp` files in `tests/unit` directory.
 
 ### Building
 

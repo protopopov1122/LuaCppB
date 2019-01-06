@@ -7,6 +7,7 @@
 #include "luacppb/Core/Runtime.h"
 #include "luacppb/Core/State.h"
 #include "luacppb/Core/Stack.h"
+#include "luacppb/Invoke/Descriptor.h"
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -71,12 +72,6 @@ namespace LuaCppB::Internal {
 		LuaCppRuntime &runtime;
 	};
 
-	template <typename C, typename M>
-	struct NativeMethodDescriptor {
-		C *object;
-		M method;
-	};
-
 	template <typename P, typename C, typename R, typename ... A>
 	class NativeMethodCall : public LuaData {
 		using M = R (C::*)(A...);
@@ -91,7 +86,7 @@ namespace LuaCppB::Internal {
 		
 		void push(lua_State *state) const override {
 			Internal::LuaStack stack(state);
-			NativeMethodDescriptor<C, M> *descriptor = stack.push<NativeMethodDescriptor<C, M>>();
+			NativeMethodDescriptor<C, M> *descriptor = NativeMethodDescriptor<C, M>::pushDescriptor(state);
 			descriptor->object = this->object;
 			descriptor->method = this->method;
 			stack.push(&this->runtime);
@@ -164,13 +159,6 @@ namespace LuaCppB::Internal {
 		}
 	};
 
-	template <typename T>
-	class NativeInvocableDescriptor {
-	 public:
-	 	NativeInvocableDescriptor(T &value) :invocable(value) {}
-		T invocable;
-	};
-
 	template <typename P, typename T, typename ... A>
 	class NativeInvocableCall : public LuaData {
 		using R = typename std::invoke_result<T, A...>::type;
@@ -179,7 +167,7 @@ namespace LuaCppB::Internal {
 
 		void push(lua_State *state) const {
 			Internal::LuaStack stack(state);
-			NativeInvocableDescriptor<T> *descriptor = stack.push<NativeInvocableDescriptor<T>>();
+			NativeInvocableDescriptor<T> *descriptor = NativeInvocableDescriptor<T>::pushDescriptor(state);
 			new(descriptor) NativeInvocableDescriptor(this->invocable);
 			stack.push(&this->runtime);
 			stack.push(&NativeInvocableCall<P, T, A...>::invocable_closure, 2);
@@ -213,33 +201,30 @@ namespace LuaCppB::Internal {
 	};
 
 	template<typename P, typename T>
-	struct NativeInvocableCallBuilder : public NativeInvocableCallBuilder<P, decltype(&T::operator())> {};
+	struct NativeInvocableCallBuilder : public NativeInvocableCallBuilder<P, decltype(&T::operator())> {
+		using Type = typename NativeInvocableCallBuilder<P, decltype(&T::operator())>::Type;
+		using FunctionType = typename NativeInvocableCallBuilder<P, decltype(&T::operator())>::FunctionType;
+		static Type create(FunctionType && f, LuaCppRuntime &runtime) {
+			return Type(std::forward<FunctionType>(f), runtime);
+		}
+	};
 
 	template<typename P, typename R, typename ... A>
 	struct NativeInvocableCallBuilder<P, R(A...)> {
 		using FunctionType = std::function<R(A...)>;
 		using Type = NativeInvocableCall<P, FunctionType, A...>;
-		static Type create(FunctionType && f, LuaCppRuntime &runtime) {
-			return Type(std::forward<FunctionType>(f), runtime);
-		}
 	};
 
 	template<typename P, typename R, typename ... A>
 	struct NativeInvocableCallBuilder<P, R(*)(A...)> {
 		using FunctionType = std::function<R(A...)>;
 		using Type = NativeInvocableCall<P, FunctionType, A...>;
-		static Type create(FunctionType && f, LuaCppRuntime &runtime) {
-			return Type(std::forward<FunctionType>(f), runtime);
-		}
 	};
 
 	template<typename P, typename C, typename R, typename ... A>
 	struct NativeInvocableCallBuilder<P, R (C::*)(A...) const> {
 		using FunctionType = std::function<R(A...)>;
 		using Type = NativeInvocableCall<P, FunctionType, A...>;
-		static Type create(FunctionType && f, LuaCppRuntime &runtime) {
-			return Type(std::forward<FunctionType>(f), runtime);
-		}
 	};
 
 	template <typename P>

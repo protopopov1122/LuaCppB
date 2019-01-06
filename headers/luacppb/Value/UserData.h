@@ -16,21 +16,23 @@ namespace LuaCppB {
     class CustomUserDataCall : public LuaData {
       using R = typename std::invoke_result<F, T &, A...>::type;
     public:
-      CustomUserDataCall(F &&inv, LuaCppRuntime &runtime) : invocable(inv), runtime(runtime) {}
+      CustomUserDataCall(F &&inv, const std::string &className, LuaCppRuntime &runtime)
+        : invocable(inv), className(className), runtime(runtime) {}
 
       void push(lua_State *state) const {
         Internal::LuaStack stack(state);
-        NativeInvocableDescriptor<F> *descriptor = stack.push<NativeInvocableDescriptor<F>>();
+        NativeInvocableDescriptor<F> *descriptor = NativeInvocableDescriptor<F>::pushDescriptor(state);
         new(descriptor) NativeInvocableDescriptor(this->invocable);
+        stack.push(this->className);
         stack.push(&this->runtime);
-        stack.push(&CustomUserDataCall<T, F, A...>::userdata_closure, 2);
+        stack.push(&CustomUserDataCall<T, F, A...>::userdata_closure, 3);
       }
     private:
-      static int call(F &invocable, LuaCppRuntime &runtime, lua_State *state) {
+      static int call(F &invocable, const std::string &className, LuaCppRuntime &runtime, lua_State *state) {
         std::array<LuaValue, sizeof...(A)> wrappedArgs;
         WrappedFunctionArguments<2, A...>::get(state, wrappedArgs);
         std::tuple<A...> args = Internal::NativeFunctionArgumentsTuple<2, A...>::value(state, runtime, wrappedArgs);
-        T &value = *static_cast<T *>(lua_touserdata(state, 1));
+        T &value = *static_cast<T *>(luaL_checkudata(state, 1, className.c_str()));
         std::tuple<T &, A...> fullArgs = std::tuple_cat(std::forward_as_tuple(value), args);
         if constexpr (std::is_void<R>::value) {
           std::apply(invocable, fullArgs);
@@ -44,53 +46,77 @@ namespace LuaCppB {
         try {
           Internal::LuaStack stack(state);
           NativeInvocableDescriptor<F> *descriptor = stack.toUserData<NativeInvocableDescriptor<F> *>(lua_upvalueindex(1));
-          LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(2));
-          return CustomUserDataCall<T, F, A...>::call(descriptor->invocable, runtime, state);
+          std::string className = stack.toString(lua_upvalueindex(2));
+          LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(3));
+          return CustomUserDataCall<T, F, A...>::call(descriptor->invocable, className, runtime, state);
         } catch (std::exception &ex) {
           return luacpp_handle_exception(state, std::current_exception());
         }
       }
 
       F invocable;
+      std::string className;
       LuaCppRuntime &runtime;
     };
 
     template <typename C, typename T>
-    struct CustomUserDataCallBuilder : public CustomUserDataCallBuilder<C, decltype(&T::operator())> {};
+    struct CustomUserDataCallBuilder : public CustomUserDataCallBuilder<C, decltype(&T::operator())> {
+      using FunctionType = typename CustomUserDataCallBuilder<C, decltype(&T::operator())>::FunctionType;
+      using Type = typename CustomUserDataCallBuilder<C, decltype(&T::operator())>::Type;
+      static std::shared_ptr<Type> create(FunctionType && f, const std::string &className, LuaCppRuntime &runtime) {
+        return std::make_shared<Type>(std::forward<FunctionType>(f), className, runtime);
+      }
+    };
 
     template <typename T, typename R, typename ... A>
     struct CustomUserDataCallBuilder<T, R(T &, A...)> {
       using FunctionType = std::function<R(T &, A...)>;
       using Type = CustomUserDataCall<T, FunctionType, A...>;
-      static std::shared_ptr<Type> create(FunctionType && f, LuaCppRuntime &runtime) {
-        return std::make_shared<Type>(std::forward<FunctionType>(f), runtime);
-      }
     };
 
     template<typename T, typename R, typename ... A>
     struct CustomUserDataCallBuilder<T, R(*)(T &, A...)> {
       using FunctionType = std::function<R(T &, A...)>;
       using Type = CustomUserDataCall<T, FunctionType, A...>;
-      static std::shared_ptr<Type> create(FunctionType && f, LuaCppRuntime &runtime) {
-        return std::make_shared<Type>(std::forward<FunctionType>(f), runtime);
-      }
     };
 
     template<typename T, typename C, typename R, typename ... A>
     struct CustomUserDataCallBuilder<T, R (C::*)(T &, A...) const> {
       using FunctionType = std::function<R(T &, A...)>;
       using Type = CustomUserDataCall<T, FunctionType, A...>;
-      static std::shared_ptr<Type> create(FunctionType && f, LuaCppRuntime &runtime) {
-        return std::make_shared<Type>(std::forward<FunctionType>(f), runtime);
-      }
     };
   }
 
   enum class LuaMetamethod {
     GC,
     Index,
-    NewIndex
-    // TODO Full list of metamethods
+    NewIndex,
+    Call,
+    ToString,
+    Length,
+    Pairs,
+    IPairs,
+    //Mathematical
+    UnaryMinus,
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    FloorDivide,
+    Modulo,
+    Power,
+    Concat,
+    // Bitwise
+    BitwiseAnd,
+    BitwiseOr,
+    BitwiseXor,
+    BitwiseNot,
+    ShiftLeft,
+    ShiftRight,
+    // Equivalence
+    Equals,
+    LessThan,
+    LessOrEqual
   };
 
   template <typename T>
@@ -135,11 +161,11 @@ namespace LuaCppB {
       this->className = LuaUserData::getCustomName<T>(CustomUserDataClass::nextIdentifier++);
     }
 
-    void setDefaultConstructor(std::function<void(T &)> fn) {
+    void setDefaultConstructor(std::function<void(T &)> &&fn) {
       this->constructor = fn;
     }
 
-    CustomUserData<T> create(lua_State *state, std::function<void(T &)> constructor) const {
+    CustomUserData<T> create(lua_State *state, const std::function<void(T &)> &&constructor) const {
       Internal::LuaStack stack(state);
       T *value = stack.push<T>();
       if (stack.metatable(this->className)) {
@@ -156,12 +182,12 @@ namespace LuaCppB {
     }
 
     CustomUserData<T> create(lua_State *state) const {
-      return this->create(state, this->constructor);
+      return this->create(state, std::move(this->constructor));
     }
 
     template <typename F>
     void bind(const std::string &key, F &&fn) {
-      this->methods[key] = Internal::CustomUserDataCallBuilder<T, F>::create(std::forward<F>(fn), this->runtime);
+      this->methods[key] = Internal::CustomUserDataCallBuilder<T, F>::create(std::forward<F>(fn), this->className, this->runtime);
     }
 
     template <typename F>
@@ -190,8 +216,33 @@ namespace LuaCppB {
   std::map<LuaMetamethod, std::string> CustomUserDataClass<T>::metamethods = {
     { LuaMetamethod::GC, "__gc" },
     { LuaMetamethod::Index, "__index" },
-    { LuaMetamethod::NewIndex, "__newindex" }
-    // TODO Full list of metamethods
+    { LuaMetamethod::NewIndex, "__newindex" },
+    { LuaMetamethod::Call, "__call" },
+    { LuaMetamethod::ToString, "__tostring" },
+    { LuaMetamethod::Length, "__len" },
+    { LuaMetamethod::Pairs, "__pairs" },
+    { LuaMetamethod::IPairs, "__ipairs" },
+    //Mathematical
+    { LuaMetamethod::UnaryMinus, "__unm" },
+    { LuaMetamethod::Add, "__add" },
+    { LuaMetamethod::Subtract, "__sub" },
+    { LuaMetamethod::Multiply, "__mul" },
+    { LuaMetamethod::Divide, "__div" },
+    { LuaMetamethod::FloorDivide, "__idiv" },
+    { LuaMetamethod::Modulo, "__mod" },
+    { LuaMetamethod::Power, "__pow" },
+    { LuaMetamethod::Concat, "__concat" },
+    // Bitwise
+    { LuaMetamethod::BitwiseAnd, "__band" },
+    { LuaMetamethod::BitwiseOr, "__bor" },
+    { LuaMetamethod::BitwiseXor, "__bxor" },
+    { LuaMetamethod::BitwiseNot, "__bnot" },
+    { LuaMetamethod::ShiftLeft, "__shl" },
+    { LuaMetamethod::ShiftRight, "__shr" },
+    // Equivalence
+    { LuaMetamethod::Equals, "__eq" },
+    { LuaMetamethod::LessThan, "__lt" },
+    { LuaMetamethod::LessOrEqual, "__le" }
   };
 }
 

@@ -1,6 +1,5 @@
 #include "catch.hpp"
 #include "luacppb/LuaCppB.h"
-#include <iostream>
 
 using namespace LuaCppB;
 
@@ -21,7 +20,7 @@ TEST_CASE("Custom userdata") {
                             "for i = 1, #arr do\n"
                             "    sum = sum + arr[i]\n"
                             "end\n"
-                            "arr2[50] = arr2[50] + 100";
+                            "arr2[50] = arr2[50] + (arr2 + 50)";
   LuaEnvironment env;
 
   CustomUserDataClass<IntegerArray> arrayUD(env);
@@ -52,6 +51,9 @@ TEST_CASE("Custom userdata") {
   arrayUD.bind("__len", [](IntegerArray &arr) {
     return arr.length;
   });
+  arrayUD.bind(LuaMetamethod::Add, [](IntegerArray &arr, int num) {
+    return arr.length + num;
+  });
 
   auto filledArray = arrayUD.create(env.getState(), [](IntegerArray &arr) {
     new(&arr) IntegerArray(100);
@@ -70,5 +72,5 @@ TEST_CASE("Custom userdata") {
   REQUIRE(&env["arr2"].get<IntegerArray &>() == &array2);
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(env["sum"].get<int>() == 4950);
-  REQUIRE(array2.array[49] == 100);
+  REQUIRE(array2.array[49] == 150);
 }

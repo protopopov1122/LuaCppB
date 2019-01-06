@@ -1,8 +1,7 @@
 ## LuaCppB manual
 This manual describes `LuaCppB` library usage.
 ### Installation
-`LuaCppB` library requires integration into build system. Module for CMake is prepared in the `cmake` directory. Use unit test build script `CMakeLists.txt` as an example.
-
+`LuaCppB` library requires integration into build system. Module for CMake is prepared in the `cmake` directory. Use unit test build script `CMakeLists.txt` as an example. \
 You should also enable custom build of Lua - download and unpack Lua sources, specify source directory in `cmake` module arguments. This enables Lua continuation support and error throwing mechanism.
 ### Preparations
 Before using LuaCppB you should include the header `luacppb/LuaCppB.h`:
@@ -210,7 +209,7 @@ env.setExceptionHandler([](std::exception &ex) {
 ```
 
 #### Custom userdata types
-`LuaCppB` supports custom userdata type definitions. Currently this feature is experimental. You should use `CustomUserDataClass` to build userdata metatable and then use method `CustomUserDataClass::create` to instantiate `CustomUserData` objects. These objects can be implicitly converted into appropriate pointers and references, as well as passed to Lua. Example:
+`LuaCppB` supports custom userdata type definitions. You should use `CustomUserDataClass` to build userdata metatable and then use method `CustomUserDataClass::create` to instantiate `CustomUserData` objects. These objects can be implicitly converted into appropriate pointers and references, as well as passed to Lua. Example:
 ```C++
 CustomUserDataClass<SomeType> udClass(env);
 udClass.setDefaultConstructor([](SomeType &obj) {
@@ -225,7 +224,7 @@ udClass.setDefaultConstructor([](SomeType &obj) {
 udClass.bind("__add", [](SomeType &obj, int x) {
   return obj + x;
 });
-// Or using enumetation (currently there are only few constants assigned to metamethods)
+// Or using enumetation
 udClass.bind(LuaMetamethod::GC, [](SomeType &obj) {
   // Finalizer could properly destroy object
   obj.~SomeType();
@@ -242,3 +241,31 @@ env["data"] = ud1;
 env["fn"](ud2);
 ```
 > **WARNING** You are responsible for proper resource initialization and finalizaton. Lua only allocates and deallocates memory. For example, you should use placement new & delete operators. It's recommended to attach appropriate default constructors to your types and implement `__gc` methods.
+> 
+Metamethod constants (part of `LuaMetamethod` enumeration):
+* `GC`
+* `Index`
+* `NewIndex`
+* `Call`
+* `ToString`
+* `Length`
+* `Pairs`
+* `IPairs`
+* `UnaryMinus`
+* `Add`
+* `Subtract`
+* `Multiply`
+* `Divide`
+* `FloorDivide`
+* `Modulo`
+* `Power`
+* `Concat`
+* `BitwiseAnd`
+* `BitwiseOr`
+* `BitwiseXor`
+* `BitwiseNot`
+* `ShiftLeft`
+* `ShiftRight`
+* `Equals`
+* `LessThan`
+* `LessOrEqual`

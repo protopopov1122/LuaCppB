@@ -25,7 +25,7 @@ Example preparation is in progress. You can also consult the unit tests. See `*.
 ### Building
 
 Project is meant to be used as a static library (that is - it's not header-only and requires intergration into build system).
-Currently CMake and Meson are supported (CMake is preferrable, currently Meson build file is quite messy).
+Currently CMake and Meson are supported.
 CMake package is prepared in `cmake` directory, refer to `CMakeLists.txt` (which builds unit tests) as an usage example. \
 It's strongly recommended to obtain Lua source code and cofigure build system to use it. It will be built along with other project code in C++ mode, this allows safe usage of coroutines and error mechanism (in C mode Lua uses longjmp which violates RAII).
 Otherwise corresponding features of the library will be disabled.

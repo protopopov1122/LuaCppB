@@ -1,2 +1,3 @@
 
-option('system_lua', type: 'boolean', value: 'false')
+option('system_lua', type: 'boolean', value: 'true')
+option('custom_lua_version', type: 'string', value: '')

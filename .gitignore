@@ -34,4 +34,5 @@
 # Project-related
 bin
 tests/unit/catch.hpp
-lua-source
+lua-source/*
+!lua-source/meson.build

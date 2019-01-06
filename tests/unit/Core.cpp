@@ -262,3 +262,42 @@ TEST_CASE("Exception") {
     REQUIRE(ex.getErrorCode() == LuaCppBErrorCode::StackOverflow);
   }
 }
+
+TEST_CASE("Garbage collector") {
+  SECTION("Empty GC") {
+    Internal::LuaGC gc;
+    REQUIRE_FALSE(gc.isValid());
+    REQUIRE_FALSE(gc.isRunning());
+    REQUIRE(gc.count() == 0);
+    REQUIRE(gc.countBytes() == 0);
+    REQUIRE_NOTHROW(gc.stop());
+    REQUIRE_FALSE(gc.isRunning());
+    REQUIRE_NOTHROW(gc.restart());
+    REQUIRE_FALSE(gc.isRunning());
+    REQUIRE_NOTHROW(gc.collect());
+    REQUIRE_FALSE(gc.step(0));
+    REQUIRE_FALSE(gc.step(100));
+    REQUIRE(gc.setPause(100) == 0);
+    REQUIRE(gc.setPause(0) == 0);
+    REQUIRE(gc.setStepMultiplier(100) == 0);
+    REQUIRE(gc.setStepMultiplier(0) == 0);
+  }
+  SECTION("Valid GC") {
+    LuaEnvironment env;
+    Internal::LuaGC gc(env.getState());
+    REQUIRE(gc.isValid());
+    REQUIRE(gc.isRunning());
+    REQUIRE_NOTHROW(gc.stop());
+    REQUIRE_FALSE(gc.isRunning());
+    REQUIRE_NOTHROW(gc.restart());
+    REQUIRE(gc.isRunning());
+    REQUIRE(gc.step(0));
+
+    int pause = gc.setPause(100);
+    REQUIRE(gc.setPause(pause) == 100);
+    REQUIRE(gc.setPause(pause) == pause);
+    int step = gc.setStepMultiplier(100);
+    REQUIRE(gc.setStepMultiplier(step) == 100);
+    REQUIRE(gc.setStepMultiplier(step) == step);
+  }
+}

@@ -23,5 +23,6 @@
 #include "luacppb/Core/Throw.h"
 #include "luacppb/Core/StackGuard.h"
 #include "luacppb/Core/Stack.h"
+#include "luacppb/Core/GC.h"
 
 #endif

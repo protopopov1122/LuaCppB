@@ -4,6 +4,18 @@
 
 namespace LuaCppB::Internal {
 
+  void LuaRegistryHandle::push(lua_State *state) const {
+    Internal::LuaStack stack(state);
+    int ref = -1;
+    this->get([&](lua_State *handleState) {
+      Internal::LuaStack handleStack(handleState);
+      handleStack.copy(-1);
+      ref = handleStack.ref();
+    });
+    stack.getIndex<true>(LUA_REGISTRYINDEX, ref);
+    stack.unref(ref);
+  }
+
   LuaUniqueRegistryHandle::LuaUniqueRegistryHandle()
     : state(nullptr), ref(0) {}
 

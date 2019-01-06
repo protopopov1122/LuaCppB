@@ -55,13 +55,13 @@ TEST_CASE("Custom userdata") {
     return arr.length + num;
   });
 
-  auto filledArray = arrayUD.create(env.getState(), [](IntegerArray &arr) {
+  auto filledArray = arrayUD.create(env, [](IntegerArray &arr) {
     new(&arr) IntegerArray(100);
     for (std::size_t i = 0; i < arr.length; i++) {
       arr.array[i] = i;
     }
   });
-  auto emptyArray = arrayUD.create(env.getState());
+  auto emptyArray = arrayUD.create(env);
 
   IntegerArray *array = filledArray;
   IntegerArray &array2 = emptyArray;

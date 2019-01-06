@@ -13,6 +13,7 @@ namespace LuaCppB::Internal {
     virtual bool hasValue() const = 0;
     virtual bool get(std::function<void (lua_State *)>) const = 0;
     virtual bool set(std::function<void (lua_State *)>) = 0;
+    void push(lua_State *) const;
   };
 
   class LuaUniqueRegistryHandle : public LuaRegistryHandle {

@@ -138,15 +138,7 @@ namespace LuaCppB {
     }
 
 	  void push(lua_State *state) const override {
-      Internal::LuaStack stack(state);
-      int ref = -1;
-      this->handle.get([&](lua_State *handleState) {
-        Internal::LuaStack handleStack(handleState);
-        handleStack.copy(-1);
-        ref = handleStack.ref();
-      });
-      stack.getIndex<true>(LUA_REGISTRYINDEX, ref);
-      stack.unref(ref);
+      this->handle.push(state);
     }
    private:
     T *pointer;
@@ -165,7 +157,9 @@ namespace LuaCppB {
       this->constructor = fn;
     }
 
-    CustomUserData<T> create(lua_State *state, const std::function<void(T &)> &&constructor) const {
+    template <typename S>
+    CustomUserData<T> create(S &env, const std::function<void(T &)> &&constructor) const {
+      lua_State *state = env.getState();
       Internal::LuaStack stack(state);
       T *value = stack.push<T>();
       if (stack.metatable(this->className)) {
@@ -181,8 +175,9 @@ namespace LuaCppB {
       return CustomUserData<T>(value, handle);
     }
 
-    CustomUserData<T> create(lua_State *state) const {
-      return this->create(state, std::move(this->constructor));
+    template <typename S>
+    CustomUserData<T> create(S &env) const {
+      return this->create(env, std::function(this->constructor));
     }
 
     template <typename F>

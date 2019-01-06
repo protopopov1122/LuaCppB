@@ -80,15 +80,7 @@ namespace LuaCppB {
     : handle(base.handle) {}
 
   void LuaReferencedValue::push(lua_State *state) const {
-    Internal::LuaStack stack(state);
-    int ref = -1;
-    handle.get([&](lua_State *handleState) {
-      Internal::LuaStack handleStack(handleState);
-      handleStack.copy(-1);
-      ref = handleStack.ref();
-    });
-    stack.getIndex<true>(LUA_REGISTRYINDEX, ref);
-    stack.unref(ref);
+    this->handle.push(state);
   }
 
   bool LuaReferencedValue::hasValue() const {

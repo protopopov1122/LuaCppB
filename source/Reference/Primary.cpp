@@ -4,6 +4,9 @@
 
 namespace LuaCppB::Internal {
 
+  LuaGlobalVariable::LuaGlobalVariable(LuaState &state, const std::string &name)
+    : LuaReference(state), state(state.getState()), name(name) {}
+
   bool LuaGlobalVariable::putOnTop(std::function<void (lua_State *)> callback) {
     Internal::LuaStackGuard guard(this->state);
     lua_getglobal(this->state, this->name.c_str());
@@ -22,6 +25,9 @@ namespace LuaCppB::Internal {
     lua_setglobal(this->state, this->name.c_str());
     return true;
   }
+
+  LuaStackReference::LuaStackReference(LuaState &state, int index)
+    : LuaReference(state), state(state.getState()), index(index) {}
 
   bool LuaStackReference::putOnTop(std::function<void (lua_State *)> callback) {
     Internal::LuaStack stack(this->state);

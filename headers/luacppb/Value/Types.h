@@ -7,7 +7,6 @@
 #include "luacppb/Core/Runtime.h"
 #include "luacppb/Core/Status.h"
 #include <string>
-#include <sstream>
 
 namespace LuaCppB {
 
@@ -21,9 +20,7 @@ namespace LuaCppB {
 	 public:
 	 	LuaInteger();
 		LuaInteger(lua_Integer);
-		operator lua_Integer() const {
-			return this->integer;
-		}
+		operator lua_Integer() const;
 		void push(lua_State *) const override;
 		static LuaInteger get(lua_State *, int = -1);
 	 private:
@@ -34,9 +31,7 @@ namespace LuaCppB {
 	 public:
 	 	LuaNumber();
 	 	LuaNumber(lua_Number);
-		operator lua_Number() const {
-			return this->number;
-		}
+		operator lua_Number() const;
 		void push(lua_State *) const override;
 		static LuaNumber get(lua_State *, int = -1);
 	 private:
@@ -46,9 +41,7 @@ namespace LuaCppB {
 	class LuaBoolean : public LuaValueBase {
 	 public:
 		LuaBoolean(bool);
-		operator bool() const {
-			return this->boolean;
-		}
+		operator bool() const;
 		void push(lua_State *) const override;
 		static LuaBoolean get(lua_State *, int = -1);
 	 private:
@@ -59,9 +52,7 @@ namespace LuaCppB {
 	 public:
 		LuaString(const std::string &);
 		LuaString(const char *);
-	 	operator const std::string &() const {
-			return this->string;
-		}
+	 	operator const std::string &() const;
 		void push(lua_State *) const override;
 		static LuaString get(lua_State *, int = -1);
 	 private:
@@ -83,14 +74,7 @@ namespace LuaCppB {
 
 	protected:
 		template <typename T>
-		T toPointer() const {
-			T res = nullptr;
-			handle.get([&](lua_State *state) {
-				const void *ptr = lua_topointer(state, -1);;
-				res = reinterpret_cast<T>(const_cast<void *>(ptr));
-			});
-			return res;
-		}
+		T toPointer() const;
 
 	 	Internal::LuaSharedRegistryHandle handle;
 	};
@@ -110,42 +94,13 @@ namespace LuaCppB {
 		static LuaUserData create(lua_State *, std::size_t);
 
 		template <typename T>
-		static std::string getCustomName(uint64_t idx) {
-      std::stringstream ss;
-      ss << "$custom_udata_" << typeid(T).name() << '$' << idx;
-      return ss.str();
-		}
+		static std::string getCustomName(uint64_t);
 
 		template <typename T>
-		T *getCustomData() const {
-			T *pointer = nullptr;
-			this->handle.get([&](lua_State *state) {
-				if (!lua_isuserdata(state, -1)) {
-					return;
-				}
-				
-				lua_getmetatable(state, -1);
-				if (lua_istable(state, -1)) {
-					lua_getfield(state, -1, "__name");
-					std::string className(lua_tostring(state, -1));
-					lua_pop(state, 1);
-
-					std::stringstream ss;
-					ss << "$custom_udata_" << typeid(T).name();
-					std::string userClassName(ss.str());
-					if (className.compare(0, userClassName.size(), userClassName) == 0) {
-						pointer = static_cast<T *>(lua_touserdata(state, -2));
-					}
-				}
-				lua_pop(state, 1);
-			});
-			return pointer;
-		}
+		T *getCustomData() const;
 
 		template <typename T>
-		T toPointer() const {
-			return this->LuaReferencedValue::toPointer<T>();
-		}
+		T toPointer() const;
 	};
 
 	class LuaThread : public LuaReferencedValue {
@@ -167,5 +122,7 @@ namespace LuaCppB {
 		static LuaFunction create(lua_State *, LuaCFunction, int = 0);
 	};
 }
+
+#include "luacppb/Value/Impl/Types.h"
 
 #endif 

@@ -14,8 +14,8 @@ namespace LuaCppB {
 
 	class LuaReferenceHandle {
 	 public:
-	 	LuaReferenceHandle() : state(nullptr), ref(nullptr) {}
-		LuaReferenceHandle(lua_State *state, std::unique_ptr<Internal::LuaReference> ref) : state(state), ref(std::move(ref)) {}
+	 	LuaReferenceHandle();
+		LuaReferenceHandle(lua_State *, std::unique_ptr<Internal::LuaReference>);
 		LuaReferenceHandle(const LuaReferenceHandle &);
 		LuaReferenceHandle(LuaReferenceHandle &&);
 
@@ -30,77 +30,28 @@ namespace LuaCppB {
 		LuaValue operator*();
 
 		template <typename T>
-		typename std::enable_if<!std::is_same<T, LuaReferenceHandle>::value, LuaReferenceHandle>::type &operator=(T &value) {
-			try {
-				if (this->ref) {
-					this->ref->set<T>(value);
-				}
-			} catch (std::exception &ex) {
-				this->getRuntime().getExceptionHandler()(ex);
-			}
-			return *this;
-		}
+		typename std::enable_if<!std::is_same<T, LuaReferenceHandle>::value, LuaReferenceHandle>::type &operator=(T &);
 
 		template <typename T>
-		typename std::enable_if<!std::is_same<T, LuaReferenceHandle>::value, LuaReferenceHandle>::type &operator=(T &&value) {
-			try {
-				if (this->ref) {
-					this->ref->set<T>(value);
-				}
-			} catch (std::exception &ex) {
-				this->getRuntime().getExceptionHandler()(ex);
-			}
-			return *this;
-		}
+		typename std::enable_if<!std::is_same<T, LuaReferenceHandle>::value, LuaReferenceHandle>::type &operator=(T &&);
 
 		template <typename T, typename Type = typename std::enable_if<!std::is_class<T>::value || Internal::LuaReferenceGetSpecialCase<T>::value, T>::type>
-		operator T () {
-			try {
-				return this->ref->get<T>();
-			} catch (std::exception &ex) {
-				if constexpr (std::is_default_constructible<T>::value) {
-					this->getRuntime().getExceptionHandler()(ex);
-					return T{};
-				} else {
-					throw;
-				}
-			}
-		}
+		operator T ();
 
 		template <typename T, typename Type = typename std::enable_if<std::is_class<T>::value && !Internal::LuaReferenceGetSpecialCase<T>::value, T>::type>
-		operator T& () {
-			return this->ref->get<T &>();
-		}
+		operator T& ();
 
 		template <typename T>
-		typename std::enable_if<!Internal::is_instantiation<std::function, T>::value, T>::type get() {
-			try {
-				return this->ref->get<T>();
-			} catch (std::exception &ex) {
-				if constexpr (std::is_default_constructible<T>::value) {
-					this->getRuntime().getExceptionHandler()(ex);
-					return T{};
-				} else {
-					throw;
-				}
-			}
-		}
+		typename std::enable_if<!Internal::is_instantiation<std::function, T>::value, T>::type get();
 
 		template <typename ... A>
-		Internal::LuaFunctionCallResult operator()(A &&... args) const {
-			try {
-				if (this->ref) {
-					return Internal::LuaFunctionInvoke::invoke<Internal::LuaReference, A...>(*this->ref, this->getRuntime(), std::forward<A>(args)...);
-				}
-			} catch (std::exception &ex) {
-				this->getRuntime().getExceptionHandler()(ex);
-			}
-			return Internal::LuaFunctionCallResult(LuaError(LuaStatusCode::RuntimeError));
-		}
+		Internal::LuaFunctionCallResult operator()(A &&...) const;
 	 private:
 	 	lua_State *state;
 		std::unique_ptr<Internal::LuaReference> ref;
 	};
 }
+
+#include "luacppb/Reference/Impl/Handle.h"
 
 #endif

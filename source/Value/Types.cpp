@@ -20,6 +20,10 @@ namespace LuaCppB {
 
   LuaInteger::LuaInteger(lua_Integer i) : integer(i) {}
 
+  LuaInteger::operator lua_Integer() const {
+    return this->integer;
+  }
+
   void LuaInteger::push(lua_State *state) const {
     Internal::LuaStack stack(state);
     stack.push(this->integer);
@@ -33,6 +37,10 @@ namespace LuaCppB {
   LuaNumber::LuaNumber() : number(0) {}
 
   LuaNumber::LuaNumber(lua_Number n) : number(n) {}
+
+  LuaNumber::operator lua_Number() const {
+    return this->number;
+  }
   
   void LuaNumber::push(lua_State *state) const {
     Internal::LuaStack stack(state);
@@ -45,6 +53,10 @@ namespace LuaCppB {
   }
 
   LuaBoolean::LuaBoolean(bool b) : boolean(b) {}
+
+  LuaBoolean::operator bool() const {
+    return this->boolean;
+  }
 
   void LuaBoolean::push(lua_State *state) const {
     Internal::LuaStack stack(state);
@@ -59,6 +71,10 @@ namespace LuaCppB {
   LuaString::LuaString(const std::string &str) : string(str) {}
 
   LuaString::LuaString(const char *str) : string(str) {}
+  
+  LuaString::operator const std::string &() const {
+    return this->string;
+  }
 
   void LuaString::push(lua_State *state) const {
     Internal::LuaStack stack(state);

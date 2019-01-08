@@ -37,14 +37,10 @@ namespace LuaCppB::Internal {
     void getField(int, const std::string &);
 
     template <bool R = false>
-    void setIndex(int index, int idx) {
-      lua_seti(this->state, index, idx);
-    }
+    void setIndex(int, int);
 
     template <bool R = false>
-    void getIndex(int index, int idx) {
-      lua_geti(this->state, index, idx);
-    }
+    void getIndex(int, int);
 
     int ref();
     void unref(int);
@@ -54,77 +50,36 @@ namespace LuaCppB::Internal {
     void setMetatable(const std::string &);
 
     template <typename T>
-    T toPointer(int index = -1) {
-      return reinterpret_cast<T>(const_cast<void *>(lua_topointer(this->state, index)));
-    }
+    T toPointer(int = -1);
 
     template <typename T>
-    T toUserData(int index = -1) {
-      return reinterpret_cast<T>(lua_touserdata(this->state, index));
-    }
+    T toUserData(int = -1);
 
     template <typename T>
-    typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, bool>::value>::type push(T value) {
-      lua_pushinteger(this->state, static_cast<lua_Integer>(value));
-    }
+    typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, bool>::value>::type push(T);
 
     template <typename T>
-    typename std::enable_if<std::is_floating_point<T>::value>::type push(T value) {
-      lua_pushnumber(this->state, static_cast<lua_Number>(value));
-    }
+    typename std::enable_if<std::is_floating_point<T>::value>::type push(T);
 
     template <typename T>
-    void push(T *pointer) {
-      lua_pushlightuserdata(this->state, reinterpret_cast<void *>(pointer));
-    }
+    void push(T *);
 
     template <typename T>
-    T *push() {
-      return reinterpret_cast<T *>(lua_newuserdata(state, sizeof(T)));
-    }
+    T *push();
 
     template <typename T>
-    T *checkUserData(int index, const std::string &name) {
-      return reinterpret_cast<T *>(const_cast<void *>(luaL_checkudata(this->state, index, name.c_str())));
-    }
+    T *checkUserData(int, const std::string &);
 
     template <LuaType T>
-    bool is(int index = -1) {
-      return false;
-    }
+    bool is(int = -1);
     
     bool isInteger(int = -1);
     bool isCFunction(int = -1);
    private:
     lua_State *state;
   };
-
-  
-  template <>
-  void LuaStack::setIndex<true>(int, int);
-  template <>
-  void LuaStack::getIndex<true>(int, int);
-  
-  template <>
-  bool LuaStack::is<LuaType::None>(int);
-  template <>
-  bool LuaStack::is<LuaType::Nil>(int);
-  template <>
-  bool LuaStack::is<LuaType::Number>(int);
-  template <>
-  bool LuaStack::is<LuaType::Boolean>(int);
-  template <>
-  bool LuaStack::is<LuaType::String>(int);
-  template <>
-  bool LuaStack::is<LuaType::Function>(int);
-  template <>
-  bool LuaStack::is<LuaType::Table>(int);
-  template <>
-  bool LuaStack::is<LuaType::LightUserData>(int);
-  template <>
-  bool LuaStack::is<LuaType::UserData>(int);
-  template <>
-  bool LuaStack::is<LuaType::Thread>(int);
 }
+
+#include "luacppb/Core/Impl/Stack.h"
 
 #endif

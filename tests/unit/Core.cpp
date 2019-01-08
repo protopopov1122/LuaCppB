@@ -291,7 +291,7 @@ TEST_CASE("Garbage collector") {
     REQUIRE_FALSE(gc.isRunning());
     REQUIRE_NOTHROW(gc.restart());
     REQUIRE(gc.isRunning());
-    REQUIRE(gc.step(0));
+    REQUIRE_NOTHROW(gc.step(0));
 
     int pause = gc.setPause(100);
     REQUIRE(gc.setPause(pause) == 100);

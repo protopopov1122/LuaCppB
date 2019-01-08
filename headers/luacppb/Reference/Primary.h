@@ -9,8 +9,7 @@ namespace LuaCppB::Internal {
 
 	class LuaGlobalVariable : public LuaReference {
 	 public:
-		LuaGlobalVariable(LuaState &state, const std::string &name)
-			: LuaReference(state), state(state.getState()), name(name) {}
+		LuaGlobalVariable(LuaState &, const std::string &);
 	
 		bool putOnTop(std::function<void (lua_State *)>) override;
 		bool setValue(std::function<void (lua_State *)>) override;
@@ -21,7 +20,7 @@ namespace LuaCppB::Internal {
 
 	class LuaStackReference : public LuaReference {
 	 public:
-		LuaStackReference(LuaState &state, int index) : LuaReference(state), state(state.getState()), index(index) {}
+		LuaStackReference(LuaState &, int);
 
 		bool putOnTop(std::function<void (lua_State *)>) override;
 		bool setValue(std::function<void (lua_State *)> gen) override;

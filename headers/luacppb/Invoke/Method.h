@@ -10,16 +10,11 @@ namespace LuaCppB::Internal {
     using M = R (C::*)(A...);
     using Mc = R (C::*)(A...) const;
    public:
-    NativeMethodWrapper(M meth) : method(meth) {}
-    NativeMethodWrapper(Mc meth) : method(reinterpret_cast<M>(meth)) {}
+    NativeMethodWrapper(M);
+    NativeMethodWrapper(Mc);
 
-    M get() const {
-      return this->method;
-    }
-
-    operator M() const {
-      return this->method;
-    }
+    M get() const;
+    operator M() const;
    private:
     M method;
   };
@@ -29,5 +24,7 @@ namespace LuaCppB::Internal {
     M method;
   };
 }
+
+#include "luacppb/Invoke/Impl/Method.h"
 
 #endif

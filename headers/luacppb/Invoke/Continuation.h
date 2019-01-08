@@ -20,54 +20,28 @@ namespace LuaCppB {
 
     template <std::size_t I>
     struct ContinuationCallbackArguments_Impl<I> {
-      static std::tuple<> value(lua_State *state, LuaCppRuntime &runtime, std::vector<LuaValue> &result) {
-        return std::make_tuple();
-      }
+      static std::tuple<> value(lua_State *, LuaCppRuntime &, std::vector<LuaValue> &);
     };
 
 
 
     template <std::size_t I, typename T, typename ... Ts>
     struct ContinuationCallbackArguments_Impl<I, T, Ts...> {
-      static std::tuple<T, Ts...> value(lua_State *state, LuaCppRuntime &runtime, std::vector<LuaValue> &result) {
-        if constexpr (!std::is_same<T, LuaState>::value) {
-          return std::tuple_cat(std::forward_as_tuple(result.at(I).get<T>()), ContinuationCallbackArguments_Impl<I + 1, Ts...>::value(state, runtime, result));
-        } else {
-          LuaState newState(state, runtime.getRuntimeInfo());
-          return std::tuple_cat(std::forward_as_tuple(newState), ContinuationCallbackArguments_Impl<I, Ts...>::value(state, runtime, result));
-        }
-      };
+      static std::tuple<T, Ts...> value(lua_State *, LuaCppRuntime &, std::vector<LuaValue> &);
     };
     
     template <typename ... A>
     struct ContinuationCallbackArguments {
-      static std::tuple<A...> value(lua_State *state, LuaCppRuntime &runtime, std::vector<LuaValue> &result) {
-        return ContinuationCallbackArguments_Impl<0, A...>::value(state, runtime, result);
-      }
+      static std::tuple<A...> value(lua_State *, LuaCppRuntime &, std::vector<LuaValue> &);
     };
 
     template <typename F, typename ... A>
     class LuaContinuationHandler : public LuaFunctionContinuation {
       using R = decltype(std::declval<F>()(std::declval<A>()...));
     public:
-      LuaContinuationHandler(F callback, std::function<void(LuaError)> errorHandler)
-        : callback(callback), errorHandler(errorHandler) {}
+      LuaContinuationHandler(F, std::function<void(LuaError)>);
       
-      int call(lua_State *state, LuaCppRuntime &runtime, LuaError error, std::vector<LuaValue> &result) override {
-        std::tuple<A...> args = ContinuationCallbackArguments<A...>::value(state, runtime, result);
-        Internal::LuaStack stack(state);
-        if (!error.hasError()) {
-          if constexpr (std::is_void<R>::value) {
-              std::apply(this->callback, args);
-              return 0;
-          } else {
-            return Internal::NativeFunctionResult<Internal::LuaNativeValue, R>::set(state, runtime, std::apply(this->callback, args));
-          }
-        } else {
-          this->errorHandler(error);
-        }
-        return 0;
-      }
+      int call(lua_State *, LuaCppRuntime &, LuaError, std::vector<LuaValue> &) override;
     private:
       F callback;
       std::function<void(LuaError)> errorHandler;
@@ -79,43 +53,31 @@ namespace LuaCppB {
     template <typename C, typename R, typename ... A>
     struct LuaContinuationHandlerType<R(C::*)(A...) const> {
       template <typename F>
-      static auto newHandler(F callback, std::function<void(LuaError)> errorHandler) {
-        return std::make_unique<Internal::LuaContinuationHandler<F, A...>>(callback, errorHandler);
-      }
+      static std::unique_ptr<Internal::LuaContinuationHandler<F, A...>> newHandler(F, std::function<void(LuaError)>);
     };
 
     template <typename R, typename ... A>
     struct LuaContinuationHandlerType<R(*)(A...)> {
       template <typename F>
-      static auto newHandler(F callback, std::function<void(LuaError)> errorHandler) {
-        return std::make_unique<Internal::LuaContinuationHandler<F, A...>>(callback, errorHandler);
-      }
+      static std::unique_ptr<Internal::LuaContinuationHandler<F, A...>> newHandler(F, std::function<void(LuaError)>);
     };
 
     template <typename R, typename ... A>
     struct LuaContinuationHandlerType<R(A...)> {
       template <typename F>
-      static auto newHandler(F callback, std::function<void(LuaError)> errorHandler) {
-        return std::make_unique<Internal::LuaContinuationHandler<F, A...>>(callback, errorHandler);
-      }
+      static std::unique_ptr<Internal::LuaContinuationHandler<F, A...>> newHandler(F, std::function<void(LuaError)>);
     };
   }
   
   class LuaContinuation {
    public:
-    LuaContinuation(const LuaReferenceHandle &handle, LuaCppRuntime &runtime)
-      : handle(handle), runtime(runtime) {}
+    LuaContinuation(const LuaReferenceHandle &, LuaCppRuntime &);
     
     template <typename F, typename ... A>
-    void call(F callback, std::function<void(LuaError)> errorHandler, A &&... args) {
-      Internal::LuaFunctionInvoke::invokeK<Internal::LuaReference, A...>(handle.getReference(),
-        this->runtime, Internal::LuaContinuationHandlerType<F>::newHandler(callback, errorHandler), std::forward<A>(args)...);
-    }
+    void call(F, std::function<void(LuaError)>, A &&...);
 
     template <typename S, typename F, typename ... A>
-    static void yield(S &env, F callback, std::function<void(LuaError)> errorHandler, A &&... args) {
-      Internal::LuaFunctionInvoke::yieldK<A...>(env.getState(), env, Internal::LuaContinuationHandlerType<F>::newHandler(callback, errorHandler), std::forward<A>(args)...);
-    }
+    static void yield(S &, F, std::function<void(LuaError)>, A &&...);
    private:
 
     LuaReferenceHandle handle;
@@ -124,5 +86,7 @@ namespace LuaCppB {
 }
 
 #endif
+
+#include "luacppb/Invoke/Impl/Continuation.h"
 
 #endif

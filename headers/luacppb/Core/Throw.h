@@ -8,12 +8,11 @@
 namespace LuaCppB {
 
   template <typename S, typename T>
-  void LuaThrow(S &env, T &&value) {
-    Internal::LuaNativeValue::push(env.getState(), env, value);
-    lua_error(env.getState());
-  }
+  void LuaThrow(S &, T &&);
 }
 
 #endif
+
+#include "luacppb/Core/Impl/Throw.h"
 
 #endif

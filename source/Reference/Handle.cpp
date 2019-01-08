@@ -5,6 +5,12 @@
 
 namespace LuaCppB {
 
+  LuaReferenceHandle::LuaReferenceHandle()
+    : state(nullptr), ref(nullptr) {}
+  
+  LuaReferenceHandle::LuaReferenceHandle(lua_State *state, std::unique_ptr<Internal::LuaReference> ref)
+    : state(state), ref(std::move(ref)) {}
+
   LuaReferenceHandle::LuaReferenceHandle(const LuaReferenceHandle &handle) : state(handle.state) {
     handle.getReference().putOnTop([&](lua_State *state) {
       this->ref = std::make_unique<Internal::LuaRegistryReference>(state, handle.getRuntime(), -1);

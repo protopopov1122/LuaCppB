@@ -3,6 +3,9 @@
 
 namespace LuaCppB::Internal {
 
+  LuaTableField::LuaTableField(LuaReferenceHandle ref, LuaCppRuntime &runtime, const std::string &name)
+    : LuaReference(runtime), ref(ref), name(name) {}
+
   bool LuaTableField::putOnTop(std::function<void (lua_State *)> callback) {
     bool result = false;
     this->ref.getReference().putOnTop([&](lua_State *state) {
@@ -37,6 +40,9 @@ namespace LuaCppB::Internal {
     });
     return result;
   }
+
+  LuaArrayField::LuaArrayField(LuaReferenceHandle ref, LuaCppRuntime &runtime, lua_Integer index)
+    : LuaReference(runtime), ref(ref), index(index) {}
 
   bool LuaArrayField::putOnTop(std::function<void (lua_State *)> callback) {
     bool result = false;

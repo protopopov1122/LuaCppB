@@ -13,59 +13,37 @@ namespace LuaCppB::Internal {
 
   class LuaCppContainer {
    public:
-    // Vectors
     template <typename T, class P>
     static typename std::enable_if<is_instantiation<std::vector, T>::value>::type
-      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      LuaCppVector<P>::push(state, runtime, value);
-    }
+      push(lua_State *, LuaCppRuntime &, T &);
 
     template <typename T, class P>
     static typename std::enable_if<std::is_const<T>::value && is_instantiation<std::vector, typename std::remove_const<T>::type>::value>::type
-      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      LuaCppVector<P>::push(state, runtime, value);
-    }
+      push(lua_State *, LuaCppRuntime &, T &);
 
     template <typename T, class P>
     static typename std::enable_if<is_smart_pointer<T>::value && is_instantiation<std::vector, typename T::element_type>::value>::type
-      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      LuaCppVector<P>::push(state, runtime, value);
-    }
-    // Map
+      push(lua_State *, LuaCppRuntime &, T &);
+    
     template <typename T, class P>
     static typename std::enable_if<is_instantiation<std::map, T>::value>::type
-      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      LuaCppMap<P>::push(state, runtime, value);
-    }
+      push(lua_State *, LuaCppRuntime &, T &);
 
     template <typename T, class P>
     static typename std::enable_if<std::is_const<T>::value && is_instantiation<std::map, typename std::remove_const<T>::type>::value>::type
-      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      LuaCppMap<P>::push(state, runtime, value);
-    }
+      push(lua_State *, LuaCppRuntime &, T &);
 
     template <typename T, class P>
     static typename std::enable_if<is_smart_pointer<T>::value && is_instantiation<std::map, typename T::element_type>::value>::type
-      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      LuaCppMap<P>::push(state, runtime, value);
-    }
-    // Pair & tuple
+      push(lua_State *, LuaCppRuntime &, T &);
+    
     template <typename T, class P>
     static typename std::enable_if<LuaCppTuple::is_tuple<T>()>::type
-      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      LuaCppTuple::push<T, P>(state, runtime, value);
-    }
-    // Optional
+      push(lua_State *, LuaCppRuntime &, T &);
+  
     template <typename T, class P>
     static typename std::enable_if<is_instantiation<std::optional, T>::value>::type
-      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      if (value.has_value()) {
-        P::push(state, runtime, value.value());
-      } else {
-        Internal::LuaStack stack(state);
-        stack.push();
-      }
-    }
+      push(lua_State *, LuaCppRuntime &, T &);
 
     template <typename T>
     static constexpr bool is_container() {
@@ -78,5 +56,7 @@ namespace LuaCppB::Internal {
 
   };
 }
+
+#include "luacppb/Container/Impl/Container.h"
 
 #endif

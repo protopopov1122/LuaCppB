@@ -4,6 +4,18 @@
 
 namespace LuaCppB {
 
+  LuaValue::LuaValue() : type(LuaType::Nil) {}
+  LuaValue::LuaValue(LuaInteger i) : type(LuaType::Number), value(i) {}
+  LuaValue::LuaValue(LuaNumber n) : type(LuaType::Number), value(n) {}
+  LuaValue::LuaValue(LuaBoolean b) : type(LuaType::Boolean), value(b) {}
+  LuaValue::LuaValue(const LuaString &s) : type(LuaType::String), value(s) {}
+  LuaValue::LuaValue(LuaFunction f) : type(LuaType::Function), value(f) {}
+  LuaValue::LuaValue(LuaCFunction f) : type(LuaType::Function), value(f) {}
+  LuaValue::LuaValue(LuaTable t) : type(LuaType::Table), value(t) {}
+  LuaValue::LuaValue(void *ptr) : type(LuaType::LightUserData), value(ptr) {}
+  LuaValue::LuaValue(LuaUserData ud) : type(LuaType::UserData), value(ud) {}
+  LuaValue::LuaValue(LuaThread th) : type(LuaType::Thread), value(th) {}
+
   LuaType LuaValue::getType() const noexcept {
     return this->type;
   }

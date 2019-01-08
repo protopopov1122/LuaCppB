@@ -27,74 +27,52 @@ namespace LuaCppB::Internal {
 
   class LuaNativeValue {
    public:
-    // LuaData values
     template <typename T>
     static typename std::enable_if<std::is_base_of<LuaData, T>::value>::type
-      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      value.push(state);
-    }
-    // Trivial values
+      push(lua_State *, LuaCppRuntime &, T &);
+    
     template <typename T>
     static typename std::enable_if<LuaValue::is_constructible<T>()>::type
-      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      LuaValue::create<T>(value).push(state);
-    }
+      push(lua_State *, LuaCppRuntime &, T &);
 
     template <typename T>
     static typename std::enable_if<LuaValue::is_constructible<T>()>::type
-      push(lua_State *state, LuaCppRuntime &runtime, T &&value) {
-      LuaValue::create<T>(value).push(state);
-    }
-    // Enum
+      push(lua_State *, LuaCppRuntime &, T &&);
+    
     template <typename T>
     static typename std::enable_if<std::is_enum<T>::value>::type
-      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      using EnumType = typename std::underlying_type<T>::type;
-      LuaNativeValue::push(state, runtime, static_cast<EnumType>(value));
-    }
-    // Arbitrary objects
+      push(lua_State *, LuaCppRuntime &, T &);
+    
     template <typename T>
     static typename std::enable_if<!LuaNativeValueSpecialCase<T>::value>::type
-      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      Internal::LuaNativeObject::push<T>(state, runtime, value);
-    }
+      push(lua_State *, LuaCppRuntime &, T &);
     
     template <typename T>
     static typename std::enable_if<is_smart_pointer<T>::value && !Internal::LuaCppContainer::is_container<typename T::element_type>()>::type
-      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      Internal::LuaNativeObject::push<T>(state, runtime, value);
-    }
-    // Reference wrapped values
+      push(lua_State *, LuaCppRuntime &, T &);
+    
     template <typename T>
     static typename std::enable_if<is_instantiation<std::reference_wrapper, T>::value>::type
-      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      LuaNativeValue::push<typename T::type>(state, runtime, value.get());
-    }
-    // Containers
+      push(lua_State *, LuaCppRuntime &, T &);
+    
     template <typename T>
     static typename std::enable_if<Internal::LuaCppContainer::is_container<T>()>::type
-      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      Internal::LuaCppContainer::push<T, Internal::LuaNativeValue>(state, runtime, value);
-    }
+      push(lua_State *, LuaCppRuntime &, T &);
 
     template <typename T>
     static typename std::enable_if<is_smart_pointer<T>::value && Internal::LuaCppContainer::is_container<typename T::element_type>()>::type
-      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      Internal::LuaCppContainer::push<T, Internal::LuaNativeValue>(state, runtime, value);
-    }
-    // Callables
+      push(lua_State *, LuaCppRuntime &, T &);
+    
     template <typename T>
     static typename std::enable_if<is_callable<T>::value>::type
-      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      NativeInvocable<Internal::LuaNativeValue>::create(value, runtime).push(state);
-    }
-    // Function call result
+      push(lua_State *, LuaCppRuntime &, T &);
+    
     template <typename T>
     static typename std::enable_if<std::is_same<T, LuaFunctionCallResult>::value>::type
-      push(lua_State *state, LuaCppRuntime &runtime, T &value) {
-      value.push(state);
-    }
+      push(lua_State *, LuaCppRuntime &, T &);
   };
 }
+
+#include "luacppb/Value/Impl/Native.h"
 
 #endif

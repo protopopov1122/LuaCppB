@@ -12,15 +12,12 @@ namespace LuaCppB {
 
     template <typename C>
     struct ObjectBinder_Impl<C> {
-      static void bind(C &obj) {}
+      static void bind(C &obj);
     };
 
     template <typename C, typename N, typename M, typename ... T>
     struct ObjectBinder_Impl<C, N, M, T...> {
-      static void bind(C &obj, N &&name, M &&method, T &&... args) {
-        obj.bind(name, method);
-        ObjectBinder_Impl<C, T...>::bind(obj, std::forward<T>(args)...);
-      }
+      static void bind(C &, N &&, M &&, T &&...);
     };
 
     template <typename C, typename ... T>
@@ -28,54 +25,35 @@ namespace LuaCppB {
 
     template <typename C>
     struct ClassBinder_Impl<C> {
-      static void bind(C &cl) {}
+      static void bind(C &cl);
     };
 
     template <typename C, typename N, typename M, typename ... T>
     struct ClassBinder_Impl<C, N, M, T...> {
-      static void bind(C &cl, N &&name, M &&method, T &&... args) {
-        cl.bind(name, method);
-        ClassBinder_Impl<C, T...>::bind(cl, std::forward<T>(args)...);
-      }
+      static void bind(C &, N &&, M &&, T &&...);
     };
   }
 
   class ObjectBinder {
    public:
     template <typename C, typename ... T>
-    static LuaCppObject<C> bind(C &obj, LuaCppRuntime &runtime, T &&... methods) {
-      LuaCppObject<C> object(obj, runtime);
-      Internal::ObjectBinder_Impl<LuaCppObject<C>, T...>::bind(object, std::forward<T>(methods)...);
-      return object;
-    }
+    static LuaCppObject<C> bind(C &, LuaCppRuntime &, T &&...);
 
     template <typename C, typename ... T>
-    static LuaCppObject<C> bind(C *obj, LuaCppRuntime &runtime, T &&... methods) {
-      LuaCppObject<C> object(obj, runtime);
-      Internal::ObjectBinder_Impl<LuaCppObject<C>, T...>::bind(object, std::forward<T>(methods)...);
-      return object;
-    }
+    static LuaCppObject<C> bind(C *, LuaCppRuntime &, T &&...);
   };
 
   template <typename C, typename P = void>
   class ClassBinder {
    public:
     template <typename ... T>
-    static LuaCppClass<C, P> bind(LuaState &state, T &&... methods) {
-      LuaCppClass<C, P> cl(state);
-      Internal::ClassBinder_Impl<LuaCppClass<C, P>, T...>::bind(cl, std::forward<T>(methods)...);
-      state.getClassRegistry().bind(cl);
-      return cl;
-    }
+    static LuaCppClass<C, P> bind(LuaState &, T &&...);
 
     template <typename ... T>
-    static LuaCppClass<C, P> bind(const std::string &name, LuaState &state, T &&... methods) {
-      LuaCppClass<C, P> cl(name, state);
-      Internal::ClassBinder_Impl<LuaCppClass<C, P>, T...>::bind(cl, std::forward<T>(methods)...);
-      state.getClassRegistry().bind(cl);
-      return cl;
-    }
+    static LuaCppClass<C, P> bind(const std::string &, LuaState &, T &&...);
   };
 }
+
+#include "luacppb/Object/Impl/Bind.h"
 
 #endif

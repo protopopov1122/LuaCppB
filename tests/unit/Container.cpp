@@ -4,7 +4,8 @@
 using namespace LuaCppB;
 
 void test_basic_operations(LuaEnvironment &env) {
-  const std::string &CODE = "sum = 0\n"
+  const std::string &CODE = "vec[1] = nil\n"
+                            "sum = 0\n"
                             "for i = 1, #vec do\n"
                             "    sum = sum + vec[i]\n"
                             "end\n"
@@ -28,17 +29,17 @@ void test_basic_operations(LuaEnvironment &env) {
 TEST_CASE("Vector") {
   LuaEnvironment env;
   SECTION("Basic vectors") {
-    std::vector<int> vec = {1, 2, 3, 4};
+    std::vector<int> vec = {1000, 1, 2, 3, 4};
     env["vec"] = vec;
     test_basic_operations(env);
   }
   SECTION("Unique pointer vectors") {
-    std::vector<int> vec = {1, 2, 3, 4};
+    std::vector<int> vec = {1000, 1, 2, 3, 4};
     env["vec"] = std::make_unique<std::vector<int>>(vec);
     test_basic_operations(env);
   }
   SECTION("Unique pointer vectors") {
-    std::vector<int> vec = {1, 2, 3, 4};
+    std::vector<int> vec = {1000, 1, 2, 3, 4};
     env["vec"] = std::make_shared<std::vector<int>>(vec);
     test_basic_operations(env);
   }
@@ -114,6 +115,7 @@ TEST_CASE("Tuple") {
 
 void test_map(LuaEnvironment &env) {
   const std::string &CODE = "map[3] = map[1] + map[2]\n"
+                            "map[10] = nil\n"
                             "sz = #map\n"
                             "psum = 0\n"
                             "for k, v in pairs(map) do\n"
@@ -135,7 +137,8 @@ TEST_CASE("Map") {
   LuaEnvironment env;
   std::map<int, int> map = {
     { 1, 10 },
-    { 2, 20 }
+    { 2, 20 },
+    { 10, 100 }
   };
   SECTION("By reference") {
     env["map"] = map;
@@ -155,10 +158,10 @@ TEST_CASE("Map") {
     const auto &cMap = map;
     env["map"] = cMap;
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-    REQUIRE(env["sz"].get<int>() == 2);
+    REQUIRE(env["sz"].get<int>() == 3);
     int psum = env["psum"];
     int isum = env["isum"];
-    REQUIRE(psum == 50);
+    REQUIRE(psum == 1050);
     REQUIRE(isum == 50);
   }
   SECTION("Unique pointer") {

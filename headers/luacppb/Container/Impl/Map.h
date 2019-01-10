@@ -95,10 +95,14 @@ namespace LuaCppB::Internal {
     using Handle = LuaCppObjectWrapper<M>;
     Handle *handle = stack.toPointer<Handle *>(1);
     K key = stack.get(2).value_or(LuaValue()).get<K>();
-    V value = stack.get(3).value_or(LuaValue()).get<V>();
     M *map = handle->get();
-    if (map) {
-      (*map)[key] = value;
+    if (!stack.is<LuaType::Nil>(3)) {
+      V value = stack.get(3).value_or(LuaValue()).get<V>();
+      if (map) {
+        (*map)[key] = value;
+      }
+    } else if (map) {
+      map->erase(map->find(key));
     }
     return 0;
   }

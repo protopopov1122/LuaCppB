@@ -17,14 +17,18 @@ namespace LuaCppB::Internal {
     using Handle = LuaCppObjectWrapper<V>;
     Handle *handle = stack.toPointer<Handle *>(1);
     std::size_t index = stack.toInteger(2) - 1;
-    T value = stack.get(3).value_or(LuaValue()).get<T>();
     V *vec = handle->get();
-    if (vec) {
-      if (index < vec->size()) {
-        (*vec)[index] = value;
-      } else if (index == vec->size()) {
-        vec->push_back(value);
+    if (!stack.is<LuaType::Nil>()) {
+      T value = stack.get(3).value_or(LuaValue()).get<T>();
+      if (vec) {
+        if (index < vec->size()) {
+          (*vec)[index] = value;
+        } else if (index == vec->size()) {
+          vec->push_back(value);
+        }
       }
+    } else if (vec && index < vec->size()) {
+      vec->erase(vec->begin() + index);
     }
     return 0;
   }

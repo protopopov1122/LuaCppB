@@ -40,6 +40,24 @@ namespace LuaCppB::Internal {
     LuaCppContainer::push(lua_State *state, LuaCppRuntime &runtime, T &value) {
     LuaCppMap<P>::push(state, runtime, value);
   }
+
+  template <typename T, class P>
+  typename std::enable_if<is_instantiation<std::set, T>::value>::type
+    LuaCppContainer::push(lua_State *state, LuaCppRuntime &runtime, T &value) {
+    LuaCppSet<P>::push(state, runtime, value);
+  }
+
+  template <typename T, class P>
+  typename std::enable_if<std::is_const<T>::value && is_instantiation<std::set, typename std::remove_const<T>::type>::value>::type
+    LuaCppContainer::push(lua_State *state, LuaCppRuntime &runtime, T &value) {
+    LuaCppSet<P>::push(state, runtime, value);
+  }
+
+  template <typename T, class P>
+  typename std::enable_if<is_smart_pointer<T>::value && is_instantiation<std::set, typename T::element_type>::value>::type
+    LuaCppContainer::push(lua_State *state, LuaCppRuntime &runtime, T &value) {
+    LuaCppSet<P>::push(state, runtime, value);
+  }
   
   template <typename T, class P>
   typename std::enable_if<LuaCppTuple::is_tuple<T>()>::type

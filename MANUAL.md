@@ -116,7 +116,7 @@ Person &eugene = env["me"]; // Retrieving and object from Lua
 ```
 
 #### Standard library classes
-`LuaCppB` supports following STL containers - `std::vector`, `std::map`, `std::pair` and `std::tuple`. Vectors and maps may be passed by pointer, reference (const and non-const) and using smart pointers. Pairs and tuples are passed only by reference and are simultaneously converted to Lua tables, while vectors and maps are wrapped by `LuaCppB`. On Lua side you can access vector and map content using operator `[]` or functions `pairs` and `ipairs`, as well as modify it (if passed object is not constant). `#` operator is also available. Examples:
+`LuaCppB` supports following STL containers - `std::vector`, `std::map`, `std::set`, `std::pair` and `std::tuple`. Vectors, maps and sets may be passed by reference (const and non-const) or using smart pointers. Pairs and tuples are passed only by reference and are simultaneously converted to Lua tables, while vectors, maps and sets are wrapped by `LuaCppB`. On Lua side you can access those container content using operator `[]` or functions `pairs` and `ipairs`, as well as modify it (if passed object is not constant). `#` operator is also available. Examples:
 ```C++
 std::vector<int> ints = { 1, 2, 3, 4 };
 env["array"] = ints;                            // Passing vector by reference

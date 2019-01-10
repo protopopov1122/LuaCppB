@@ -186,3 +186,56 @@ TEST_CASE("Optional") {
   REQUIRE(env["res"][1].get<bool>());
   REQUIRE(env["res"][2].get<bool>());
 }
+
+
+void test_set(LuaEnvironment &env) {
+  const std::string &CODE = "numbers[10] = true\n"
+                            "numbers[1] = nil\n"
+                            "sz = #numbers\n"
+                            "psum = 0\n"
+                            "for k, v in pairs(numbers) do\n"
+                            "    psum = psum + k\n"
+                            "end\n"
+                            "res = numbers[2] and (numbers[100] or numbers[3])";
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["sz"].get<int>() == 5);
+  int psum = env["psum"].get<int>();
+  bool res = env["res"];
+  REQUIRE(psum == 24);
+  REQUIRE(res);
+}
+
+TEST_CASE("Set") {
+  LuaEnvironment env;
+  std::set<int> numbers = { 1, 2, 3, 4, 5 };
+  SECTION("By reference") {
+    env["numbers"] = numbers;
+    test_set(env);
+    REQUIRE(numbers.count(10) != 0);
+    REQUIRE(numbers.count(1) == 0);
+  }
+  SECTION("By constant reference") {
+  const std::string &CODE = "sz = #numbers\n"
+                            "psum = 0\n"
+                            "for k, v in pairs(numbers) do\n"
+                            "    psum = psum + k\n"
+                            "end\n"
+                            "res = numbers[2] and (numbers[100] or numbers[3])";
+    const auto &cNumbers = numbers;
+    env["numbers"] = cNumbers;
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["sz"].get<int>() == 5);
+    int psum = env["psum"].get<int>();
+    bool res = env["res"];
+    REQUIRE(psum == 15);
+    REQUIRE(res);
+  }
+  SECTION("Unique pointer") {
+    env["numbers"] = std::make_unique<std::set<int>>(numbers);
+    test_set(env);
+  }
+  SECTION("Shared pointer") {
+    env["numbers"] = std::make_shared<std::set<int>>(numbers);
+    test_set(env);
+  }
+}

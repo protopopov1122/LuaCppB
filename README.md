@@ -9,7 +9,7 @@ This repo contains the prototype of Lua-C++ bindings. Currently it has following
 * transparent C++ object passing to/from Lua.
 * custom user data types
 * support of smart pointers.
-* support of some STL types - vectors, maps, pairs, tuples.
+* support of some STL types - vectors, maps, sets, pairs, tuples.
 * support of coroutines.
 * support of std::exception-based exception propagation and handlers.
 * wrappers for Lua stack and garbage collector.

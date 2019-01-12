@@ -103,7 +103,7 @@ namespace LuaCppB {
     return this->handle.hasValue();
   }
 
-  LuaReferenceHandle LuaTable::ref(LuaCppRuntime &runtime) {
+  LuaReferenceHandle LuaReferencedValue::ref(LuaCppRuntime &runtime) {
     LuaReferenceHandle handle;
     this->handle.get([&](lua_State *state) {
       handle = LuaReferenceHandle(state, std::make_unique<Internal::LuaRegistryReference>(state, runtime));
@@ -173,14 +173,6 @@ namespace LuaCppB {
       fn = lua_tocfunction(state, -1);
     });
     return fn;
-  }
-
-  LuaReferenceHandle LuaFunction::ref(LuaCppRuntime &runtime) {
-    LuaReferenceHandle handle;
-    this->handle.get([&](lua_State *state) {
-      handle = LuaReferenceHandle(state, std::make_unique<Internal::LuaRegistryReference>(state, runtime));
-    });
-    return handle;
   }
 
   LuaFunction LuaFunction::get(lua_State *state, int index) {

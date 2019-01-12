@@ -11,7 +11,7 @@
 
 namespace LuaCppB {
 
-  class LuaCoroutine {
+  class LuaCoroutine : public LuaData {
    public:
     LuaCoroutine(lua_State *, int, LuaCppRuntime &);
     LuaCoroutine(LuaThread &, LuaCppRuntime &);
@@ -20,6 +20,8 @@ namespace LuaCppB {
     LuaCoroutine(const LuaCoroutine &);
     LuaCoroutine &operator=(const LuaCoroutine &);
     LuaStatusCode getStatus() const;
+
+    void push(lua_State *) const override;
 
     template <typename ... A>
     Internal::LuaFunctionCallResult operator()(A &&...) const;

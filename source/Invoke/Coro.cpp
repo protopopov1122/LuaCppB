@@ -31,6 +31,10 @@ namespace LuaCppB {
   LuaStatusCode LuaCoroutine::getStatus() const {
     return static_cast<LuaStatusCode>(lua_status(this->thread.toState()));
   }
+
+  void LuaCoroutine::push(lua_State *state) const {
+    thread.push(state);
+  }
 }
 
 #endif

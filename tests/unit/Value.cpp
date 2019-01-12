@@ -247,3 +247,31 @@ TEST_CASE("Value types get method") {
     REQUIRE(LuaFunction::get(state).isCFunction());
   }
 }
+
+TEST_CASE("Value factory") {
+  LuaEnvironment env;
+  SECTION("Table factory") {
+    const std::string &CODE = "res = tbl.hello + tbl.world";
+    auto table = LuaValueFactory::newTable(env);
+    table["hello"] = 123;
+    table["world"] = 321;
+    env["tbl"] = *table;
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["res"].get<int>() == 444);
+  }
+  SECTION("Function factory") {
+    const std::string &CODE = "res = fun(5)";
+    auto fn = LuaValueFactory::newFunction(env, [](int i) { return i * i; });
+    env["fun"] = *fn;
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["res"].get<int>() == 25);
+  }
+  SECTION("Thread factory") {
+    const std::string &CODE = "suc, res = coroutine.resume(coro, 10)";
+    auto fn = LuaValueFactory::newFunction(env, [](int i) { return i * i; });
+    auto coro = LuaValueFactory::newThread(env, fn);
+    env["coro"] = *coro;
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["res"].get<int>() == 100);
+  }
+}

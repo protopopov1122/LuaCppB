@@ -24,5 +24,6 @@
 #include "luacppb/Core/StackGuard.h"
 #include "luacppb/Core/Stack.h"
 #include "luacppb/Core/GC.h"
+#include "luacppb/Value/Factory.h"
 
 #endif

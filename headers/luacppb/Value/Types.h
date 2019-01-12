@@ -71,6 +71,7 @@ namespace LuaCppB {
 		
 		void push(lua_State *) const override;
 		bool hasValue() const;
+		LuaReferenceHandle ref(LuaCppRuntime &);
 
 	protected:
 		template <typename T>
@@ -82,7 +83,6 @@ namespace LuaCppB {
 	class LuaTable : public LuaReferencedValue {
 	 public:
 	 	using LuaReferencedValue::LuaReferencedValue;
-		LuaReferenceHandle ref(LuaCppRuntime &);
 		static LuaTable get(lua_State *, int = -1);
 		static LuaTable create(lua_State *);
 	};
@@ -115,7 +115,6 @@ namespace LuaCppB {
 	class LuaFunction : public LuaReferencedValue {
 	 public:
 		using LuaReferencedValue::LuaReferencedValue;
-		LuaReferenceHandle ref(LuaCppRuntime &);
 		bool isCFunction() const;
 		LuaCFunction toCFunction() const;
 		static LuaFunction get(lua_State *, int = -1);

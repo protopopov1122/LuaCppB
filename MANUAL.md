@@ -45,19 +45,24 @@ auto fn = env[1]; // Referencing the value directly from Lua stack; read-only re
 If the reference is not converted to some C++ types, it will be stored as an instance of `LuaReferenceHandle` class.
 
 #### Lua values
-Most C++ values are implicitly converted to Lua equivalents. However for some complex values you will need wrapper classes:
+Most C++ values are implicitly converted to Lua equivalents. `LuaCppB` includes the factory for some complex values:
 * Tables - creating new table objects are performed with following calls:
   ```C++
-  auto table = LuaTable::create(env.getState());  // Creating new table
+  auto table = LuaValueFactory::newTable(env);  // Creating and referencing a new table
+  table["abc"] = 123;                           // Adding keys and values
   // Then you can assign it to any reference
-  env["table"] = table;
-  // Or create reference to this table
-  auto ref = table.ref(env);
+  // * operator is vital, otherwise only reference itself will be copied
+  env["table"] = *table;
   ```
-* Threads:
+* Functions - creating anonymous function references
   ```C++
-  auto thread = LuaThread::create(env.getState());
-  env["thread"] = thread;
+  auto fn = LuaValueFactory::newFunction(env, [](int i) { return i * i; }); // You can use function pointers as well
+  env["some_func"] = *fn;
+  ```
+* Threads - building Lua coroutines
+  ```C++
+  auto thread = LuaValueFactory::newThread(env, env["some_func"]);    // You can pass any function reference, including the one from previous example
+  env["thread"] = *thread;
   ```
 
 #### Calling C++ from Lua and vice versa
@@ -112,7 +117,7 @@ You can use object references (const or non-const), pointer (const or non-const)
 ```C++
 env["me"] = std::make_unique<Person>("Eugene");
 env["someone"] = &someone;
-Person &eugene = env["me"]; // Retrieving and object from Lua
+Person &eugene = env["me"]; // Retrieving an object from Lua
 ```
 
 #### Standard library classes

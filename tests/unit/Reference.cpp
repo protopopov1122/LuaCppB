@@ -155,3 +155,18 @@ TEST_CASE("Object assignment") {
   REQUIRE_NOTHROW(env["obj2"] = TestClass2());
   REQUIRE(env["obj2"].get<LuaValue>().getType() == LuaType::Nil);
 }
+
+TEST_CASE("Metatable operations") {
+  const std::string &CODE = "res = tbl.a + tbl.b + getmetatable(tbl).__index.b";
+  LuaEnvironment env;
+  auto table = LuaValueFactory::newTable(env);
+  table.setMetatable(*LuaValueFactory::newTable(env));
+  auto metatable = table.getMetatable();
+  auto index = LuaValueFactory::newTable(env);
+  metatable["__index"] = *index;
+  table["a"] = 25;
+  index["b"] = 50;
+  env["tbl"] = *table;
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["res"].get<int>() == 125);
+}

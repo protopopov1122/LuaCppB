@@ -29,6 +29,10 @@ namespace LuaCppB {
 		LuaReferenceHandle &operator=(const LuaReferenceHandle &);
 		LuaValue operator*();
 
+		LuaReferenceHandle getMetatable();
+		void setMetatable(LuaData &);
+		void setMetatable(LuaData &&);
+
 		template <typename T>
 		typename std::enable_if<!std::is_same<T, LuaReferenceHandle>::value, LuaReferenceHandle>::type &operator=(T &);
 

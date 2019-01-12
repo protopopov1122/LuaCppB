@@ -83,4 +83,25 @@ namespace LuaCppB {
     });
     return *this;
   }
+
+  LuaReferenceHandle LuaReferenceHandle::getMetatable() {
+    LuaReferenceHandle handle;
+    this->getReference().putOnTop([&](lua_State *state) {
+      lua_getmetatable(state, -1);
+      handle = LuaReferenceHandle(state, std::make_unique<Internal::LuaRegistryReference>(state, this->getRuntime(), -1));
+      lua_pop(state, 1);
+    });
+    return handle;
+  }
+
+  void LuaReferenceHandle::setMetatable(LuaData &data) {
+    this->getReference().putOnTop([&](lua_State *state) {
+      data.push(state);
+      lua_setmetatable(state, -2);
+    });
+  }
+
+  void LuaReferenceHandle::setMetatable(LuaData &&data) {
+    this->setMetatable(data);
+  }
 }

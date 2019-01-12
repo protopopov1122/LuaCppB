@@ -65,6 +65,15 @@ Most C++ values are implicitly converted to Lua equivalents. `LuaCppB` includes 
   env["thread"] = *thread;
   ```
 
+#### Metatables
+It's possible to assign/retrieve metatable to/from any reference. Consider following example:
+```C++
+  auto sometable = env["table"];
+  auto metatable = LuaValueFactory::newTable(env);
+  sometable.setMetatable(*metatable);                 // Assigning metatable
+  sometable.getMetatable()["a"] = 1;                  // Retrieving metatable
+```
+
 #### Calling C++ from Lua and vice versa
 C++ functions (as well as lambdas and object methods) are treated as the first-class objects. It means, that they can be assigned to any `LuaCppB` reference (except read-only stack references), or passed as an argument while calling Lua function. You can use special `NativeCallable` function (which is strictly necessary while dealing with object methods) or directly pass them to Lua. Examples:
 ```C++

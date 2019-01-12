@@ -57,7 +57,7 @@ namespace LuaCppB {
     }
   }
 
-  template <typename T, typename V = typename std::remove_reference<T>::type>
+  template <typename T, typename V>
   typename std::enable_if<std::is_reference<T>::value && std::is_same<V, const std::string>::value, T>::type
     LuaValue::get(const T &defaultValue) const {
     if (this->type == LuaType::String) {
@@ -193,12 +193,12 @@ namespace LuaCppB {
     return static_cast<T>(this->get<EnumType>());
   }
 
-  template <typename T, typename Type = typename std::enable_if<!std::is_class<T>::value || Internal::LuaValueGetSpecialCase<T>::value, T>::type>
+  template <typename T, typename Type>
   LuaValue::operator T () {
     return this->get<Type>();
   }
 
-  template <typename T, typename Type = typename std::enable_if<std::is_class<T>::value && !Internal::LuaValueGetSpecialCase<T>::value, T>::type>
+  template <typename T, typename Type>
   LuaValue::operator T& () {
     return this->get<Type &>();
   }

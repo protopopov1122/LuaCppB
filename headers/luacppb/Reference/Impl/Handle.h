@@ -30,7 +30,7 @@ namespace LuaCppB {
     return *this;
   }
 
-  template <typename T, typename Type = typename std::enable_if<!std::is_class<T>::value || Internal::LuaReferenceGetSpecialCase<T>::value, T>::type>
+  template <typename T, typename Type>
     LuaReferenceHandle::operator T () {
     try {
       return this->ref->get<T>();
@@ -44,7 +44,7 @@ namespace LuaCppB {
     }
   }
 
-  template <typename T, typename Type = typename std::enable_if<std::is_class<T>::value && !Internal::LuaReferenceGetSpecialCase<T>::value, T>::type>
+  template <typename T, typename Type>
     LuaReferenceHandle::operator T& () {
     return this->ref->get<T &>();
   }

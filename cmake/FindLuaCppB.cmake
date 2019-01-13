@@ -3,6 +3,7 @@
 #	LUACPPB_LUA_SOURCE (path) - Lua source code directory (only if LUACPPB_COMPILE_LUA is defined)
 #	LUACPPB_LUA_HEADERS (path)	- Lua header directory (if LUACPPB_COMPILE_LUA is not defined)
 # LUACPPB_CXX_MODE (on/off) - Lua compiled as C++
+# LUACPPB_FPIC (on/off) - produce position-independent code
 # Results:
 #	LUACPPB_CUSTOM_LUA - custom Lua was build as the static library 'luacppb_lua'
 #	LUACPPB_LUA_HEADERS (path) - Lua header directory (if LUACPPB_COMPILE_LUA)
@@ -15,6 +16,9 @@ if (LUACPPB_COMPILE_LUA)
 	set(LUACPPB_LUA_HEADERS ${LUACPPB_LUA_SOURCE}/src)
 	add_library(luacppb_lua STATIC ${LUA_SRC})
 	target_include_directories(luacppb_lua PUBLIC ${LUACPPB_LUA_HEADERS})
+	if (LUACPPB_FPIC)
+		set_property(TARGET luacppb_lua PROPERTY POSITION_INDEPENDENT_CODE ON)
+	endif (LUACPPB_FPIC)
 	set(LUACPPB_CUSTOM_LUA ON)
 	set(LUACPPB_CXX_MODE ON)
 endif (LUACPPB_COMPILE_LUA)
@@ -30,4 +34,7 @@ target_include_directories(luacppb PUBLIC ${LUACPPB_HEADERS})
 if (LUACPPB_LUA_HEADERS)
 	target_include_directories(luacppb PUBLIC ${LUACPPB_LUA_HEADERS})
 endif (LUACPPB_LUA_HEADERS)
+if (LUACPPB_FPIC)
+	set_property(TARGET luacppb PROPERTY POSITION_INDEPENDENT_CODE ON)
+endif (LUACPPB_FPIC)
 set(LUACPPB ON)

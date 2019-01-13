@@ -7,8 +7,8 @@
 namespace LuaCppB::Internal {
 
   template <typename T, typename P>
-  LuaCppClassObjectBoxer<T, P>::LuaCppClassObjectBoxer(const std::string &className)
-    : className(className) {}
+  LuaCppClassObjectBoxer<T, P>::LuaCppClassObjectBoxer(const std::string &className, std::map<std::string, std::shared_ptr<LuaCppObjectFieldPusher>> &fields)
+    : className(className), fields(fields) {}
 
   template <typename T, typename P>
   void LuaCppClassObjectBoxer<T, P>::wrap(lua_State *state, void *raw_ptr) {
@@ -64,9 +64,16 @@ namespace LuaCppB::Internal {
   }
 
   template <typename T, typename P>
+  void LuaCppClassObjectBoxer<T, P>::fillFields(std::map<std::string, std::shared_ptr<LuaCppObjectFieldPusher>> &fields) {
+    fields.insert(this->fields.begin(), this->fields.end());
+  }
+
+  template <typename T, typename P>
   void LuaCppClassRegistry::bind(LuaCppClass<T, P> &cl) {
     cl.bind(this->state);
-    this->addBoxer<T>(std::make_shared<LuaCppClassObjectBoxer<T, P>>(cl.getClassName()));
+    std::map<std::string, std::shared_ptr<LuaCppObjectFieldPusher>> map;
+    cl.fillFields(map);
+    this->addBoxer<T>(std::make_shared<LuaCppClassObjectBoxer<T, P>>(cl.getClassName(), map));
   }
 }
 

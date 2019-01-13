@@ -9,6 +9,8 @@
 
 namespace LuaCppB::Internal {
 
+  class LuaCppObjectFieldPusher;
+
   class LuaCppObjectBoxer {
   public:
     virtual ~LuaCppObjectBoxer() = default;
@@ -17,6 +19,7 @@ namespace LuaCppB::Internal {
     virtual void wrapUnique(lua_State *, void *) = 0;
     virtual void wrapShared(lua_State *, std::shared_ptr<void>) = 0;
     virtual std::string getClassName() = 0;
+    virtual void fillFields(std::map<std::string, std::shared_ptr<LuaCppObjectFieldPusher>> &) = 0;
   };
 
   class LuaCppObjectBoxerRegistry {
@@ -26,6 +29,9 @@ namespace LuaCppB::Internal {
     
     template <typename T>
     std::string getClassName();
+
+    template <typename T>
+    void fillFields(std::map<std::string, std::shared_ptr<LuaCppObjectFieldPusher>> &);
 
     template <typename T>
     bool canWrap();

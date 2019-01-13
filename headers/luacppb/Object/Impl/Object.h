@@ -63,7 +63,7 @@ namespace LuaCppB {
     
     stack.copy(lua_upvalueindex(1));
     stack.copy(2);
-    lua_rawget(state, -2);
+    lua_gettable(state, -2);
     lua_remove(state, -2);
     
     if (lua_isnoneornil(state, -1)) {

@@ -1,5 +1,4 @@
 #include "luacppb/Object/Field.h"
-#include <iostream>
 
 namespace LuaCppB::Internal {
 

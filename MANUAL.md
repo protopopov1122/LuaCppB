@@ -104,7 +104,8 @@ C++ classes and separate objects can be bound to `LuaCppB` environment. That cre
 env["Person"] = ClassBinder<Person>::bind(env,  // Class is bound to environment and exposed to Lua code at the same time
     "getName", &Person::getName,    // const methods are properly handled
     "setName", &Person::setName,
-    "build", &Person::build         // You can bind static methods
+    "build", &Person::build,        // You can bind static methods
+    "id", &Person::ID,              // Class fields are bound in read-only mode
     "new", &LuaCppConstructor<Person, const std::string &> // And even constructors
 );
 ```

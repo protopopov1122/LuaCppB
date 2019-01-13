@@ -13,15 +13,17 @@ namespace LuaCppB::Internal {
   template <typename T, typename P>
   class LuaCppClassObjectBoxer : public LuaCppObjectBoxer {
    public:
-    LuaCppClassObjectBoxer(const std::string &);
+    LuaCppClassObjectBoxer(const std::string &, std::map<std::string, std::shared_ptr<LuaCppObjectFieldPusher>> &);
 
     void wrap(lua_State *, void *) override;
     void wrap(lua_State *, const void *) override;
     void wrapUnique(lua_State *, void *) override;
     void wrapShared(lua_State *, std::shared_ptr<void>) override;
     std::string getClassName() override;
+    void fillFields(std::map<std::string, std::shared_ptr<LuaCppObjectFieldPusher>> &) override;
    private:
     std::string className;
+    std::map<std::string, std::shared_ptr<LuaCppObjectFieldPusher>> fields;
   };
 
   class LuaCppClassRegistry : public LuaCppObjectBoxerRegistry {

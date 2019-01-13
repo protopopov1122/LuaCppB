@@ -121,11 +121,12 @@ TEST_CASE("Class manual binding") {
                               "x = a:add(5)\n"
                               "a2 = Arith.new()\n"
                               "a2:set(50)\n"
-                              "result = { x, a2:sub(20) }";
+                              "result = { x, a2:sub(20), a.value + a2.value }";
     LuaCppClass<Arith> arith(env);
     arith.bind("add", &Arith::add);
     arith.bind("sub", &Arith::sub);
     arith.bind("set", &Arith::set);
+    arith.bind("value", &Arith::Value);
     arith.bind("build", &LuaCppConstructor<Arith, int>);
     env["Arith"] = arith;
     env.getClassRegistry().bind(arith);
@@ -136,6 +137,7 @@ TEST_CASE("Class manual binding") {
     REQUIRE(env["a"].getType() == LuaType::UserData);
     REQUIRE(env["result"][1].get<int>() == 60);
     REQUIRE(env["result"][2].get<int>() == 30);
+    REQUIRE(env["result"][3].get<int>() == 65);
   }
   SECTION("Unbound class assignment") {
     const std::string &CODE = "res = arith == nil and parith == nil and uarith == nil and sarith == nil";
@@ -152,12 +154,13 @@ TEST_CASE("Class manual binding") {
 TEST_CASE("Inheritance") {
   const std::string &CODE = "narith = NArith.build(100)\n"
                             "narith2 = NArith.new()\n"
-                            "result = { narith:mul(5), arith:add(35), narith2:mul(6) }\n";
+                            "result = { narith:mul(5) + narith.value, arith:add(35), narith2:mul(6) }\n";
   LuaEnvironment env;
   LuaCppClass<Arith> arithCl("Arith", env);
   arithCl.bind("add", &Arith::add);
   arithCl.bind("sub", &Arith::sub);
   arithCl.bind("set", &Arith::set);
+  arithCl.bind("value", &Arith::Value);
   arithCl.bind("build", &LuaCppConstructor<Arith, int>);
   env.getClassRegistry().bind(arithCl);
 
@@ -170,7 +173,7 @@ TEST_CASE("Inheritance") {
   NArith arith(10);
   env["arith"] = arith;
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  REQUIRE(env["result"][1].get<int>() == 500);
+  REQUIRE(env["result"][1].get<int>() == 600);
   REQUIRE(env["result"][2].get<int>() == 45);
   REQUIRE(env["result"][3].get<int>() == 60);
 }
@@ -181,10 +184,11 @@ TEST_CASE("Object opaque binding") {
   arithCl.bind("add", &Arith::add);
   arithCl.bind("sub", &Arith::sub);
   arithCl.bind("set", &Arith::set);
+  arithCl.bind("value", &Arith::Value);
   env.getClassRegistry().bind(arithCl);
   SECTION("Assigning object") {
     SECTION("Assigning object by reference") {
-      const std::string &CODE = "result = { arith:add(50), arithRef:sub(100) }";
+      const std::string &CODE = "result = { arith:add(50) * arith.value, arithRef:sub(100) }";
       Arith arith(10);
       env["arith"] = arith;
       env["arithRef"] = std::ref(arith);
@@ -193,7 +197,7 @@ TEST_CASE("Object opaque binding") {
       REQUIRE(env["arith"].getType() == LuaType::UserData);
       REQUIRE(env["arithRef"].getType() == LuaType::UserData);
       REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-      REQUIRE(env["result"][1].get<int>() == 60);
+      REQUIRE(env["result"][1].get<int>() == 600);
       REQUIRE(env["result"][2].get<int>() == -90);
     }
     SECTION("Assigning object unique pointer") {
@@ -305,14 +309,14 @@ TEST_CASE("Class binder") {
                             "r1 = arith:add(4)\n"
                             "arith:set(100)\n"
                             "r2 = arith:sub(5)\n"
-                            "r3 = narith:mul(5) + temp:sub(5)";
+                            "r3 = narith:mul(5) + temp:sub(5) - narith.value";
   LuaEnvironment env;
-  env["Arith"] = ClassBinder<Arith>::bind(env, "add", &Arith::add, "sub", &Arith::sub, "set", &Arith::set, "new", &Arith::newArith);
+  env["Arith"] = ClassBinder<Arith>::bind(env, "add", &Arith::add, "sub", &Arith::sub, "set", &Arith::set, "new", &Arith::newArith, "value", &Arith::Value);
   env["NArith"] = ClassBinder<NArith, Arith>::bind("NArith", env, "mul", &NArith::mul, "new", &LuaCppConstructor<NArith, int>);
   NArith narith(60);
   env["narith"] = narith;
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(env["r1"].get<int>() == 54);
   REQUIRE(env["r2"].get<int>() == 95);
-  REQUIRE(env["r3"].get<int>() == 395);
+  REQUIRE(env["r3"].get<int>() == 335);
 }

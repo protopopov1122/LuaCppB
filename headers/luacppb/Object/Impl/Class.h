@@ -12,15 +12,28 @@ namespace LuaCppB {
 
   template <typename C, typename P>
   LuaCppClass<C, P>::LuaCppClass(const std::string &className, LuaCppRuntime &runtime)
-    : className(className), runtime(runtime) {}
+    : className(className), runtime(runtime) {
+    if constexpr (!std::is_void<P>::value) {
+      this->runtime.getObjectBoxerRegistry().template fillFields<P>(this->fields);
+    }
+  }
   
   template <typename C, typename P>
   LuaCppClass<C, P>::LuaCppClass(LuaCppRuntime &runtime)
-    : className(typeid(C).name()), runtime(runtime) {}
+    : className(typeid(C).name()), runtime(runtime) {
+    if constexpr (!std::is_void<P>::value) {
+      this->runtime.getObjectBoxerRegistry().template fillFields<P>(this->fields);
+    }
+  }
 
   template <typename C, typename P>
   const std::string &LuaCppClass<C, P>::getClassName() const {
     return this->className;
+  }
+
+  template <typename C, typename P>
+  void LuaCppClass<C, P>::fillFields(std::map<std::string, std::shared_ptr<Internal::LuaCppObjectFieldPusher>> &fields) {
+    fields.insert(this->fields.begin(), this->fields.end());
   }
   
   template <typename C, typename P>
@@ -41,6 +54,9 @@ namespace LuaCppB {
         it->second->push(state);
         stack.setField(-2, it->first);
       }
+
+      Internal::LuaCppObjectFieldController::pushFunction(state, this->fields);
+      stack.push(&LuaCppClass<C, P>::lookupObject, 2);
       stack.setField(-2, "__index");
       if constexpr (std::is_default_constructible<C>::value) {
         stack.push(this->className);
@@ -84,12 +100,37 @@ namespace LuaCppB {
   }
 
   template <typename C, typename P>
+  template <typename T>
+  void LuaCppClass<C, P>::bind(const std::string &key, T C::*field) {
+    this->fields[key] = std::make_shared<Internal::LuaCppObjectFieldHandle<C, T>>(field, this->runtime);
+  }
+
+  template <typename C, typename P>
   std::string LuaCppClass<C, P>::fullName() const {
     if constexpr (!std::is_void<P>::value) {
       return this->runtime.getObjectBoxerRegistry().template getClassName<P>() + "::" + this->className;
     } else {
       return this->className;
     }
+  }
+
+  template <typename C, typename P>
+  int LuaCppClass<C, P>::lookupObject(lua_State *state) {
+    Internal::LuaStack stack(state);
+    
+    stack.copy(lua_upvalueindex(2));
+    stack.copy(1);
+    stack.copy(2);
+    lua_pcall(state, 2, 1, 0);
+    
+    if (lua_isnoneornil(state, -1)) {
+      stack.pop(1);
+      stack.copy(lua_upvalueindex(1));
+      stack.copy(2);
+      lua_gettable(state, -2);
+      lua_remove(state, -2);
+    }
+    return 1;
   }
 
   template <typename C, typename P>

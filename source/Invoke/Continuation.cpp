@@ -2,6 +2,9 @@
 
 namespace LuaCppB {
 
+#ifdef LUACPPB_COROUTINE_SUPPORT
+
   LuaContinuation::LuaContinuation(const LuaReferenceHandle &handle, LuaCppRuntime &runtime)
     : handle(handle), runtime(runtime) {}
+#endif
 }

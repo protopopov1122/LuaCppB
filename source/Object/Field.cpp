@@ -33,9 +33,9 @@ namespace LuaCppB::Internal {
   int LuaCppObjectFieldController::indexFunction(lua_State *state) {
     Internal::LuaStack stack(state);
     LuaCppObjectFieldController *controller = stack.toUserData<LuaCppObjectFieldController *>(lua_upvalueindex(1));
-    void *object = stack.toPointer<void *>(1);
+    void *object = stack.toUserData<void *>(1);
     std::string key = stack.toString(2);
-    if (controller) {
+    if (controller && object) {
       controller->get(state, object, key);
     } else {
       stack.push();

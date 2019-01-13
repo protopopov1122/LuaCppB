@@ -16,8 +16,10 @@ namespace LuaCppB {
     template <typename T, typename F>
     static LuaReferenceHandle newFunction(T &, F &&);
 
+#ifdef LUACPPB_COROUTINE_SUPPORT
     template <typename T>
     static LuaReferenceHandle newThread(T &env, LuaReferenceHandle);
+#endif
   };
 }
 

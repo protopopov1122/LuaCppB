@@ -5,7 +5,6 @@
 
 namespace LuaCppB {
 
-
   template <typename ... A>
   Internal::LuaFunctionCallResult LuaCoroutine::operator()(A &&... args) const {
     std::vector<LuaValue> result;

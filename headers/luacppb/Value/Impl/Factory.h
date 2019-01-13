@@ -21,6 +21,7 @@ namespace LuaCppB {
     return ref;
   }
 
+#ifdef LUACPPB_COROUTINE_SUPPORT
   template <typename T>
   LuaReferenceHandle LuaValueFactory::newThread(T &env, LuaReferenceHandle handle) {
     LuaCoroutine coro = handle;
@@ -30,6 +31,7 @@ namespace LuaCppB {
     stack.pop();
     return ref;
   }
+#endif
 }
 
 #endif

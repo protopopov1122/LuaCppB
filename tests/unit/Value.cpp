@@ -266,6 +266,7 @@ TEST_CASE("Value factory") {
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
     REQUIRE(env["res"].get<int>() == 25);
   }
+#ifdef LUACPPB_COROUTINE_SUPPORT
   SECTION("Thread factory") {
     const std::string &CODE = "suc, res = coroutine.resume(coro, 10)";
     auto fn = LuaValueFactory::newFunction(env, [](int i) { return i * i; });
@@ -274,4 +275,5 @@ TEST_CASE("Value factory") {
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
     REQUIRE(env["res"].get<int>() == 100);
   }
+#endif
 }

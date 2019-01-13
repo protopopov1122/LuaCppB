@@ -35,8 +35,8 @@ namespace LuaCppB {
   };
 }
 
-#endif
-
 #include "luacppb/Invoke/Impl/Coro.h"
+
+#endif
 
 #endif

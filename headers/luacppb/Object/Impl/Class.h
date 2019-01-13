@@ -55,6 +55,11 @@ namespace LuaCppB {
         stack.setField(-2, it->first);
       }
 
+      for (auto it = this->dataFields.begin(); it != this->dataFields.end(); ++it) {
+        it->second.push(state);
+        stack.setField(-2, it->first);
+      }
+
       Internal::LuaCppObjectFieldController::pushFunction(state, this->fields);
       stack.push(&LuaCppClass<C, P>::lookupObject, 2);
       stack.setField(-2, "__index");
@@ -103,6 +108,34 @@ namespace LuaCppB {
   template <typename T>
   void LuaCppClass<C, P>::bind(const std::string &key, T C::*field) {
     this->fields[key] = std::make_shared<Internal::LuaCppObjectFieldHandle<C, T>>(field, this->runtime);
+  }
+
+  template <typename C, typename P>
+  template <typename V>
+  typename std::enable_if<LuaValue::is_constructible<V>()>::type
+    LuaCppClass<C, P>::bind(const std::string &key, V &value) {
+    this->dataFields[key] = LuaValue::create(value);
+  }
+
+  template <typename C, typename P>
+  template <typename V>
+  typename std::enable_if<LuaValue::is_constructible<V>()>::type
+    LuaCppClass<C, P>::bind(const std::string &key, V &&value) {
+    this->dataFields[key] = LuaValue::create(value);
+  }
+
+  template <typename C, typename P>
+  template <typename V>
+  typename std::enable_if<std::is_same<V, LuaValue>::value>::type
+    LuaCppClass<C, P>::bind(const std::string &key, V &value) {
+    this->dataFields[key] = value;
+  }
+
+  template <typename C, typename P>
+  template <typename V>
+  typename std::enable_if<std::is_same<V, LuaValue>::value>::type
+    LuaCppClass<C, P>::bind(const std::string &key, V &&value) {
+    this->dataFields[key] = value;
   }
 
   template <typename C, typename P>

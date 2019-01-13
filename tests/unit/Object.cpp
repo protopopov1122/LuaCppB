@@ -5,8 +5,8 @@ using namespace LuaCppB;
 
 class Arith {
  public:
-  Arith() : n(10) {}
-  Arith(int n) : n(n) {}
+  Arith() : Value(10), n(10) {}
+  Arith(int n) : Value(n), n(n) {}
   int add(int x) const {
     return n + x;
   }
@@ -32,6 +32,8 @@ class Arith {
   static std::shared_ptr<Arith> newSharedArith(int n) {
     return std::make_shared<Arith>(n);
   }
+
+  const int Value;
  protected:
   static Arith global;
   int n;
@@ -90,14 +92,15 @@ TEST_CASE("Object binding") {
   LuaCppObject aObj(arith, env);
   aObj.bind("add", &Arith::add);
   aObj.bind("sub", &Arith::sub);
+  aObj.bind("value", &Arith::Value);
   env["arith"] = aObj;
   SECTION("Binding") {
-    const std::string &CODE = "result = { arith:add(50), arith:sub(100) }";
+    const std::string &CODE = "result = { arith:add(50), arith:sub(100) - arith.value }";
     REQUIRE(env["arith"].exists());
     REQUIRE(env["arith"].getType() == LuaType::UserData);
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
     REQUIRE(env["result"][1].get<int>() == 60);
-    REQUIRE(env["result"][2].get<int>() == -90);
+    REQUIRE(env["result"][2].get<int>() == -100);
   }
   SECTION("Object extracting") {
     const std::string &CODE = "test(arith, arith, arith)";
@@ -283,17 +286,17 @@ TEST_CASE("Enum") {
 }
 
 TEST_CASE("Object binder") {
-  const std::string &CODE = "r1 = arith:sub(5)\n"
+  const std::string &CODE = "r1 = arith:sub(5) * arith.value\n"
                             "arith:set(20)\n"
-                            "r2 = ptr:add(10)";
+                            "r2 = ptr:add(10) / ptr.value";
   LuaEnvironment env;
   Arith arith(10);
   const Arith *ptr = &arith;
-  env["ptr"] = ObjectBinder::bind(ptr, env, "add", &Arith::add);
-  env["arith"] = ObjectBinder::bind(arith, env, "add", &Arith::add, "sub", &Arith::sub, "set", &Arith::set);
+  env["ptr"] = ObjectBinder::bind(ptr, env, "add", &Arith::add, "value", &Arith::Value);
+  env["arith"] = ObjectBinder::bind(arith, env, "add", &Arith::add, "sub", &Arith::sub, "set", &Arith::set, "value", &Arith::Value);
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  REQUIRE(env["r1"].get<int>() == 5);
-  REQUIRE(env["r2"].get<int>() == 30);
+  REQUIRE(env["r1"].get<int>() == 50);
+  REQUIRE(env["r2"].get<int>() == 3);
 }
 
 TEST_CASE("Class binder") {

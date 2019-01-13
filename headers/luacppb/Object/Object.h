@@ -3,6 +3,7 @@
 
 #include "luacppb/Base.h"
 #include "luacppb/Object/Method.h"
+#include "luacppb/Object/Field.h"
 #include "luacppb/Core/Stack.h"
 #include <map>
 #include <type_traits>
@@ -24,12 +25,16 @@ namespace LuaCppB {
     template <typename R, typename ... A>
     void bind(const std::string &, R (T::*)(A...) const);
 
+    template <typename V>
+    void bind(const std::string &, V T::*);
+
     void push(lua_State *) const override;
    private:
     static int gcObject(lua_State *);
 
     T *object;
     std::map<std::string, std::shared_ptr<LuaData>> methods;
+    std::map<std::string, std::shared_ptr<LuaData>> fields;
     LuaCppRuntime &runtime;
     std::string className;
 

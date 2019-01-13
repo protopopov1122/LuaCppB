@@ -30,6 +30,12 @@ namespace LuaCppB {
   }
 
   template <typename T>
+  template <typename V>
+  void LuaCppObject<T>::bind(const std::string &key, V T::*field) {
+    this->fields[key] = std::make_shared<Internal::LuaCppObjectFieldHandle<T, V>>(*this->object, field, this->runtime);
+  }
+
+  template <typename T>
   void LuaCppObject<T>::push(lua_State *state) const {
     Internal::LuaStack stack(state);
     LuaCppObjectWrapper<T> *object = stack.push<LuaCppObjectWrapper<T>>();
@@ -40,6 +46,10 @@ namespace LuaCppB {
         it->second->push(state);
         stack.setField(-2, it->first);
       }
+      stack.pushTable();
+      Internal::LuaCppObjectFieldController::pushFunction(state, this->fields);
+      stack.setField(-2, "__index");
+      stack.setMetatable(-2);
       stack.setField(-2, "__index");
       stack.push(&LuaCppObject<T>::gcObject);
       stack.setField(-2, "__gc");

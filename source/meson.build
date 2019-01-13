@@ -10,6 +10,7 @@ luacppb_source = [
   'Invoke/Coro.cpp',
   'Invoke/Lua.cpp',
   'Invoke/Native.cpp',
+  'Object/Field.cpp',
   'Reference/Base.cpp',
   'Reference/Field.cpp',
   'Reference/Handle.cpp',

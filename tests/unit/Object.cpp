@@ -89,18 +89,22 @@ void test_object_smart_pointer(LuaEnvironment &env) {
 TEST_CASE("Object binding") {
   LuaEnvironment env;
   Arith arith(10);
+  auto constant = LuaValueFactory::newTable(env);
+  constant["pi"] = 3.14f;
   LuaCppObject aObj(arith, env);
   aObj.bind("add", &Arith::add);
   aObj.bind("sub", &Arith::sub);
   aObj.bind("value", &Arith::Value);
+  aObj.bind("constant", *constant);
   env["arith"] = aObj;
   SECTION("Binding") {
-    const std::string &CODE = "result = { arith:add(50), arith:sub(100) - arith.value }";
+    const std::string &CODE = "result = { arith:add(50), arith:sub(100) - arith.value, arith.constant.pi }";
     REQUIRE(env["arith"].exists());
     REQUIRE(env["arith"].getType() == LuaType::UserData);
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
     REQUIRE(env["result"][1].get<int>() == 60);
     REQUIRE(env["result"][2].get<int>() == -100);
+    REQUIRE(env["result"][3].get<float>() == 3.14f);
   }
   SECTION("Object extracting") {
     const std::string &CODE = "test(arith, arith, arith)";
@@ -290,13 +294,13 @@ TEST_CASE("Enum") {
 }
 
 TEST_CASE("Object binder") {
-  const std::string &CODE = "r1 = arith:sub(5) * arith.value\n"
+  const std::string &CODE = "r1 = arith:sub(ptr.constant) * arith.value\n"
                             "arith:set(20)\n"
-                            "r2 = ptr:add(10) / ptr.value";
+                            "r2 = ptr:add(10) / ptr.value\n";
   LuaEnvironment env;
   Arith arith(10);
   const Arith *ptr = &arith;
-  env["ptr"] = ObjectBinder::bind(ptr, env, "add", &Arith::add, "value", &Arith::Value);
+  env["ptr"] = ObjectBinder::bind(ptr, env, "add", &Arith::add, "value", &Arith::Value, "constant", 5);
   env["arith"] = ObjectBinder::bind(arith, env, "add", &Arith::add, "sub", &Arith::sub, "set", &Arith::set, "value", &Arith::Value);
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(env["r1"].get<int>() == 50);

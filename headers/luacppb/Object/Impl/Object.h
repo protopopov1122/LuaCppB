@@ -36,6 +36,34 @@ namespace LuaCppB {
   }
 
   template <typename T>
+  template <typename V>
+  typename std::enable_if<LuaValue::is_constructible<V>()>::type
+    LuaCppObject<T>::bind(const std::string &key, V &value) {
+    this->dataFields[key] = LuaValue::create(value);
+  }
+
+  template <typename T>
+  template <typename V>
+  typename std::enable_if<LuaValue::is_constructible<V>()>::type
+    LuaCppObject<T>::bind(const std::string &key, V &&value) {
+    this->dataFields[key] = LuaValue::create(value);
+  }
+
+  template <typename T>
+  template <typename V>
+  typename std::enable_if<std::is_same<V, LuaValue>::value>::type
+    LuaCppObject<T>::bind(const std::string &key, V &value) {
+    this->dataFields[key] = value;
+  }
+
+  template <typename T>
+  template <typename V>
+  typename std::enable_if<std::is_same<V, LuaValue>::value>::type
+    LuaCppObject<T>::bind(const std::string &key, V &&value) {
+    this->dataFields[key] = value;
+  }
+
+  template <typename T>
   void LuaCppObject<T>::push(lua_State *state) const {
     Internal::LuaStack stack(state);
     LuaCppObjectWrapper<T> *object = stack.push<LuaCppObjectWrapper<T>>();
@@ -44,6 +72,11 @@ namespace LuaCppB {
       stack.pushTable();
       for (auto it = this->methods.begin(); it != this->methods.end(); ++it) {
         it->second->push(state);
+        stack.setField(-2, it->first);
+      }
+
+      for (auto it = this->dataFields.begin(); it != this->dataFields.end(); ++it) {
+        it->second.push(state);
         stack.setField(-2, it->first);
       }
       

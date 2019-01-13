@@ -2,7 +2,7 @@
 #define LUACPPB_VALUE_FACTORY_H_
 
 #include "luacppb/Base.h"
-#include "luacppb/Value/Value.h"
+#include "luacppb/Value/Native.h"
 #include "luacppb/Reference/Handle.h"
 
 namespace LuaCppB {
@@ -18,8 +18,14 @@ namespace LuaCppB {
 
 #ifdef LUACPPB_COROUTINE_SUPPORT
     template <typename T>
-    static LuaReferenceHandle newThread(T &env, LuaReferenceHandle);
+    static LuaReferenceHandle newThread(T &, LuaReferenceHandle);
 #endif
+
+    template <typename T, typename V>
+    static LuaValue wrap(T &, V &);
+
+    template <typename T, typename V>
+    static LuaValue wrap(T &, V &&);
   };
 }
 

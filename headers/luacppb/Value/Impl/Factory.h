@@ -32,6 +32,20 @@ namespace LuaCppB {
     return ref;
   }
 #endif
+
+  template <typename T, typename V>
+  LuaValue LuaValueFactory::wrap(T &env, V &value) {
+    Internal::LuaNativeValue::push(env.getState(), env, value);
+    Internal::LuaStack stack(env.getState());
+    LuaValue val = stack.get().value_or(LuaValue());
+    stack.pop();
+    return val;
+  }
+
+  template <typename T, typename V>
+  LuaValue LuaValueFactory::wrap(T &env, V &&value) {
+    return LuaValueFactory::wrap(env, value);
+  }
 }
 
 #endif

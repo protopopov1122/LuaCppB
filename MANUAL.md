@@ -65,6 +65,11 @@ Most C++ values are implicitly converted to Lua equivalents. `LuaCppB` includes 
   env["thread"] = *thread;
   ```
 
+You can also wrap any of supported types in `LuaValue` object using `LuaValueFactory::wrap` method. It may be useful when assigning constants to wrapped classes. Example:
+```C++
+LuaValue value = LuaValueFactory::wrap(env, "Hello, world!");
+```
+
 #### Metatables
 It's possible to assign/retrieve metatable to/from any reference. Consider following example:
 ```C++
@@ -106,6 +111,7 @@ env["Person"] = ClassBinder<Person>::bind(env,  // Class is bound to environment
     "setName", &Person::setName,
     "build", &Person::build,        // You can bind static methods
     "id", &Person::ID,              // Class fields are bound in read-only mode
+    "seed", 1234,                   // Bound constants will be an instance fields
     "new", &LuaCppConstructor<Person, const std::string &> // And even constructors
 );
 ```
@@ -120,7 +126,9 @@ Similarly you can bind separate objects (static methods and constructors are not
 SomeObject obj;
 env["object"] = ObjectBinder(obj, env,
   "add", &SomeObject::add,
-  "get", &SomeObject::get
+  "get", &SomeObject::get,
+  "id", &SomeObject::ID,
+  "constant", 1234
 )
 ```
 You can use object references (const or non-const), pointer (const or non-const), as well as standard smart pointers (`std::unique_ptr` and `std::shared_ptr`) while passing C++ object to Lua.

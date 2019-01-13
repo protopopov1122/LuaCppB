@@ -276,4 +276,9 @@ TEST_CASE("Value factory") {
     REQUIRE(env["res"].get<int>() == 100);
   }
 #endif
+  SECTION("Value wrapper") {
+    auto val = LuaValueFactory::wrap(env, std::string("Hello, world!"));
+    REQUIRE(val.getType() == LuaType::String);
+    REQUIRE(val.get<const std::string &>().compare("Hello, world!") == 0);
+  }
 }

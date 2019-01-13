@@ -32,7 +32,7 @@ namespace LuaCppB {
   template <typename T>
   template <typename V>
   void LuaCppObject<T>::bind(const std::string &key, V T::*field) {
-    this->fields[key] = std::make_shared<Internal::LuaCppObjectFieldHandle<T, V>>(*this->object, field, this->runtime);
+    this->fields[key] = std::make_shared<Internal::LuaCppObjectFieldHandle<T, V>>(field, this->runtime);
   }
 
   template <typename T>
@@ -46,15 +46,34 @@ namespace LuaCppB {
         it->second->push(state);
         stack.setField(-2, it->first);
       }
-      stack.pushTable();
+      
       Internal::LuaCppObjectFieldController::pushFunction(state, this->fields);
-      stack.setField(-2, "__index");
-      stack.setMetatable(-2);
+
+      stack.push(&LuaCppObject<T>::lookupObject, 2);
       stack.setField(-2, "__index");
       stack.push(&LuaCppObject<T>::gcObject);
       stack.setField(-2, "__gc");
     }
     stack.setMetatable(-2);
+  }
+
+  template <typename T>
+  int LuaCppObject<T>::lookupObject(lua_State *state) {
+    Internal::LuaStack stack(state);
+    
+    stack.copy(lua_upvalueindex(1));
+    stack.copy(2);
+    lua_rawget(state, -2);
+    lua_remove(state, -2);
+    
+    if (lua_isnoneornil(state, -1)) {
+      stack.pop(1);
+      stack.copy(lua_upvalueindex(2));
+      stack.copy(1);
+      stack.copy(2);
+      lua_pcall(state, 2, 1, 0);
+    }
+    return 1;
   }
   
   template <typename T>

@@ -1,20 +1,21 @@
 #include "luacppb/Object/Field.h"
+#include <iostream>
 
 namespace LuaCppB::Internal {
 
 
-  LuaCppObjectFieldController::LuaCppObjectFieldController(const std::map<std::string, std::shared_ptr<LuaData>> &fields)
+  LuaCppObjectFieldController::LuaCppObjectFieldController(const std::map<std::string, std::shared_ptr<LuaCppObjectFieldPusher>> &fields)
     : fields(fields) {}
 
-  void LuaCppObjectFieldController::get(lua_State *state, const std::string &key) {
+  void LuaCppObjectFieldController::get(lua_State *state, void *object, const std::string &key) {
     if (this->fields.count(key)) {
-      this->fields[key]->push(state);
+      this->fields[key]->push(state, object);
     } else {
       LuaValue().push(state);
     }
   }
 
-  void LuaCppObjectFieldController::push(lua_State *state, const std::map<std::string, std::shared_ptr<LuaData>> &fields) {
+  void LuaCppObjectFieldController::push(lua_State *state, const std::map<std::string, std::shared_ptr<LuaCppObjectFieldPusher>> &fields) {
     Internal::LuaStack stack(state);
     LuaCppObjectFieldController *controller = stack.push<LuaCppObjectFieldController>();
     new(controller) LuaCppObjectFieldController(fields);
@@ -24,7 +25,7 @@ namespace LuaCppB::Internal {
     stack.setMetatable(-2);
   }
 
-  void LuaCppObjectFieldController::pushFunction(lua_State *state, const std::map<std::string, std::shared_ptr<LuaData>> &fields) {
+  void LuaCppObjectFieldController::pushFunction(lua_State *state, const std::map<std::string, std::shared_ptr<LuaCppObjectFieldPusher>> &fields) {
     Internal::LuaStack stack(state);
     LuaCppObjectFieldController::push(state, fields);
     stack.push(&LuaCppObjectFieldController::indexFunction, 1);
@@ -33,9 +34,10 @@ namespace LuaCppB::Internal {
   int LuaCppObjectFieldController::indexFunction(lua_State *state) {
     Internal::LuaStack stack(state);
     LuaCppObjectFieldController *controller = stack.toUserData<LuaCppObjectFieldController *>(lua_upvalueindex(1));
+    void *object = stack.toPointer<void *>(1);
     std::string key = stack.toString(2);
     if (controller) {
-      controller->get(state, key);
+      controller->get(state, object, key);
     } else {
       stack.push();
     }

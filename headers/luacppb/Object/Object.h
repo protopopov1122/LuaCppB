@@ -30,11 +30,12 @@ namespace LuaCppB {
 
     void push(lua_State *) const override;
    private:
+    static int lookupObject(lua_State *);
     static int gcObject(lua_State *);
 
     T *object;
     std::map<std::string, std::shared_ptr<LuaData>> methods;
-    std::map<std::string, std::shared_ptr<LuaData>> fields;
+    std::map<std::string, std::shared_ptr<Internal::LuaCppObjectFieldPusher>> fields;
     LuaCppRuntime &runtime;
     std::string className;
 

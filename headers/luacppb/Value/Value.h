@@ -133,6 +133,32 @@ namespace LuaCppB {
 		LuaType type;
 	 	std::variant<LuaInteger, LuaNumber, LuaBoolean, LuaString, LuaCFunction, LuaTable, void *, LuaUserData, LuaThread, LuaFunction> value;
 	};
+
+	namespace Internal {
+
+		template <typename T, typename E = void>
+		struct LuaValueWrapper {
+			static constexpr bool Conversible = false;
+		};
+
+		template <typename T>
+		struct LuaValueWrapper<T, typename std::enable_if<LuaValue::is_constructible<T>()>::type> {
+			static LuaValue wrap(T &);
+
+			static LuaValue wrap(T &&);
+
+			static constexpr bool Conversible = true;
+		};
+
+		template <typename T>
+		struct LuaValueWrapper<T, typename std::enable_if<std::is_convertible<T, LuaValue>::value>::type> {
+			static LuaValue wrap(T &);
+
+			static LuaValue wrap(T &&);
+
+			static constexpr bool Conversible = true;
+		};
+	}
 }
 
 #include "luacppb/Value/Impl/Value.h"

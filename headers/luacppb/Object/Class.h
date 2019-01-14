@@ -42,16 +42,11 @@ namespace LuaCppB {
     void bind(const std::string &, T C::*);
 
     template <typename V>
-    typename std::enable_if<LuaValue::is_constructible<V>()>::type bind(const std::string &, V &);
+    typename std::enable_if<Internal::LuaValueWrapper<V>::Conversible>::type bind(const std::string &, V &);
 
     template <typename V>
-    typename std::enable_if<LuaValue::is_constructible<V>()>::type bind(const std::string &, V &&);
-
-    template <typename V>
-    typename std::enable_if<std::is_same<V, LuaValue>::value>::type bind(const std::string &, V &);
-
-    template <typename V>
-    typename std::enable_if<std::is_same<V, LuaValue>::value>::type bind(const std::string &, V &&);
+    typename std::enable_if<Internal::LuaValueWrapper<V>::Conversible>::type bind(const std::string &, V &&);
+    
    private:
     std::string fullName() const;
     static int lookupObject(lua_State *);

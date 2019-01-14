@@ -112,30 +112,16 @@ namespace LuaCppB {
 
   template <typename C, typename P>
   template <typename V>
-  typename std::enable_if<LuaValue::is_constructible<V>()>::type
+  typename std::enable_if<Internal::LuaValueWrapper<V>::Conversible>::type
     LuaCppClass<C, P>::bind(const std::string &key, V &value) {
-    this->dataFields[key] = LuaValue::create(value);
+    this->dataFields[key] = Internal::LuaValueWrapper<V>::wrap(value);
   }
 
   template <typename C, typename P>
   template <typename V>
-  typename std::enable_if<LuaValue::is_constructible<V>()>::type
+  typename std::enable_if<Internal::LuaValueWrapper<V>::Conversible>::type
     LuaCppClass<C, P>::bind(const std::string &key, V &&value) {
-    this->dataFields[key] = LuaValue::create(value);
-  }
-
-  template <typename C, typename P>
-  template <typename V>
-  typename std::enable_if<std::is_same<V, LuaValue>::value>::type
-    LuaCppClass<C, P>::bind(const std::string &key, V &value) {
-    this->dataFields[key] = value;
-  }
-
-  template <typename C, typename P>
-  template <typename V>
-  typename std::enable_if<std::is_same<V, LuaValue>::value>::type
-    LuaCppClass<C, P>::bind(const std::string &key, V &&value) {
-    this->dataFields[key] = value;
+    this->dataFields[key] = Internal::LuaValueWrapper<V>::wrap(std::forward<V>(value));
   }
 
   template <typename C, typename P>

@@ -30,6 +30,14 @@ namespace LuaCppB::Internal {
     lua_pushvalue(this->state, index);
   }
 
+  void LuaStack::move(lua_State *state, int count) {
+    lua_xmove(this->state, state, count);
+  }
+
+  void LuaStack::remove(int index) {
+    lua_remove(this->state, index);
+  }
+
   void LuaStack::push() {
     lua_pushnil(this->state);
   }
@@ -92,6 +100,10 @@ namespace LuaCppB::Internal {
   
   bool LuaStack::metatable(const std::string &name) {
     return static_cast<bool>(luaL_newmetatable(this->state, name.c_str()));
+  }
+
+  void LuaStack::getMetatable(int index) {
+    lua_getmetatable(this->state, index);
   }
 
   void LuaStack::setMetatable(int index) {
@@ -170,6 +182,10 @@ namespace LuaCppB::Internal {
     return static_cast<bool>(lua_isthread(this->state, index));
   }
 
+  bool LuaStack::isNoneOrNil(int index) {
+    return static_cast<bool>(lua_isnoneornil(this->state, index));
+  }
+
   bool LuaStack::isInteger(int index) {
     return static_cast<bool>(lua_isinteger(this->state, index));
   }
@@ -177,5 +193,4 @@ namespace LuaCppB::Internal {
   bool LuaStack::isCFunction(int index) {
     return static_cast<bool>(lua_iscfunction(this->state, index));
   }
-  bool isCFunction(int = -1);
 }

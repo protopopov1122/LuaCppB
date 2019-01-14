@@ -18,6 +18,8 @@ namespace LuaCppB::Internal {
 
     void pop(unsigned int = 1);
     void copy(int);
+    void move(lua_State *, int);
+    void remove(int);
 
     void push();
     void push(bool);
@@ -46,6 +48,7 @@ namespace LuaCppB::Internal {
     void unref(int);
 
     bool metatable(const std::string &);
+    void getMetatable(int = -1);
     void setMetatable(int = -1);
     void setMetatable(const std::string &);
 
@@ -72,7 +75,8 @@ namespace LuaCppB::Internal {
 
     template <LuaType T>
     bool is(int = -1);
-    
+
+    bool isNoneOrNil(int = -1);    
     bool isInteger(int = -1);
     bool isCFunction(int = -1);
    private:

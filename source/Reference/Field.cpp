@@ -19,7 +19,7 @@ namespace LuaCppB::Internal {
           canary.assume();
           result = true;
         }
-        lua_pop(state, 1);
+        stack.pop(1);
       }
     });
     return result;
@@ -57,7 +57,7 @@ namespace LuaCppB::Internal {
           canary.assume();
           result = true;
         }
-        lua_pop(state, 1);
+        stack.pop(1);
       }
     });
     return result;

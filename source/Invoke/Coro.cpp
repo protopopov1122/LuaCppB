@@ -6,8 +6,9 @@ namespace LuaCppB {
 
   LuaCoroutine::LuaCoroutine(lua_State *state, int index, LuaCppRuntime &runtime)
     : thread(LuaThread::create(state)), runtime(runtime) {
-    lua_pushvalue(state, index);
-    lua_xmove(state, thread.toState(), 1);
+    Internal::LuaStack stack(state);
+    stack.copy(index);
+    stack.move(thread.toState(), 1);
   }
 
   LuaCoroutine::LuaCoroutine(LuaThread &thread, LuaCppRuntime &runtime)

@@ -60,7 +60,7 @@ namespace LuaCppB {
       std::string parentName = this->runtime.getObjectBoxerRegistry().template getClassName<P>();
       if (!parentName.empty()) {
         stack.pushTable();
-        luaL_getmetatable(state, parentName.c_str());
+        stack.metatable(parentName);
         stack.setField(-2,  "__index");
         lua_setmetatable(state, -2);
       }
@@ -73,7 +73,7 @@ namespace LuaCppB {
     if constexpr (!std::is_void<P>::value) {
       std::string parentName = this->runtime.getObjectBoxerRegistry().template getClassName<P>();
       if (!parentName.empty()) {
-        luaL_setmetatable(state, parentName.c_str());
+        stack.setMetatable(parentName);
       }
     }
   }
@@ -180,12 +180,12 @@ namespace LuaCppB {
     stack.copy(2);
     lua_pcall(state, 2, 1, 0);
     
-    if (lua_isnoneornil(state, -1)) {
+    if (stack.isNoneOrNil(-1)) {
       stack.pop(1);
       stack.copy(lua_upvalueindex(1));
       stack.copy(2);
       lua_gettable(state, -2);
-      lua_remove(state, -2);
+      stack.remove(-2);
     }
     return 1;
   }

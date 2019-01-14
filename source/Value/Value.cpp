@@ -26,7 +26,7 @@ namespace LuaCppB {
       case LuaType::None:
         break;
       case LuaType::Nil:
-        lua_pushnil(state);
+        stack.push();
         break;
       case LuaType::Number:
         assert(this->value.index() == 0 || this->value.index() == 1);

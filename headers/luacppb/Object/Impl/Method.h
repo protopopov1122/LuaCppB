@@ -60,7 +60,7 @@ namespace LuaCppB::Internal {
     if (!stack.is<LuaType::UserData>(index)) {
       return nullptr;
     }
-    lua_getmetatable(state, index);
+    stack.getMetatable(index);
     stack.push(std::string("__name"));
     lua_rawget(state, -2);
     std::string name = stack.toString(-1);

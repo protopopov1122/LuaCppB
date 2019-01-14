@@ -87,9 +87,10 @@ namespace LuaCppB {
   LuaReferenceHandle LuaReferenceHandle::getMetatable() {
     LuaReferenceHandle handle;
     this->getReference().putOnTop([&](lua_State *state) {
-      lua_getmetatable(state, -1);
+      Internal::LuaStack stack(state);
+      stack.getMetatable(-1);
       handle = LuaReferenceHandle(state, std::make_unique<Internal::LuaRegistryReference>(state, this->getRuntime(), -1));
-      lua_pop(state, 1);
+      stack.pop(1);
     });
     return handle;
   }

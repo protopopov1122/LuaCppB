@@ -9,39 +9,44 @@ namespace LuaCppB::Internal {
 	}
 
 	void LuaCppBNativeException::process(lua_State *state, std::exception_ptr eptr) {
-		LuaCppBNativeException *ex = reinterpret_cast<LuaCppBNativeException *>(lua_newuserdata(state, sizeof(LuaCppBNativeException)));
+		Internal::LuaStack stack(state);
+		LuaCppBNativeException *ex = stack.push<LuaCppBNativeException>();
 		new(ex) LuaCppBNativeException(eptr);
-		if (luaL_newmetatable(state, LuaCppBNativeException::LUACPPB_EXCEPTION_POINTER)) {
-			lua_pushcfunction(state, &LuaCppBNativeException::gc);
-			lua_setfield(state, -2, "__gc");
+		if (stack.metatable(LuaCppBNativeException::LUACPPB_EXCEPTION_POINTER)) {
+			stack.push(&LuaCppBNativeException::gc);
+			stack.setField(-2, "__gc");
 		}
-		lua_setmetatable(state, -2);
+		stack.setMetatable(-2);
 		lua_error(state);
 	}
 
 	void LuaCppBNativeException::check(lua_State *state) {
-		if (lua_isuserdata(state, -1)) {
-			lua_getmetatable(state, -1);
-			if (lua_istable(state, -1)) {
-				lua_pushstring(state, "__name");
+		Internal::LuaStack stack(state);
+		if (stack.is<LuaType::UserData>(-1)) {
+			stack.getMetatable(-1);
+			if (stack.is<LuaType::Table>(-1)) {
+				stack.push(std::string("__name"));
 				lua_rawget(state, -2);
-				std::string tableName(lua_tostring(state, -1));
-				lua_pop(state, 2);
+				std::string tableName(stack.toString(-1));
+				stack.pop(2);
 				if (tableName.compare(LuaCppBNativeException::LUACPPB_EXCEPTION_POINTER) == 0) {
-					LuaCppBNativeException *ex = reinterpret_cast<LuaCppBNativeException *>(luaL_checkudata(state, -1, LuaCppBNativeException::LUACPPB_EXCEPTION_POINTER));
+					LuaCppBNativeException *ex = stack.checkUserData<LuaCppBNativeException>(-1, LuaCppBNativeException::LUACPPB_EXCEPTION_POINTER);
 					if (ex) {
 						std::exception_ptr eptr = ex->get();
 						std::rethrow_exception(eptr);
 					}
 				}
 			} else {
-				lua_pop(state, 1);
+				stack.pop();
 			}
 		}
 	}
 
+
+
 	int LuaCppBNativeException::gc(lua_State *state) {
-		LuaCppBNativeException *ex = reinterpret_cast<LuaCppBNativeException *>(luaL_checkudata(state, 1, LuaCppBNativeException::LUACPPB_EXCEPTION_POINTER));
+		Internal::LuaStack stack(state);
+		LuaCppBNativeException *ex = stack.checkUserData<LuaCppBNativeException>(1, LuaCppBNativeException::LUACPPB_EXCEPTION_POINTER);
 		ex->~LuaCppBNativeException();
 		::operator delete(ex, ex);
 		return 0;

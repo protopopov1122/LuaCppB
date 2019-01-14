@@ -27,7 +27,8 @@ namespace LuaCppB::Internal {
     LuaReference::get() {
     LuaCoroutine coro(this->getRuntime());
     this->putOnTop([&](lua_State *state) {
-      if (lua_isthread(state, -1)) {
+      Internal::LuaStack stack(state);
+      if (stack.is<LuaType::Thread>(-1)) {
         coro = LuaCoroutine(LuaThread(state, -1), this->getRuntime());
       } else {
         coro = LuaCoroutine(state, -1, this->getRuntime());

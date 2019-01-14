@@ -16,10 +16,10 @@ namespace LuaCppB::Internal {
   }
 
   template <typename T>
-  void LuaCppObjectBoxerRegistry::fillFields(std::map<std::string, std::shared_ptr<LuaCppObjectFieldPusher>> &fields) {
+  void LuaCppObjectBoxerRegistry::copyFields(std::map<std::string, std::shared_ptr<LuaCppObjectFieldPusher>> &fields) {
     std::type_index idx = std::type_index(typeid(T));
     if (this->wrappers.count(idx)) {
-      this->wrappers[idx]->fillFields(fields);
+      this->wrappers[idx]->copyFields(fields);
     }
   }
 

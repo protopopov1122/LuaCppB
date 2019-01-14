@@ -14,7 +14,7 @@ namespace LuaCppB {
   LuaCppClass<C, P>::LuaCppClass(const std::string &className, LuaCppRuntime &runtime)
     : className(className), runtime(runtime) {
     if constexpr (!std::is_void<P>::value) {
-      this->runtime.getObjectBoxerRegistry().template fillFields<P>(this->fields);
+      this->runtime.getObjectBoxerRegistry().template copyFields<P>(this->fields);
     }
   }
   
@@ -22,7 +22,7 @@ namespace LuaCppB {
   LuaCppClass<C, P>::LuaCppClass(LuaCppRuntime &runtime)
     : className(typeid(C).name()), runtime(runtime) {
     if constexpr (!std::is_void<P>::value) {
-      this->runtime.getObjectBoxerRegistry().template fillFields<P>(this->fields);
+      this->runtime.getObjectBoxerRegistry().template copyFields<P>(this->fields);
     }
   }
 
@@ -32,7 +32,7 @@ namespace LuaCppB {
   }
 
   template <typename C, typename P>
-  void LuaCppClass<C, P>::fillFields(std::map<std::string, std::shared_ptr<Internal::LuaCppObjectFieldPusher>> &fields) {
+  void LuaCppClass<C, P>::copyFields(std::map<std::string, std::shared_ptr<Internal::LuaCppObjectFieldPusher>> &fields) {
     fields.insert(this->fields.begin(), this->fields.end());
   }
   
@@ -43,38 +43,76 @@ namespace LuaCppB {
     if (stack.metatable(this->className)) {
       stack.push(fullName);
       stack.setField(-2, "__name");
-      stack.pushTable();
-      if constexpr (!std::is_void<P>::value) {
-        std::string parentName = this->runtime.getObjectBoxerRegistry().template getClassName<P>();
-        if (!parentName.empty()) {
-          luaL_setmetatable(state, parentName.c_str());
-        }
-      }
-      for (auto it = this->methods.begin(); it != this->methods.end(); ++it) {
-        it->second->push(state);
-        stack.setField(-2, it->first);
-      }
-
-      for (auto it = this->dataFields.begin(); it != this->dataFields.end(); ++it) {
-        it->second.push(state);
-        stack.setField(-2, it->first);
-      }
-
-      Internal::LuaCppObjectFieldController::pushFunction(state, this->fields);
-      stack.push(&LuaCppClass<C, P>::lookupObject, 2);
-      stack.setField(-2, "__index");
-      if constexpr (std::is_default_constructible<C>::value) {
-        stack.push(this->className);
-        stack.push(&LuaCppClass<C, P>::newObject, 1);
-        stack.setField(-2, "new");
-      }
-      for (auto it = this->staticMethods.begin(); it != this->staticMethods.end(); ++it) {
-        it->second->push(state);
-        stack.setField(-2, it->first);
-      }
+      this->setupParentClassStaticMembers(state);
+      this->setupInstanceMembers(state);
+      this->setupStaticMembers(state);
       stack.push(this->className);
       stack.push(&LuaCppClass<C, P>::gcObject, 1);
       stack.setField(-2, "__gc");
+    }
+  }
+
+  template <typename C, typename P>
+  void LuaCppClass<C, P>::setupParentClassStaticMembers(lua_State *state) const {
+    Internal::LuaStack stack(state);
+    std::optional<std::string> parentName;
+    if constexpr (!std::is_void<P>::value) {
+      std::string parentName = this->runtime.getObjectBoxerRegistry().template getClassName<P>();
+      if (!parentName.empty()) {
+        stack.pushTable();
+        luaL_getmetatable(state, parentName.c_str());
+        stack.setField(-2,  "__index");
+        lua_setmetatable(state, -2);
+      }
+    }
+  }
+
+  template <typename C, typename P>
+  void LuaCppClass<C, P>::setupParentClassInstanceMembers(lua_State *state) const {
+    Internal::LuaStack stack(state);
+    if constexpr (!std::is_void<P>::value) {
+      std::string parentName = this->runtime.getObjectBoxerRegistry().template getClassName<P>();
+      if (!parentName.empty()) {
+        luaL_setmetatable(state, parentName.c_str());
+      }
+    }
+  }
+
+  template <typename C, typename P>
+  void LuaCppClass<C, P>::setupInstanceMembers(lua_State *state) const {
+    Internal::LuaStack stack(state);
+    stack.pushTable();
+    this->setupParentClassInstanceMembers(state);
+    for (auto it = this->methods.begin(); it != this->methods.end(); ++it) {
+      it->second->push(state);
+      stack.setField(-2, it->first);
+    }
+
+    for (auto it = this->dataFields.begin(); it != this->dataFields.end(); ++it) {
+      it->second.push(state);
+      stack.setField(-2, it->first);
+    }
+
+    Internal::LuaCppObjectFieldController::pushFunction(state, this->fields);
+    stack.push(&LuaCppClass<C, P>::lookupObject, 2);
+    stack.setField(-2, "__index");
+  }
+
+  template <typename C, typename P>
+  void LuaCppClass<C, P>::setupStaticMembers(lua_State *state) const {
+    Internal::LuaStack stack(state);
+    if constexpr (std::is_default_constructible<C>::value) {
+      stack.push(this->className);
+      stack.push(&LuaCppClass<C, P>::newObject, 1);
+      stack.setField(-2, "new");
+    }
+    for (auto it = this->staticMethods.begin(); it != this->staticMethods.end(); ++it) {
+      it->second->push(state);
+      stack.setField(-2, it->first);
+    }
+    for (auto it = this->dataFields.begin(); it != this->dataFields.end(); ++it) {
+      it->second.push(state);
+      stack.setField(-2, it->first);
     }
   }
 

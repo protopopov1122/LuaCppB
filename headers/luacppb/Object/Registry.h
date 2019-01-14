@@ -20,7 +20,7 @@ namespace LuaCppB::Internal {
     void wrapUnique(lua_State *, void *) override;
     void wrapShared(lua_State *, std::shared_ptr<void>) override;
     std::string getClassName() override;
-    void fillFields(std::map<std::string, std::shared_ptr<LuaCppObjectFieldPusher>> &) override;
+    void copyFields(std::map<std::string, std::shared_ptr<LuaCppObjectFieldPusher>> &) override;
    private:
     std::string className;
     std::map<std::string, std::shared_ptr<LuaCppObjectFieldPusher>> fields;

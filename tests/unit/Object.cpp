@@ -125,7 +125,7 @@ TEST_CASE("Class manual binding") {
                               "x = a:add(5)\n"
                               "a2 = Arith.new()\n"
                               "a2:set(50)\n"
-                              "result = { x, a2:sub(20), a.value + a2.value, a.constant }";
+                              "result = { x, a2:sub(20), a.value + a2.value, a.constant .. Arith.constant }";
     LuaCppClass<Arith> arith(env);
     arith.bind("add", &Arith::add);
     arith.bind("sub", &Arith::sub);
@@ -143,7 +143,7 @@ TEST_CASE("Class manual binding") {
     REQUIRE(env["result"][1].get<int>() == 60);
     REQUIRE(env["result"][2].get<int>() == 30);
     REQUIRE(env["result"][3].get<int>() == 65);
-    REQUIRE(env["result"][4].get<std::string>().compare("Hello") == 0);
+    REQUIRE(env["result"][4].get<std::string>().compare("HelloHello") == 0);
   }
   SECTION("Unbound class assignment") {
     const std::string &CODE = "res = arith == nil and parith == nil and uarith == nil and sarith == nil";
@@ -312,15 +312,15 @@ TEST_CASE("Object binder") {
 }
 
 TEST_CASE("Class binder") {
-  const std::string &CODE = "temp = NArith.new(100)\n"
+  const std::string &CODE = "temp = NArith.new(NArith.constant)\n"
                             "arith = Arith.new(temp.constant / 2)\n"
                             "r1 = arith:add(4)\n"
                             "arith:set(100)\n"
                             "r2 = arith:sub(5)\n"
                             "r3 = narith:mul(5) + temp:sub(5) - narith.value";
   LuaEnvironment env;
-  env["Arith"] = ClassBinder<Arith>::bind(env, "add", &Arith::add, "sub", &Arith::sub, "set", &Arith::set, "new", &Arith::newArith, "value", &Arith::Value);
-  env["NArith"] = ClassBinder<NArith, Arith>::bind("NArith", env, "mul", &NArith::mul, "new", &LuaCppConstructor<NArith, int>, "constant", 100);
+  env["Arith"] = ClassBinder<Arith>::bind(env, "add", &Arith::add, "sub", &Arith::sub, "set", &Arith::set, "new", &Arith::newArith, "value", &Arith::Value, "constant", 100);
+  env["NArith"] = ClassBinder<NArith, Arith>::bind("NArith", env, "mul", &NArith::mul, "new", &LuaCppConstructor<NArith, int>);
   NArith narith(60);
   env["narith"] = narith;
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);

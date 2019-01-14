@@ -24,7 +24,7 @@ namespace LuaCppB {
 
     const std::string &getClassName() const;
 
-    void fillFields(std::map<std::string, std::shared_ptr<Internal::LuaCppObjectFieldPusher>> &);
+    void copyFields(std::map<std::string, std::shared_ptr<Internal::LuaCppObjectFieldPusher>> &);
     
     void push(lua_State *) const override;
     void bind(lua_State *);
@@ -52,6 +52,11 @@ namespace LuaCppB {
     static int lookupObject(lua_State *);
     static int newObject(lua_State *);
     static int gcObject(lua_State *);
+
+    void setupParentClassStaticMembers(lua_State *) const;
+    void setupParentClassInstanceMembers(lua_State *) const;
+    void setupInstanceMembers(lua_State *) const;
+    void setupStaticMembers(lua_State *) const;
 
     std::string className;
     std::map<std::string, std::shared_ptr<LuaData>> methods;

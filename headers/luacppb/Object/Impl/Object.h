@@ -30,9 +30,10 @@ namespace LuaCppB {
   }
 
   template <typename T>
-  template <typename V>
-  void LuaCppObject<T>::bind(const std::string &key, V T::*field) {
-    this->fields[key] = std::make_shared<Internal::LuaCppObjectFieldHandle<T, V>>(field, this->runtime);
+  template <typename V, typename B>
+  typename std::enable_if<std::is_base_of<B, T>::value>::type
+    LuaCppObject<T>::bind(const std::string &key, V B::*field) {
+    this->fields[key] = std::make_shared<Internal::LuaCppObjectFieldHandle<B, T, V>>(field, this->runtime);
   }
 
   template <typename T>

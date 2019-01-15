@@ -25,8 +25,9 @@ namespace LuaCppB {
     template <typename R, typename ... A>
     void bind(const std::string &, R (T::*)(A...) const);
 
-    template <typename V>
-    void bind(const std::string &, V T::*);
+    template <typename V, typename B>
+    typename std::enable_if<std::is_base_of<B, T>::value>::type
+      bind(const std::string &, V B::*);
 
     template <typename V>
     typename std::enable_if<Internal::LuaValueWrapper<V>::Conversible>::type bind(const std::string &, V &);

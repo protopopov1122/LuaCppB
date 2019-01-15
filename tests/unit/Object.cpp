@@ -86,6 +86,20 @@ void test_object_smart_pointer(LuaEnvironment &env) {
   REQUIRE(env["result"][2].get<int>() == -90);
 }
 
+struct point {
+  point(double x, double y)
+    : x(x), y(y) {}
+  double x;
+  double y;
+};
+
+struct rect : public point {
+  rect(double x, double y, double w, double h)
+    : point(x, y), w(w), h(h) {}
+  double w;
+  double h;
+};
+
 TEST_CASE("Object binding") {
   LuaEnvironment env;
   Arith arith(10);
@@ -154,6 +168,33 @@ TEST_CASE("Class manual binding") {
     env["sarith"] = std::make_shared<Arith>(100);
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
     REQUIRE(env["res"].get<bool>());
+  }
+}
+
+TEST_CASE("Inherited object properties") {
+  LuaEnvironment env;
+  SECTION("Objects") {
+    const std::string &CODE = "res = r.x + r.y + r.w + r.h";
+    rect pnt(1, 2, 3, 4);
+    env["r"] = ObjectBinder::bind(pnt, env,
+      "x", &rect::x,
+      "y", &rect::y,
+      "w", &rect::w,
+      "h", &rect::h);
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["res"].get<int>() == 10);
+  }
+  SECTION("Classes") {
+    const std::string &CODE = "res = r.x + r.y + r.w + r.h";
+    env["rect"] = ClassBinder<rect>::bind(env,
+      "x", &rect::x,
+      "y", &rect::y,
+      "w", &rect::w,
+      "h", &rect::h);
+    rect pnt(1, 2, 3, 4);
+    env["r"] = pnt;
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["res"].get<int>() == 10);
   }
 }
 

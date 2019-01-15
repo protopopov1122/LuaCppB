@@ -14,7 +14,7 @@ namespace LuaCppB::Internal {
 		virtual void push(lua_State *, void *) const = 0;
 	};
 
-	template <typename C, typename T>
+	template <typename C, typename B, typename T>
 	class LuaCppObjectFieldHandle : public LuaCppObjectFieldPusher {
 	 public:
 		LuaCppObjectFieldHandle(T C::*, LuaCppRuntime &);

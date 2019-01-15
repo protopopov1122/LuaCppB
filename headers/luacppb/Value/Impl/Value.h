@@ -246,23 +246,14 @@ namespace LuaCppB {
   }
 
   namespace Internal {
+
     template <typename T>
-    LuaValue LuaValueWrapper<T, typename std::enable_if<LuaValue::is_constructible<T>()>::type>::wrap(T &value) {
+    LuaValue LuaValueWrapper<T, typename std::enable_if<LuaValue::is_constructible<T>()>::type>::wrap(T value) {
       return LuaValue::create(value);
     }
 
     template <typename T>
-    LuaValue LuaValueWrapper<T, typename std::enable_if<LuaValue::is_constructible<T>()>::type>::wrap(T &&value) {
-      return LuaValue::create(value);
-    }
-
-    template <typename T>
-    LuaValue LuaValueWrapper<T, typename std::enable_if<std::is_convertible<T, LuaValue>::value>::type>::wrap(T &value) {
-      return LuaValue(value);
-    }
-
-    template <typename T>
-    LuaValue LuaValueWrapper<T, typename std::enable_if<std::is_convertible<T, LuaValue>::value>::type>::wrap(T &&value) {
+    LuaValue LuaValueWrapper<T, typename std::enable_if<std::is_convertible<T, LuaValue>::value>::type>::wrap(T value) {
       return LuaValue(value);
     }
   }

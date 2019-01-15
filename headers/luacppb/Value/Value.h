@@ -143,18 +143,14 @@ namespace LuaCppB {
 
 		template <typename T>
 		struct LuaValueWrapper<T, typename std::enable_if<LuaValue::is_constructible<T>()>::type> {
-			static LuaValue wrap(T &);
-
-			static LuaValue wrap(T &&);
+			static LuaValue wrap(T);
 
 			static constexpr bool Conversible = true;
 		};
 
 		template <typename T>
 		struct LuaValueWrapper<T, typename std::enable_if<std::is_convertible<T, LuaValue>::value>::type> {
-			static LuaValue wrap(T &);
-
-			static LuaValue wrap(T &&);
+			static LuaValue wrap(T);
 
 			static constexpr bool Conversible = true;
 		};

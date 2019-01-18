@@ -74,6 +74,12 @@ namespace LuaCppB {
     }
     return Internal::LuaFunctionCallResult(LuaError(LuaStatusCode::RuntimeError));
   }
+
+
+	template <std::size_t I, typename T>
+  T Internal::NativeFunctionArgument<I, T, typename std::enable_if<std::is_same<T, LuaReferenceHandle>::value>::type>::get(lua_State *state, LuaCppRuntime &runtime, LuaValue &value) {
+    return LuaState(state, runtime.getRuntimeInfo())[I];
+  }
 }
 
 #endif

@@ -11,18 +11,25 @@
 
 namespace LuaCppB::Internal {
 
-	template <typename T, typename E = void>
+	template <std::size_t I, typename T, typename E = void>
 	struct NativeFunctionArgument {
 		static T get(lua_State *, LuaCppRuntime &, LuaValue &);
 
 		static constexpr bool Virtual = false;
 	};
 
-	template <typename T>
-	struct NativeFunctionArgument<T, typename std::enable_if<std::is_same<T, LuaState>::value>::type> {
+	template <std::size_t I, typename T>
+	struct NativeFunctionArgument<I, T, typename std::enable_if<std::is_same<T, LuaState>::value>::type> {
 		static T get(lua_State *, LuaCppRuntime &, LuaValue &);
 
 		static constexpr bool Virtual = true;
+	};
+
+	template <std::size_t I, typename T>
+	struct NativeFunctionArgument<I, T, typename std::enable_if<std::is_same<T, LuaReferenceHandle>::value>::type> {
+		static T get(lua_State *, LuaCppRuntime &, LuaValue &);
+
+		static constexpr bool Virtual = false;
 	};
 
 	template <std::size_t Index, std::size_t Offset, std::size_t Count, typename ... T>

@@ -5,13 +5,13 @@
 
 namespace LuaCppB::Internal {
 
-	template <typename T, typename E>
-  T NativeFunctionArgument<T, E>::get(lua_State *state, LuaCppRuntime &runtime, LuaValue &value) {
+	template <std::size_t I, typename T, typename E>
+  T NativeFunctionArgument<I, T, E>::get(lua_State *state, LuaCppRuntime &runtime, LuaValue &value) {
     return value.get<T>();
   }
 
-	template <typename T>
-  T NativeFunctionArgument<T, typename std::enable_if<std::is_same<T, LuaState>::value>::type>::get(lua_State *state, LuaCppRuntime &runtime, LuaValue &value) {
+	template <std::size_t I, typename T>
+  T NativeFunctionArgument<I, T, typename std::enable_if<std::is_same<T, LuaState>::value>::type>::get(lua_State *state, LuaCppRuntime &runtime, LuaValue &value) {
     return LuaState(state, runtime.getRuntimeInfo());
   }
 
@@ -20,7 +20,7 @@ namespace LuaCppB::Internal {
 
 	template <std::size_t Index, std::size_t Offset, std::size_t Count, typename T, typename ... Ts>
   void WrappedFunctionArguments_Impl<Index, Offset, Count, T, Ts...>::get(lua_State *state, std::array<LuaValue, Count> &array) {
-    if constexpr (NativeFunctionArgument<T>::Virtual) {
+    if constexpr (NativeFunctionArgument<Index, T>::Virtual) {
       WrappedFunctionArguments_Impl<Index, Offset, Count, Ts...>::get(state, array);
     } else {
       array[Index] = LuaValue::peek(state, Offset + Index).value_or(LuaValue());
@@ -69,11 +69,11 @@ namespace LuaCppB::Internal {
 
 	template <std::size_t Index, std::size_t Offset, std::size_t Count, typename T, typename ... Ts>
   std::tuple<T, Ts...> NativeFunctionArgumentsTuple_Impl<Index, Offset, Count, T, Ts...>::value(lua_State *state, LuaCppRuntime &runtime, std::array<LuaValue, Count> &array) {
-    if constexpr (!NativeFunctionArgument<T>::Virtual) {
-      return std::tuple_cat(std::forward_as_tuple(NativeFunctionArgument<T>::get(state, runtime, array[Index - Offset])),
+    if constexpr (!NativeFunctionArgument<Index, T>::Virtual) {
+      return std::tuple_cat(std::forward_as_tuple(NativeFunctionArgument<Index, T>::get(state, runtime, array[Index - Offset])),
         NativeFunctionArgumentsTuple_Impl<Index + 1, Offset, Count, Ts...>::value(state, runtime, array));
     } else {
-      return std::tuple_cat(std::forward_as_tuple(NativeFunctionArgument<T>::get(state, runtime, array[Index - Offset])),
+      return std::tuple_cat(std::forward_as_tuple(NativeFunctionArgument<Index, T>::get(state, runtime, array[Index - Offset])),
         NativeFunctionArgumentsTuple_Impl<Index, Offset, Count, Ts...>::value(state, runtime, array));
     }
   }

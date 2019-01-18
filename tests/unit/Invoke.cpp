@@ -50,6 +50,10 @@ std::tuple<int, int, int> test_tuple_returning(int n) {
   return std::make_tuple(n, n*n, n*n*n);
 }
 
+void test_ref_prm(int factor, LuaState state, LuaReferenceHandle ref) {
+  ref["c"] = factor * (ref["a"].get<int>() + ref["b"].get<int>());
+}
+
 void test_unsupported_object_wrap(LuaEnvironment *env) {}
 
 TEST_CASE("Native function call") {
@@ -86,6 +90,16 @@ TEST_CASE("Native method call") {
   REQUIRE(env["res1"].get<float>() == 10.0f);
   REQUIRE(env["res2"].get<float>() == 50.0f);
   REQUIRE(env["res3"].get<float>() == 100.0f);
+}
+
+TEST_CASE("Reference as function parameter") {
+  const std::string &CODE = "tbl = { a = 3, b = 10 }\n"
+                            "test(2, tbl)\n"
+                            "res = tbl.c";
+  LuaEnvironment env;
+  env["test"] = test_ref_prm;
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["res"].get<int>() == 26);
 }
 
 TEST_CASE("Invocable object call") {

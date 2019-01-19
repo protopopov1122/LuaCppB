@@ -18,6 +18,7 @@
 #include "luacppb/Reference/Handle.h"
 #include "luacppb/Reference/Primary.h"
 #include "luacppb/Reference/Field.h"
+#include "luacppb/Value/Iterator.h"
 #include "luacppb/Core/Stack.h"
 
 namespace LuaCppB {
@@ -68,8 +69,12 @@ namespace LuaCppB {
     }
   }
 
-  LuaValue LuaReferenceHandle::operator*() {
+  LuaValue LuaReferenceHandle::operator*() const {
     return this->get<LuaValue>();
+  }
+
+  bool LuaReferenceHandle::isValid() const {
+    return this->state != nullptr && this->ref != nullptr;
   }
 
   bool LuaReferenceHandle::exists() {
@@ -95,9 +100,13 @@ namespace LuaCppB {
 
   LuaReferenceHandle &LuaReferenceHandle::operator=(const LuaReferenceHandle &handle) {
     this->state = handle.state;
-    handle.getReference().putOnTop([&](lua_State *state) {
-      this->ref = std::make_unique<Internal::LuaRegistryReference>(state, handle.getRuntime(), -1);
-    });
+    if (handle.isValid()) {
+      handle.getReference().putOnTop([&](lua_State *state) {
+        this->ref = std::make_unique<Internal::LuaRegistryReference>(state, handle.getRuntime(), -1);
+      });
+    } else {
+      this->ref = nullptr;
+    }
     return *this;
   }
 
@@ -121,5 +130,32 @@ namespace LuaCppB {
 
   void LuaReferenceHandle::setMetatable(LuaData &&data) {
     this->setMetatable(data);
+  }
+
+  bool LuaReferenceHandle::operator==(const LuaReferenceHandle &handle) const {
+    if (this->isValid() && handle.isValid()) {
+      LuaValue value = *handle;
+      bool result = false;
+      this->getReference().putOnTop([&](lua_State *state) {
+        value.push(state);
+        result = static_cast<bool>(lua_compare(state, -1, -2, LUA_OPEQ));
+        lua_pop(state, 1);
+      });
+      return result;
+    } else {
+      return this->state == handle.state;
+    }
+  }
+
+  bool LuaReferenceHandle::operator!=(const LuaReferenceHandle &handle) const {
+    return !this->operator==(handle);
+  }
+
+  TableIterator LuaReferenceHandle::begin() {
+    return TableIterator(this->state, *this);
+  }
+
+  const TableIterator &LuaReferenceHandle::end() const {
+    return TableIterator::End;
   }
 }

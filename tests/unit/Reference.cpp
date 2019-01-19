@@ -187,3 +187,24 @@ TEST_CASE("Metatable operations") {
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(env["res"].get<int>() == 125);
 }
+
+TEST_CASE("Table iterator") {
+  const std::string &CODE = "tbl = {\n"
+                            "    a = 1,\n"
+                            "    b = 2,\n"
+                            "    c = 3,\n"
+                            "    d = 4\n"
+                            "}";
+  LuaEnvironment env;
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  std::string line;
+  int sum = 0;
+  for (auto it = env["tbl"].begin(); it != env["tbl"].end(); ++it) {
+    auto entry = *it;
+    line.append(entry.first.get<const std::string &>());
+    sum += entry.second.get<int>();
+  }
+  std::sort(line.begin(), line.end());
+  REQUIRE(line.compare("abcd") == 0);
+  REQUIRE(sum == 10);
+}

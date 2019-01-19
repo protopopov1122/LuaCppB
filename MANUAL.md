@@ -69,6 +69,13 @@ You can also wrap any of supported types in `LuaValue` object using `LuaValueFac
 ```C++
 LuaValue value = LuaValueFactory::wrap(env, "Hello, world!");
 ```
+`LuaCppB` supports iteration over Lua tables:
+```C++
+auto table = env["tbl"];
+for (auto it = table.begin(); it != table.end(); ++it) {
+  std::pair<LuaValue, LuaValue> key_value = *it;
+}
+```
 
 #### Metatables
 It's possible to assign/retrieve metatable to/from any reference. Consider following example:

@@ -67,7 +67,7 @@ namespace LuaCppB {
   }
 
   template <typename T>
-  typename std::enable_if<!Internal::is_instantiation<std::function, T>::value, T>::type LuaReferenceHandle::get() {
+  typename std::enable_if<!Internal::is_instantiation<std::function, T>::value, T>::type LuaReferenceHandle::get() const {
     try {
       return this->ref->get<T>();
     } catch (std::exception &ex) {

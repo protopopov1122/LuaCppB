@@ -16,6 +16,7 @@ luacppb_source = [
   'Reference/Handle.cpp',
   'Reference/Primary.cpp',
   'Reference/Registry.cpp',
+  'Value/Iterator.cpp',
   'Value/Types.cpp',
   'Value/Value.cpp'
 ]

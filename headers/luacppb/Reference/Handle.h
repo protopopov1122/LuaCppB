@@ -29,6 +29,8 @@
 
 namespace LuaCppB {
 
+	class TableIterator;
+
 	class LuaReferenceHandle {
 	 public:
 	 	LuaReferenceHandle();
@@ -38,17 +40,23 @@ namespace LuaCppB {
 
 		Internal::LuaReference &getReference() const;
 		LuaCppRuntime &getRuntime() const;
+		bool isValid() const;
 		bool exists();
 		LuaType getType();
 		LuaReferenceHandle operator[](const std::string &);
 		LuaReferenceHandle operator[](const char *);
 		LuaReferenceHandle operator[](lua_Integer);
 		LuaReferenceHandle &operator=(const LuaReferenceHandle &);
-		LuaValue operator*();
+		LuaValue operator*() const;
+		TableIterator begin();
+		const TableIterator &end() const;
 
 		LuaReferenceHandle getMetatable();
 		void setMetatable(LuaData &);
 		void setMetatable(LuaData &&);
+
+		bool operator==(const LuaReferenceHandle &) const;
+		bool operator!=(const LuaReferenceHandle &) const;
 
 		template <typename T>
 		typename std::enable_if<!std::is_same<T, LuaReferenceHandle>::value, LuaReferenceHandle>::type &operator=(T &);
@@ -63,7 +71,7 @@ namespace LuaCppB {
 		operator T& ();
 
 		template <typename T>
-		typename std::enable_if<!Internal::is_instantiation<std::function, T>::value, T>::type get();
+		typename std::enable_if<!Internal::is_instantiation<std::function, T>::value, T>::type get() const;
 
 		template <typename ... A>
 		Internal::LuaFunctionCallResult operator()(A &&...) const;

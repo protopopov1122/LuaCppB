@@ -25,11 +25,7 @@ namespace LuaCppB::Internal {
 
   template <typename T>
   typename std::enable_if<std::is_same<T, LuaValue>::value, T>::type LuaReference::get() {
-    std::optional<LuaValue> value;
-    this->putOnTop([&](lua_State *state) {
-      value = LuaValue::peek(state);
-    });
-    return value.value_or(LuaValue());
+    return this->toValue();
   }
 
 #ifdef LUACPPB_COROUTINE_SUPPORT

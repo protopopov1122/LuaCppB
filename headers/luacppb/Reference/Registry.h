@@ -27,6 +27,7 @@ namespace LuaCppB::Internal {
   class LuaRegistryHandle {
    public:
     virtual ~LuaRegistryHandle() = default;
+    virtual lua_State *getState() = 0;
     virtual bool hasValue() const = 0;
     virtual bool get(std::function<void (lua_State *)>) const = 0;
     virtual bool set(std::function<void (lua_State *)>) = 0;
@@ -41,6 +42,7 @@ namespace LuaCppB::Internal {
     LuaUniqueRegistryHandle(LuaUniqueRegistryHandle &&);
     virtual ~LuaUniqueRegistryHandle();
 
+    lua_State *getState() override;
     bool hasValue() const override;
     bool get(std::function<void(lua_State *)>) const override;
     bool set(std::function<void(lua_State *)>) override;
@@ -56,6 +58,7 @@ namespace LuaCppB::Internal {
     LuaSharedRegistryHandle(const LuaSharedRegistryHandle &);
     LuaSharedRegistryHandle(const LuaRegistryHandle &);
 
+    lua_State *getState() override;
     bool hasValue() const override;
     bool get(std::function<void(lua_State *)>) const override;
     bool set(std::function<void(lua_State *)>) override;

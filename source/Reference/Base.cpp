@@ -24,4 +24,12 @@ namespace LuaCppB::Internal {
   LuaCppRuntime &LuaReference::getRuntime() {
     return this->runtime;
   }
+
+  LuaValue LuaReference::toValue() {
+    std::optional<LuaValue> value;
+    this->putOnTop([&](lua_State *state) {
+      value = LuaValue::peek(state);
+    });
+    return value.value_or(LuaValue());
+  }
 }

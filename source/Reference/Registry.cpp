@@ -67,6 +67,10 @@ namespace LuaCppB::Internal {
     }
   }
 
+  lua_State *LuaUniqueRegistryHandle::getState() {
+    return this->state;
+  }
+
   bool LuaUniqueRegistryHandle::hasValue() const {
     return this->state != nullptr;
   }
@@ -111,6 +115,10 @@ namespace LuaCppB::Internal {
     handle.get([&](lua_State *state) {
       this->handle = std::make_shared<LuaUniqueRegistryHandle>(state, -1);
     });
+  }
+
+  lua_State *LuaSharedRegistryHandle::getState() {
+    return this->handle != nullptr ? this->handle->getState() : nullptr;
   }
 
   bool LuaSharedRegistryHandle::hasValue() const {

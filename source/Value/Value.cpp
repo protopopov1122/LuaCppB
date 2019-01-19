@@ -119,4 +119,23 @@ namespace LuaCppB {
     }
     return value;
   }
+
+  std::optional<LuaValue>	LuaValue::fromRegistry(Internal::LuaSharedRegistryHandle &handle) {
+    std::optional<LuaValue> value;
+    handle.get([&](lua_State *state) {
+      Internal::LuaStack stack(state);
+      if (stack.is<LuaType::Function>(-1)) {
+        value = LuaValue(LuaFunction(handle));
+      } else if (stack.is<LuaType::Table>(-1)) {
+        value = LuaValue(LuaTable(handle));
+      } else if (stack.is<LuaType::UserData>(-1)) {
+        value = LuaValue(LuaUserData(handle));
+      } else if (stack.is<LuaType::Thread>(-1)) {
+        value = LuaValue(LuaThread(handle));
+      } else {
+        value = LuaValue::peek(state, -1);
+      }
+    });
+    return value;
+  }
 }

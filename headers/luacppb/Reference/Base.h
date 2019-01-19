@@ -71,6 +71,8 @@ namespace LuaCppB::Internal {
 		template <typename T>
 		typename std::enable_if<!std::is_base_of<LuaData, T>::value>::type set(T &);
 	 protected:
+		virtual LuaValue toValue();
+
 		LuaCppRuntime &runtime;
 	};
 }

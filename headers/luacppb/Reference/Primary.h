@@ -49,9 +49,12 @@ namespace LuaCppB::Internal {
 	class LuaRegistryReference : public LuaReference {
 	 public:
 		LuaRegistryReference(lua_State *, LuaCppRuntime &, int = -1);
+		LuaRegistryReference(LuaCppRuntime &, Internal::LuaSharedRegistryHandle &);
 
 		bool putOnTop(std::function<void (lua_State *)>) override;
 		bool setValue(std::function<void (lua_State *)>) override;
+	 protected:
+		LuaValue toValue() override;
 	 private:
 	 	Internal::LuaSharedRegistryHandle handle;
 	};

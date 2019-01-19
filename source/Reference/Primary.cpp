@@ -69,11 +69,18 @@ namespace LuaCppB::Internal {
     }
   }
 
+  LuaRegistryReference::LuaRegistryReference(LuaCppRuntime &runtime, Internal::LuaSharedRegistryHandle &handle)
+    : LuaReference(runtime), handle(handle) {}
+
   bool LuaRegistryReference::putOnTop(std::function<void (lua_State *)> callback) {
     return this->handle.get(callback);
   }
 
   bool LuaRegistryReference::setValue(std::function<void (lua_State *)> gen) {
     return this->handle.set(gen);
+  }
+
+  LuaValue LuaRegistryReference::toValue() {
+    return LuaValue::fromRegistry(this->handle).value_or(LuaValue());
   }
 }

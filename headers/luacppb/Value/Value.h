@@ -68,6 +68,7 @@ namespace LuaCppB {
 		LuaType getType() const noexcept;
 		void push(lua_State *state) const override;
 		static std::optional<LuaValue> peek(lua_State *, lua_Integer = -1);
+		static std::optional<LuaValue>	fromRegistry(Internal::LuaSharedRegistryHandle &);
 
 		template <typename T>
 		typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, bool>::value, T>::type get(T = 0) const;

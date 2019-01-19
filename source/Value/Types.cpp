@@ -112,6 +112,9 @@ namespace LuaCppB {
   LuaReferencedValue::LuaReferencedValue(const LuaReferencedValue &base)
     : handle(base.handle) {}
 
+  LuaReferencedValue::LuaReferencedValue(Internal::LuaSharedRegistryHandle &handle)
+    : handle(handle) {}
+
   void LuaReferencedValue::push(lua_State *state) const {
     this->handle.push(state);
   }
@@ -121,11 +124,7 @@ namespace LuaCppB {
   }
 
   LuaReferenceHandle LuaReferencedValue::ref(LuaCppRuntime &runtime) {
-    LuaReferenceHandle handle;
-    this->handle.get([&](lua_State *state) {
-      handle = LuaReferenceHandle(state, std::make_unique<Internal::LuaRegistryReference>(state, runtime));
-    });
-    return handle;
+    return LuaReferenceHandle(this->handle.getState(), std::make_unique<Internal::LuaRegistryReference>(runtime, this->handle));
   }
 
   LuaTable LuaTable::get(lua_State *state, int index) {

@@ -203,8 +203,10 @@ TEST_CASE("Table iterator") {
     auto entry = *it;
     line.append(entry.first.get<const std::string &>());
     sum += entry.second.get<int>();
+    int value = env["tbl"][entry.first];
+    sum += value;
   }
   std::sort(line.begin(), line.end());
   REQUIRE(line.compare("abcd") == 0);
-  REQUIRE(sum == 10);
+  REQUIRE(sum == 20);
 }

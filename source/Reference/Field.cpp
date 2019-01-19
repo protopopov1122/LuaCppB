@@ -21,7 +21,10 @@
 namespace LuaCppB::Internal {
 
   LuaTableField::LuaTableField(LuaReferenceHandle ref, LuaCppRuntime &runtime, const std::string &name)
-    : LuaReference(runtime), ref(ref), name(name) {}
+    : LuaReference(runtime), ref(std::move(ref)), name(LuaValue::create(name)) {}
+  
+  LuaTableField::LuaTableField(LuaReferenceHandle ref, LuaCppRuntime &runtime, LuaValue value)
+    : LuaReference(runtime), ref(std::move(ref)), name(std::move(value)) {}
 
   bool LuaTableField::putOnTop(std::function<void (lua_State *)> callback) {
     bool result = false;
@@ -29,7 +32,8 @@ namespace LuaCppB::Internal {
       Internal::LuaStackGuard guard(state);
       Internal::LuaStack stack(state);
       if (stack.is<LuaType::Table>()) {
-        stack.getField(-1, this->name);
+        this->name.push(state);
+        lua_gettable(state, -2);
         if (!stack.is<LuaType::None>()) {
           auto canary = guard.canary();
           callback(state);
@@ -49,9 +53,10 @@ namespace LuaCppB::Internal {
       Internal::LuaStack stack(state);
       if (stack.is<LuaType::Table>()) {
         auto canary = guard.canary();
+        this->name.push(state);
         gen(state);
-        canary.assume(1);
-        stack.setField(-2, this->name);
+        canary.assume(2);
+        lua_settable(state, -3);
         result = true;
       }
     });

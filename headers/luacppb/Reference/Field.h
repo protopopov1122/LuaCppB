@@ -25,12 +25,13 @@ namespace LuaCppB::Internal {
 	class LuaTableField : public LuaReference {
 	 public:
 		LuaTableField(LuaReferenceHandle, LuaCppRuntime &, const std::string &);
+		LuaTableField(LuaReferenceHandle, LuaCppRuntime &, LuaValue);
 		
 		bool putOnTop(std::function<void (lua_State *)>) override;
 		bool setValue(std::function<void (lua_State *)>) override;
 	 private:
 		LuaReferenceHandle ref;
-		std::string name;
+		LuaValue name;
 	};
 
 	class LuaArrayField : public LuaReference {

@@ -69,6 +69,14 @@ namespace LuaCppB {
     }
   }
 
+  LuaReferenceHandle LuaReferenceHandle::operator[](LuaValue value) {
+    if (this->ref) {
+      return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaTableField>(*this, this->ref->getRuntime(), value));
+    } else {
+      return LuaReferenceHandle();
+    }
+  }
+
   LuaValue LuaReferenceHandle::operator*() const {
     return this->get<LuaValue>();
   }

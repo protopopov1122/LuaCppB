@@ -46,6 +46,7 @@ namespace LuaCppB {
 		LuaReferenceHandle operator[](const std::string &);
 		LuaReferenceHandle operator[](const char *);
 		LuaReferenceHandle operator[](lua_Integer);
+		LuaReferenceHandle operator[](LuaValue);
 		LuaReferenceHandle &operator=(const LuaReferenceHandle &);
 		LuaValue operator*() const;
 		TableIterator begin();

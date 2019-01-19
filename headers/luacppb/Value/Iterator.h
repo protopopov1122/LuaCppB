@@ -33,13 +33,14 @@ namespace LuaCppB {
     TableIterator(const TableIterator &);
     TableIterator(TableIterator &&);
 
+    bool valid() const;
     Entry operator*() const;
     TableIterator &operator++();
     TableIterator operator++(int);
     bool operator==(const TableIterator &) const;
     bool operator!=(const TableIterator &) const;
 
-    static TableIterator End;
+    static const TableIterator End;
    private:
     TableIterator();
     void next();

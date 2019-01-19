@@ -48,7 +48,7 @@ If the reference is not converted to some C++ types, it will be stored as an ins
 Most C++ values are implicitly converted to Lua equivalents. `LuaCppB` includes the factory for some complex values:
 * Tables - creating new table objects are performed with following calls:
   ```C++
-  auto table = LuaValueFactory::newTable(env);  // Creating and referencing a new table
+  auto table = LuaFactory::newTable(env);  // Creating and referencing a new table
   table["abc"] = 123;                           // Adding keys and values
   // Then you can assign it to any reference
   // * operator is vital, otherwise only reference itself will be copied
@@ -56,18 +56,18 @@ Most C++ values are implicitly converted to Lua equivalents. `LuaCppB` includes 
   ```
 * Functions - creating anonymous function references
   ```C++
-  auto fn = LuaValueFactory::newFunction(env, [](int i) { return i * i; }); // You can use function pointers as well
+  auto fn = LuaFactory::newFunction(env, [](int i) { return i * i; }); // You can use function pointers as well
   env["some_func"] = *fn;
   ```
 * Threads - building Lua coroutines
   ```C++
-  auto thread = LuaValueFactory::newThread(env, env["some_func"]);    // You can pass any function reference, including the one from previous example
+  auto thread = LuaFactory::newThread(env, env["some_func"]);    // You can pass any function reference, including the one from previous example
   env["thread"] = *thread;
   ```
 
-You can also wrap any of supported types in `LuaValue` object using `LuaValueFactory::wrap` method. It may be useful when assigning constants to wrapped classes. Example:
+You can also wrap any of supported types in `LuaValue` object using `LuaFactory::wrap` method. It may be useful when assigning constants to wrapped classes. Example:
 ```C++
-LuaValue value = LuaValueFactory::wrap(env, "Hello, world!");
+LuaValue value = LuaFactory::wrap(env, "Hello, world!");
 ```
 `LuaCppB` supports iteration over Lua tables:
 ```C++
@@ -81,7 +81,7 @@ for (auto it = table.begin(); it != table.end(); ++it) {
 It's possible to assign/retrieve metatable to/from any reference. Consider following example:
 ```C++
   auto sometable = env["table"];
-  auto metatable = LuaValueFactory::newTable(env);
+  auto metatable = LuaFactory::newTable(env);
   sometable.setMetatable(*metatable);                 // Assigning metatable
   sometable.getMetatable()["a"] = 1;                  // Retrieving metatable
 ```

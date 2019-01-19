@@ -60,6 +60,10 @@ namespace LuaCppB {
 		LuaValue(void *);
 		LuaValue(LuaUserData);
 		LuaValue(LuaThread);
+		
+		LuaValue(LuaValue &&);
+		LuaValue(const LuaValue &) = default;
+		LuaValue &operator=(const LuaValue &) = default;
 
 		LuaType getType() const noexcept;
 		void push(lua_State *state) const override;

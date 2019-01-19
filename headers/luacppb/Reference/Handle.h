@@ -40,24 +40,24 @@ namespace LuaCppB {
 
 		Internal::LuaReference &getReference() const;
 		LuaCppRuntime &getRuntime() const;
-		bool isValid() const;
-		bool exists();
-		LuaType getType();
-		LuaReferenceHandle operator[](const std::string &);
-		LuaReferenceHandle operator[](const char *);
-		LuaReferenceHandle operator[](lua_Integer);
-		LuaReferenceHandle operator[](LuaValue);
+		bool valid() const;
+		bool exists() const;
+		LuaType getType() const;
+
 		LuaReferenceHandle &operator=(const LuaReferenceHandle &);
 		LuaValue operator*() const;
-		TableIterator begin();
+		bool operator==(const LuaReferenceHandle &) const;
+		bool operator!=(const LuaReferenceHandle &) const;
+
+		TableIterator begin() const;
 		const TableIterator &end() const;
 
-		LuaReferenceHandle getMetatable();
+		LuaReferenceHandle getMetatable() const;
 		void setMetatable(LuaData &);
 		void setMetatable(LuaData &&);
 
-		bool operator==(const LuaReferenceHandle &) const;
-		bool operator!=(const LuaReferenceHandle &) const;
+		template <typename T>
+		typename std::enable_if<Internal::LuaValueWrapper<T>::Conversible, LuaReferenceHandle>::type operator[](T);
 
 		template <typename T>
 		typename std::enable_if<!std::is_same<T, LuaReferenceHandle>::value, LuaReferenceHandle>::type &operator=(T &);

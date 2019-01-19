@@ -27,7 +27,7 @@ namespace LuaCppB::Internal {
     LuaGC();
     LuaGC(lua_State *);
 
-    bool isValid() const;
+    bool valid() const;
     bool isRunning() const;
 
     int count() const;

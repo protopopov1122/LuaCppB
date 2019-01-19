@@ -49,43 +49,15 @@ namespace LuaCppB {
     return this->ref->getRuntime();
   }
 
-  LuaReferenceHandle LuaReferenceHandle::operator[](const std::string &name) {
-    if (this->ref) {
-      return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaTableField>(*this, this->ref->getRuntime(), name));
-    } else {
-      return LuaReferenceHandle();
-    }
-  }
-
-  LuaReferenceHandle LuaReferenceHandle::operator[](const char *name)  {
-    return this->operator[](std::string(name));
-  }
-
-  LuaReferenceHandle LuaReferenceHandle::operator[](lua_Integer index) {
-    if (this->ref) {
-      return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaArrayField>(*this, this->ref->getRuntime(), index));
-    } else {
-      return LuaReferenceHandle();
-    }
-  }
-
-  LuaReferenceHandle LuaReferenceHandle::operator[](LuaValue value) {
-    if (this->ref) {
-      return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaTableField>(*this, this->ref->getRuntime(), value));
-    } else {
-      return LuaReferenceHandle();
-    }
-  }
-
   LuaValue LuaReferenceHandle::operator*() const {
     return this->get<LuaValue>();
   }
 
-  bool LuaReferenceHandle::isValid() const {
+  bool LuaReferenceHandle::valid() const {
     return this->state != nullptr && this->ref != nullptr;
   }
 
-  bool LuaReferenceHandle::exists() {
+  bool LuaReferenceHandle::exists() const {
     bool exists = false;
     if (this->ref) {
       this->ref->putOnTop([&](lua_State *state) {
@@ -96,7 +68,7 @@ namespace LuaCppB {
     return exists;
   }
 
-  LuaType LuaReferenceHandle::getType() {
+  LuaType LuaReferenceHandle::getType() const {
     LuaType type = LuaType::None;
     if (this->ref) {
       this->ref->putOnTop([&](lua_State *state) {
@@ -108,7 +80,7 @@ namespace LuaCppB {
 
   LuaReferenceHandle &LuaReferenceHandle::operator=(const LuaReferenceHandle &handle) {
     this->state = handle.state;
-    if (handle.isValid()) {
+    if (handle.valid()) {
       handle.getReference().putOnTop([&](lua_State *state) {
         this->ref = std::make_unique<Internal::LuaRegistryReference>(state, handle.getRuntime(), -1);
       });
@@ -118,7 +90,7 @@ namespace LuaCppB {
     return *this;
   }
 
-  LuaReferenceHandle LuaReferenceHandle::getMetatable() {
+  LuaReferenceHandle LuaReferenceHandle::getMetatable() const {
     LuaReferenceHandle handle;
     this->getReference().putOnTop([&](lua_State *state) {
       Internal::LuaStack stack(state);
@@ -141,13 +113,14 @@ namespace LuaCppB {
   }
 
   bool LuaReferenceHandle::operator==(const LuaReferenceHandle &handle) const {
-    if (this->isValid() && handle.isValid()) {
+    if (this->valid() && handle.valid()) {
       LuaValue value = *handle;
       bool result = false;
       this->getReference().putOnTop([&](lua_State *state) {
-        value.push(state);
-        result = static_cast<bool>(lua_compare(state, -1, -2, LUA_OPEQ));
-        lua_pop(state, 1);
+        Internal::LuaStack stack(state);
+        stack.push(value);
+        result = stack.compare(-1, -2);
+        stack.pop();
       });
       return result;
     } else {
@@ -159,7 +132,7 @@ namespace LuaCppB {
     return !this->operator==(handle);
   }
 
-  TableIterator LuaReferenceHandle::begin() {
+  TableIterator LuaReferenceHandle::begin() const {
     return TableIterator(this->state, *this);
   }
 

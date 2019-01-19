@@ -23,13 +23,13 @@
 namespace LuaCppB {
 
   template <typename T>
-  LuaReferenceHandle LuaValueFactory::newTable(T &env) {
+  LuaReferenceHandle LuaFactory::newTable(T &env) {
     LuaTable table = LuaTable::create(env.getState());
     return table.ref(env);
   }
 
   template <typename T, typename F>
-  LuaReferenceHandle LuaValueFactory::newFunction(T &env, F && fn) {
+  LuaReferenceHandle LuaFactory::newFunction(T &env, F && fn) {
     auto callable = NativeCallable(std::forward<F>(fn), env);
     Internal::LuaStack stack(env.getState());
     callable.push(env.getState());
@@ -40,7 +40,7 @@ namespace LuaCppB {
 
 #ifdef LUACPPB_COROUTINE_SUPPORT
   template <typename T>
-  LuaReferenceHandle LuaValueFactory::newThread(T &env, LuaReferenceHandle handle) {
+  LuaReferenceHandle LuaFactory::newThread(T &env, LuaReferenceHandle handle) {
     LuaCoroutine coro = handle;
     Internal::LuaStack stack(env.getState());
     coro.push(env.getState());
@@ -51,7 +51,7 @@ namespace LuaCppB {
 #endif
 
   template <typename T, typename V>
-  LuaValue LuaValueFactory::wrap(T &env, V &value) {
+  LuaValue LuaFactory::wrap(T &env, V &value) {
     Internal::LuaNativeValue::push(env.getState(), env, value);
     Internal::LuaStack stack(env.getState());
     LuaValue val = stack.get().value_or(LuaValue());
@@ -60,8 +60,17 @@ namespace LuaCppB {
   }
 
   template <typename T, typename V>
-  LuaValue LuaValueFactory::wrap(T &env, V &&value) {
-    return LuaValueFactory::wrap(env, value);
+  LuaValue LuaFactory::wrap(T &env, V &&value) {
+    return LuaFactory::wrap(env, value);
+  }
+
+  template <typename T>
+  LuaReferenceHandle LuaFactory::mkref(T &env, LuaData &data) {
+    Internal::LuaStack stack(env.getState());
+    stack.push(data);
+    LuaReferenceHandle ref(env.getState(), std::make_unique<>(env.getState(), env, -1));
+    stack.pop();
+    return ref;
   }
 }
 

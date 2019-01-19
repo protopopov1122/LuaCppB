@@ -25,6 +25,12 @@
 
 namespace LuaCppB::Internal {
 
+  enum class LuaCompareOperation {
+    Equals = LUA_OPEQ,
+    LessThan = LUA_OPLT,
+    LessOrEqual = LUA_OPLE
+  };
+
   class LuaStack {
    public:
     LuaStack(lua_State *);
@@ -42,6 +48,7 @@ namespace LuaCppB::Internal {
     void push(bool);
     void push(const std::string &);
     void push(int (*)(lua_State *), int = 0);
+    void push(LuaData &);
     void pushTable();
     lua_State *pushThread();
     void *pushUserData(std::size_t);
@@ -51,6 +58,7 @@ namespace LuaCppB::Internal {
     bool toBoolean(int = -1);
     std::string toString(int = -1);
     LuaCFunction toCFunction(int = -1);
+    bool compare(int, int, LuaCompareOperation = LuaCompareOperation::Equals);
 
     void setField(int, const std::string &);
     void getField(int, const std::string &);

@@ -75,6 +75,10 @@ namespace LuaCppB::Internal {
     }
   }
 
+  void LuaStack::push(LuaData &value) {
+    value.push(this->state);
+  }
+
   void LuaStack::pushTable() {
     lua_newtable(this->state);
   }
@@ -105,6 +109,10 @@ namespace LuaCppB::Internal {
 
   LuaCFunction LuaStack::toCFunction(int index) {
     return lua_tocfunction(this->state, index);
+  }
+
+  bool LuaStack::compare(int idx1, int idx2, LuaCompareOperation op) {
+    return static_cast<bool>(lua_compare(this->state, idx1, idx2, static_cast<int>(op)));
   }
 
   void LuaStack::setField(int index, const std::string &key) {

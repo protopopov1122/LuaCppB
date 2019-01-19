@@ -176,10 +176,10 @@ TEST_CASE("Object assignment") {
 TEST_CASE("Metatable operations") {
   const std::string &CODE = "res = tbl.a + tbl.b + getmetatable(tbl).__index.b";
   LuaEnvironment env;
-  auto table = LuaValueFactory::newTable(env);
-  table.setMetatable(*LuaValueFactory::newTable(env));
+  auto table = LuaFactory::newTable(env);
+  table.setMetatable(*LuaFactory::newTable(env));
   auto metatable = table.getMetatable();
-  auto index = LuaValueFactory::newTable(env);
+  auto index = LuaFactory::newTable(env);
   metatable["__index"] = *index;
   table["a"] = 25;
   index["b"] = 50;

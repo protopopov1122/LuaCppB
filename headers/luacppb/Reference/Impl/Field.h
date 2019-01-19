@@ -15,40 +15,21 @@
   IN THE SOFTWARE.
 */
 
-#ifndef LUACPPB_VALUE_FACTORY_H_
-#define LUACPPB_VALUE_FACTORY_H_
+#ifndef LUACPPB_REFERENCE_IMPL_FIELD_H_
+#define LUACPPB_REFERENCE_IMPL_FIELD_H_
 
-#include "luacppb/Base.h"
-#include "luacppb/Value/Native.h"
-#include "luacppb/Reference/Handle.h"
+#include "luacppb/Reference/Field.h"
 
 namespace LuaCppB {
-
-
-  class LuaFactory {
-   public:
-    template <typename T>
-    static LuaReferenceHandle newTable(T &);
-
-    template <typename T, typename F>
-    static LuaReferenceHandle newFunction(T &, F &&);
-
-#ifdef LUACPPB_COROUTINE_SUPPORT
-    template <typename T>
-    static LuaReferenceHandle newThread(T &, LuaReferenceHandle);
-#endif
-
-    template <typename T, typename V>
-    static LuaValue wrap(T &, V &);
-
-    template <typename T, typename V>
-    static LuaValue wrap(T &, V &&);
-
-    template <typename T>
-    static LuaReferenceHandle mkref(T &, LuaData &);
-  };
+  
+  template <typename T>
+  typename std::enable_if<Internal::LuaValueWrapper<T>::Conversible, LuaReferenceHandle>::type LuaReferenceHandle::operator[](T index) {
+    if (this->ref) {
+      return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaTableField>(*this, this->ref->getRuntime(), Internal::LuaValueWrapper<T>::wrap(index)));
+    } else {
+      return LuaReferenceHandle();
+    }
+  }
 }
-
-#include "luacppb/Value/Impl/Factory.h"
 
 #endif

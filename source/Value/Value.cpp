@@ -32,6 +32,11 @@ namespace LuaCppB {
   LuaValue::LuaValue(void *ptr) : type(LuaType::LightUserData), value(ptr) {}
   LuaValue::LuaValue(LuaUserData ud) : type(LuaType::UserData), value(ud) {}
   LuaValue::LuaValue(LuaThread th) : type(LuaType::Thread), value(th) {}
+  
+  LuaValue::LuaValue(LuaValue &&v)
+    : type(v.type), value(std::move(v.value)) {
+    v.type = LuaType::Nil;
+  }
 
   LuaType LuaValue::getType() const noexcept {
     return this->type;

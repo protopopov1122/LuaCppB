@@ -23,7 +23,7 @@ namespace LuaCppB::Internal {
   LuaGC::LuaGC() : state(nullptr) {}
   LuaGC::LuaGC(lua_State *state) : state(state) {}
 
-  bool LuaGC::isValid() const {
+  bool LuaGC::valid() const {
     return this->state != nullptr;
   }
 

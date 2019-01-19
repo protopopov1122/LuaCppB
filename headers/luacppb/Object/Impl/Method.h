@@ -40,7 +40,7 @@ namespace LuaCppB::Internal {
   int LuaCppObjectMethodCall<C, M, R, A...>::call(C *object, M method, LuaCppRuntime &runtime, lua_State *state) {
     std::array<LuaValue, sizeof...(A)> wrappedArgs;
     WrappedFunctionArguments<2, A...>::get(state, wrappedArgs);
-    std::tuple<A...> args = NativeFunctionArgumentsTuple<2, A...>::value(state, runtime, wrappedArgs);
+    auto args = NativeFunctionArgumentsTuple<2, A...>::value(state, runtime, wrappedArgs);
     if constexpr (std::is_void<R>::value) {
       std::apply([object, method](A... args) {	
         return (object->*method)(args...);

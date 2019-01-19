@@ -120,7 +120,7 @@ struct rect : public point {
 TEST_CASE("Object binding") {
   LuaEnvironment env;
   Arith arith(10);
-  auto constant = LuaValueFactory::newTable(env);
+  auto constant = LuaFactory::newTable(env);
   constant["pi"] = 3.14f;
   LuaCppObject aObj(arith, env);
   aObj.bind("add", &Arith::add);

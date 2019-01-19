@@ -42,7 +42,7 @@ namespace LuaCppB {
     int CustomUserDataCall<T, F, A...>::call(F &invocable, const std::string &className, LuaCppRuntime &runtime, lua_State *state) {
       std::array<LuaValue, sizeof...(A)> wrappedArgs;
       WrappedFunctionArguments<2, A...>::get(state, wrappedArgs);
-      std::tuple<A...> args = Internal::NativeFunctionArgumentsTuple<2, A...>::value(state, runtime, wrappedArgs);
+      auto args = Internal::NativeFunctionArgumentsTuple<2, A...>::value(state, runtime, wrappedArgs);
       T &value = *static_cast<T *>(luaL_checkudata(state, 1, className.c_str()));
       std::tuple<T &, A...> fullArgs = std::tuple_cat(std::forward_as_tuple(value), args);
       if constexpr (std::is_void<R>::value) {

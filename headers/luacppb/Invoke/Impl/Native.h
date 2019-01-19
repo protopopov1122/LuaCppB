@@ -37,7 +37,7 @@ namespace LuaCppB::Internal {
   int NativeFunctionCall<P, R, A...>::call(F function, LuaCppRuntime &runtime, lua_State *state) {
     std::array<LuaValue, sizeof...(A)> wrappedArgs;
     WrappedFunctionArguments<1, A...>::get(state, wrappedArgs);
-    std::tuple<A...> args = Internal::NativeFunctionArgumentsTuple<1, A...>::value(state, runtime, wrappedArgs);
+    auto args = Internal::NativeFunctionArgumentsTuple<1, A...>::value(state, runtime, wrappedArgs);
     if constexpr (std::is_void<R>::value) {
       std::apply(function, args);
       return 0;
@@ -86,7 +86,7 @@ namespace LuaCppB::Internal {
   int NativeMethodCall<P, C, R, A...>::call(C *object, M &&method, LuaCppRuntime &runtime, lua_State *state) {
     std::array<LuaValue, sizeof...(A)> wrappedArgs;
     WrappedFunctionArguments<1, A...>::get(state, wrappedArgs);
-    std::tuple<A...> args = Internal::NativeFunctionArgumentsTuple<1, A...>::value(state, runtime, wrappedArgs);
+    auto args = Internal::NativeFunctionArgumentsTuple<1, A...>::value(state, runtime, wrappedArgs);
     if constexpr (std::is_void<R>::value) {
       std::apply([object, method](A... args) {	
         return (object->*method)(args...);
@@ -163,7 +163,7 @@ namespace LuaCppB::Internal {
   int NativeInvocableCall<P, T, A...>::call(T &invocable, LuaCppRuntime &runtime, lua_State *state) {
     std::array<LuaValue, sizeof...(A)> wrappedArgs;
     WrappedFunctionArguments<1, A...>::get(state, wrappedArgs);
-    std::tuple<A...> args = Internal::NativeFunctionArgumentsTuple<1, A...>::value(state, runtime, wrappedArgs);
+    auto args = Internal::NativeFunctionArgumentsTuple<1, A...>::value(state, runtime, wrappedArgs);
     if constexpr (std::is_void<R>::value) {
       std::apply(invocable, args);
       return 0;

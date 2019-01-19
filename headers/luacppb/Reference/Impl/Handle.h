@@ -22,7 +22,6 @@
 
 namespace LuaCppB {
 
-
   template <typename T>
   typename std::enable_if<!std::is_same<T, LuaReferenceHandle>::value, LuaReferenceHandle>::type &LuaReferenceHandle::operator=(T &value) {
     try {

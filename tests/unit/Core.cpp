@@ -283,7 +283,7 @@ TEST_CASE("Exception") {
 TEST_CASE("Garbage collector") {
   SECTION("Empty GC") {
     Internal::LuaGC gc;
-    REQUIRE_FALSE(gc.isValid());
+    REQUIRE_FALSE(gc.valid());
     REQUIRE_FALSE(gc.isRunning());
     REQUIRE(gc.count() == 0);
     REQUIRE(gc.countBytes() == 0);
@@ -302,7 +302,7 @@ TEST_CASE("Garbage collector") {
   SECTION("Valid GC") {
     LuaEnvironment env;
     Internal::LuaGC gc(env.getState());
-    REQUIRE(gc.isValid());
+    REQUIRE(gc.valid());
     REQUIRE(gc.isRunning());
     REQUIRE_NOTHROW(gc.stop());
     REQUIRE_FALSE(gc.isRunning());

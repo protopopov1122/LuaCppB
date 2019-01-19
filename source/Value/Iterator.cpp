@@ -20,7 +20,7 @@
 #include "luacppb/Reference/Primary.h"
 
 namespace LuaCppB {
-  TableIterator TableIterator::End;
+  const TableIterator TableIterator::End;
 
   TableIterator::TableIterator()
     : state(nullptr), table(), index(std::make_pair(LuaReferenceHandle(), LuaReferenceHandle())) {}
@@ -43,6 +43,10 @@ namespace LuaCppB {
   TableIterator::TableIterator(TableIterator &&it)
     : state(it.state), table(std::move(it.table)), index(std::move(it.index)) {
     it.state = nullptr;
+  }
+
+  bool TableIterator::valid() const {
+    return this->state != nullptr && this->table.valid();
   }
 
   TableIterator::Entry TableIterator::operator*() const {
@@ -81,7 +85,7 @@ namespace LuaCppB {
   }
 
   void TableIterator::next() {
-    if (this->state) {
+    if (this->valid()) {
       Internal::LuaStack stack(this->state);
       (*this->table).push(this->state);
       (*this->index.first).push(this->state);

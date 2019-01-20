@@ -20,10 +20,9 @@ extraction:
       - wget https://github.com/catchorg/Catch2/releases/download/v2.5.0/catch.hpp
     configure:
       command:
-        - cd $LGTM_SRC
-        - mkdir bin
-        - cd bin
-        - meson .. -Dsystem_lua=false -Dcustom_lua_version=5.3.5
+        - mkdir $LGTM_SRC/bin
+        - cd $LGTM_SRC/bin
+        - CC=/usr/bin/gcc-8 CXX=/usr/bin/g++-8 meson .. -Dsystem_lua=false -Dcustom_lua_version=5.3.5
     index:
       build_command:
         - cd $LGTM_SRC/bin

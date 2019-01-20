@@ -1,0 +1,30 @@
+path_classifiers:
+  test:
+    - "tests/unit/*.cpp"
+
+queries:
+  - exclude: tests/unit/catch.hpp
+  - exclude: lua-source
+
+extraction:
+  cpp:
+    prepare:
+      packages:
+        - g++-8
+    after_prepare:
+      - cd $LGTM_SRC/lua-source
+      - wget https://www.lua.org/ftp/lua-5.3.5.tar.gz
+      - tar xvf lua-5.3.5.tar.gz
+      - rm *.tar.gz
+      - cd $LGTM_SRC/tests/unit
+      - wget https://github.com/catchorg/Catch2/releases/download/v2.5.0/catch.hpp
+    configure:
+      command:
+        - cd $LGTM_SRC
+        - mkdir bin
+        - cd bin
+        - meson .. -Dsystem_lua=false -Dcustom_lua_version=5.3.5
+    index:
+      build_command:
+        - cd $LGTM_SRC/bin
+        - ninja

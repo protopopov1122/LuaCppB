@@ -29,7 +29,7 @@ int test_sample_function2(lua_State *state) {
 }
 
 TEST_CASE("Value constructors") {
-  REQUIRE(LuaValue().getType() == LuaType::Nil);
+  REQUIRE(LuaValue::Nil.getType() == LuaType::Nil);
   REQUIRE(LuaValue(LuaInteger(1)).getType() == LuaType::Number);
   REQUIRE(LuaValue(LuaNumber(1.0)).getType() == LuaType::Number);
   REQUIRE(LuaValue(LuaBoolean(true)).getType() == LuaType::Boolean);
@@ -130,10 +130,11 @@ TEST_CASE("Value push method") {
   lua_State *state = env.getState();
   Internal::LuaStack stack(state);
   SECTION("Nil") {
-    LuaValue().push(state);
+    LuaValue::Nil.push(state);
     LuaNil().push(state);
     REQUIRE(lua_isnil(state, -1));
     REQUIRE(lua_isnil(state, -2));
+    REQUIRE(stack.is<LuaType::Nil>(-1));
   }
   SECTION("Integer") {
     LuaValue::create(100).push(state);
@@ -142,6 +143,7 @@ TEST_CASE("Value push method") {
     LuaValue(LuaInteger()).push(state);
     REQUIRE(lua_isinteger(state, -1));
     REQUIRE(stack.toInteger() == 0);
+    REQUIRE(stack.isInteger(-1));
   }
   SECTION("Number") {
     LuaValue::create(3.14).push(state);
@@ -150,47 +152,56 @@ TEST_CASE("Value push method") {
     LuaValue(LuaNumber()).push(state);
     REQUIRE(lua_isnumber(state, -1));
     REQUIRE(stack.toNumber() == 0.0);
+    REQUIRE(stack.is<LuaType::Number>(-1));
   }
   SECTION("Boolean") {
     LuaValue::create(true).push(state);
     REQUIRE(lua_isboolean(state, -1));
     REQUIRE(stack.toBoolean());
+    REQUIRE(stack.is<LuaType::Boolean>(-1));
   }
   SECTION("String") {
     const std::string &str = "Hello, world!";
     LuaValue::create(str).push(state);
     REQUIRE(lua_isstring(state, -1));
     REQUIRE(str.compare(stack.toString()) == 0);
+    REQUIRE(stack.is<LuaType::String>(-1));
   }
   SECTION("Function") {
     LuaCFunction fn = nullptr;
     LuaValue::create(fn).push(state);
     REQUIRE(lua_iscfunction(state, -1));
     REQUIRE(stack.toCFunction() == fn);
+    REQUIRE(stack.isCFunction(-1));
     LuaFunction func = LuaValue::peek(state).value();
     stack.pop();
     LuaValue(func).push(state);
+    REQUIRE(stack.is<LuaType::Function>(-1));
   }
   SECTION("Table") {
     LuaTable table = LuaTable::create(state);
     table.ref(env)["test"] = 100;
     LuaValue(table).push(state);
     REQUIRE(lua_istable(state, -1));
+    REQUIRE(stack.is<LuaType::Table>(-1));
   }
   SECTION("Light userdata") {
     int value = 100;
     LuaValue(static_cast<void *>(&value)).push(state);
     REQUIRE(lua_islightuserdata(state, -1));
+    REQUIRE(stack.is<LuaType::LightUserData>(-1));
   }
   SECTION("Userdata") {
     auto udata = LuaUserData::create(state, 100);
     LuaValue(udata).push(state);
     REQUIRE(lua_isuserdata(state, -1));
+    REQUIRE(stack.is<LuaType::UserData>(-1));
   }
   SECTION("Thread") {
     auto thread = LuaThread::create(state);
     LuaValue(thread).push(state);
     REQUIRE(lua_isthread(state, -1));
+    REQUIRE(stack.is<LuaType::Thread>(-1));
   }
 }
 
@@ -198,29 +209,29 @@ TEST_CASE("Value get method") {
   LuaEnvironment env;
   SECTION("Integer") {
     REQUIRE(LuaValue::create(10).get<int>() == 10);
-    REQUIRE(LuaValue().get<int>(100) == 100);
+    REQUIRE(LuaValue::Nil.get<int>(100) == 100);
   }
   SECTION("Number") {
     REQUIRE(LuaValue::create(3.14).get<float>() == 3.14f);
-    REQUIRE(LuaValue().get<float>(2.1828) == 2.1828f);
+    REQUIRE(LuaValue::Nil.get<float>(2.1828) == 2.1828f);
   }
   SECTION("Boolean") {
     REQUIRE_FALSE(LuaValue::create(false).get<bool>());
-    REQUIRE(LuaValue().get<bool>(true));
+    REQUIRE(LuaValue::Nil.get<bool>(true));
   }
   SECTION("String") {
     REQUIRE(LuaValue::create("Hello").get<std::string>().compare("Hello") == 0);
-    REQUIRE(LuaValue().get<std::string>("world").compare("world") == 0);
+    REQUIRE(LuaValue::Nil.get<std::string>("world").compare("world") == 0);
     REQUIRE(LuaValue::create("Hello").get<const std::string &>().compare("Hello") == 0);
-    REQUIRE(LuaValue().get<const std::string &>("world").compare("world") == 0);
+    REQUIRE(LuaValue::Nil.get<const std::string &>("world").compare("world") == 0);
   }
   SECTION("CFunction") {
     REQUIRE(LuaValue::create(test_sample_function).get<LuaCFunction>() == test_sample_function);
-    REQUIRE(LuaValue().get<LuaCFunction>(test_sample_function2) == test_sample_function2);
+    REQUIRE(LuaValue::Nil.get<LuaCFunction>(test_sample_function2) == test_sample_function2);
   }
   SECTION("Function") {
     REQUIRE(LuaValue(LuaFunction::create(env.getState(), test_sample_function, 0)).get<LuaFunction>().hasValue());
-    REQUIRE_FALSE(LuaValue().get<LuaFunction>().hasValue());
+    REQUIRE_FALSE(LuaValue::Nil.get<LuaFunction>().hasValue());
   }
 }
 

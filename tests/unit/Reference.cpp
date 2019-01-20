@@ -83,6 +83,14 @@ TEST_CASE("Tables") {
     REQUIRE(nested["y"].get<int>() == 200);
     REQUIRE_FALSE(nested["x"].exists());
   }
+  SECTION("Invalid references") {
+    LuaReferenceHandle ref;
+    REQUIRE_FALSE(ref.valid());
+    REQUIRE_FALSE(ref.exists());
+    auto subref = ref["test"];
+    REQUIRE_FALSE(subref.valid());
+    REQUIRE_FALSE(subref.exists());
+  }
 }
 
 TEST_CASE("Arrays") {
@@ -206,7 +214,26 @@ TEST_CASE("Table iterator") {
     int value = env["tbl"][entry.first];
     sum += value;
   }
+  for (TableIterator it(std::move(env["tbl"].begin())); !(it == env["tbl"].end()); it++) {
+    auto entry = *it;
+    line.append(entry.first.get<const std::string &>());
+    sum += entry.second.get<int>();
+    int value = env["tbl"][entry.first];
+    sum += value;
+  }
   std::sort(line.begin(), line.end());
-  REQUIRE(line.compare("abcd") == 0);
-  REQUIRE(sum == 20);
+  REQUIRE(line.compare("aabbccdd") == 0);
+  REQUIRE(sum == 40);
+}
+
+TEST_CASE("Reference comparison") {
+  const std::string &CODE = "a = 2\n"
+                            "b = 4\n"
+                            "c = b - a";
+  LuaEnvironment env;
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["a"] == env["c"]);
+  REQUIRE(env["a"] != env["b"]);
+  REQUIRE(env["a"] != LuaReferenceHandle());
+  REQUIRE(LuaReferenceHandle() == LuaReferenceHandle());
 }

@@ -45,7 +45,7 @@ namespace LuaCppB {
     } else {
       std::optional<LuaValue> value = stack.get();
       stack.pop();
-      return LuaError(status, value.value_or(LuaValue()));
+      return LuaError(status, value.value_or(LuaValue::Nil));
     }
   }
 }

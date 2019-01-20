@@ -30,7 +30,7 @@ namespace LuaCppB::Internal {
 		bool setValue(std::function<void (lua_State *)>) override;
 	 private:
 		LuaReferenceHandle ref;
-		LuaValue name;
+		LuaValue index;
 	};
 }
 

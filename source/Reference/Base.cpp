@@ -30,6 +30,6 @@ namespace LuaCppB::Internal {
     this->putOnTop([&](lua_State *state) {
       value = LuaValue::peek(state);
     });
-    return value.value_or(LuaValue());
+    return value.value_or(LuaValue::Nil);
   }
 }

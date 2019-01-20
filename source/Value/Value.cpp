@@ -21,6 +21,8 @@
 
 namespace LuaCppB {
 
+  LuaValue LuaValue::Nil;
+
   LuaValue::LuaValue() : type(LuaType::Nil) {}
   LuaValue::LuaValue(LuaInteger i) : type(LuaType::Number), value(i) {}
   LuaValue::LuaValue(LuaNumber n) : type(LuaType::Number), value(n) {}
@@ -100,22 +102,33 @@ namespace LuaCppB {
     std::optional<LuaValue> value;
     if (stack.isInteger(index)) {
       value = LuaValue::create<lua_Integer>(stack.toInteger(index));
-    } else if (stack.is<LuaType::Number>(index)) {
-      value = LuaValue::create<lua_Number>(stack.toNumber(index));
-    } else if (stack.is<LuaType::Boolean>(index)) {
-      value = LuaValue::create<bool>(stack.toBoolean(index));
-    } else if (stack.is<LuaType::String>(index)) {
-      value = LuaValue::create<std::string>(stack.toString(index));
-    } else if (stack.is<LuaType::Function>(index)) {
-      value = LuaValue(LuaFunction(state, index));
-    } else if (stack.is<LuaType::Table>(index)) {
-      value = LuaValue(LuaTable(state, index));
-    } else if (stack.is<LuaType::LightUserData>(index)) {
-      value = LuaValue(stack.toPointer<void *>(index));
-    } else if (stack.is<LuaType::UserData>(index)) {
-      value = LuaValue(LuaUserData(state, index));
-    } else if (stack.is<LuaType::Thread>(index)) {
-      value = LuaValue(LuaThread(state, index));
+    } else switch (stack.getType(index)) {
+      case LuaType::Number:
+        value = LuaValue::create<lua_Number>(stack.toNumber(index));
+        break;
+      case LuaType::Boolean:
+        value = LuaValue::create<bool>(stack.toBoolean(index));
+        break;
+      case LuaType::String:
+        value = LuaValue::create<std::string>(stack.toString(index));
+        break;
+      case LuaType::Function:
+        value = LuaValue(LuaFunction(state, index));
+        break;
+      case LuaType::Table:
+        value = LuaValue(LuaTable(state, index));
+        break;
+      case LuaType::LightUserData:
+        value = LuaValue(stack.toPointer<void *>(index));
+        break;
+      case LuaType::UserData:
+        value = LuaValue(LuaUserData(state, index));
+        break;
+      case LuaType::Thread:
+        value = LuaValue(LuaThread(state, index));
+        break;
+      default:
+        break;
     }
     return value;
   }
@@ -124,16 +137,22 @@ namespace LuaCppB {
     std::optional<LuaValue> value;
     handle.get([&](lua_State *state) {
       Internal::LuaStack stack(state);
-      if (stack.is<LuaType::Function>(-1)) {
-        value = LuaValue(LuaFunction(handle));
-      } else if (stack.is<LuaType::Table>(-1)) {
-        value = LuaValue(LuaTable(handle));
-      } else if (stack.is<LuaType::UserData>(-1)) {
-        value = LuaValue(LuaUserData(handle));
-      } else if (stack.is<LuaType::Thread>(-1)) {
-        value = LuaValue(LuaThread(handle));
-      } else {
-        value = LuaValue::peek(state, -1);
+      switch (stack.getType()) {
+        case LuaType::Function:
+          value = LuaValue(LuaFunction(handle));
+          break;
+        case LuaType::Table:
+          value = LuaValue(LuaTable(handle));
+          break;
+        case LuaType::UserData:
+          value = LuaValue(LuaUserData(handle));
+          break;
+        case LuaType::Thread:
+          value = LuaValue(LuaThread(handle));
+          break;
+        default:
+          value = LuaValue::peek(state, -1);
+          break;
       }
     });
     return value;

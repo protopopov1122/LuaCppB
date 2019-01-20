@@ -21,14 +21,16 @@
 #include "luacppb/Object/Boxer.h"
 
 namespace LuaCppB::Internal {
+
+  static std::string EmptyClassName = "";
     
   template <typename T>
-  std::string LuaCppObjectBoxerRegistry::getClassName() {
+  const std::string &LuaCppObjectBoxerRegistry::getClassName() {
     std::type_index idx = std::type_index(typeid(T));
     if (this->wrappers.count(idx)) {
       return this->wrappers[idx]->getClassName();
     } else {
-      return "";
+      return EmptyClassName;
     }
   }
 

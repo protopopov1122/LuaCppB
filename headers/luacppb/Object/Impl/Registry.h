@@ -76,7 +76,7 @@ namespace LuaCppB::Internal {
   }
 
   template <typename T, typename P>
-  std::string LuaCppClassObjectBoxer<T, P>::getClassName() {
+  const std::string &LuaCppClassObjectBoxer<T, P>::getClassName() {
     return this->className;
   }
 

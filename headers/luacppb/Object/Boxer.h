@@ -35,7 +35,7 @@ namespace LuaCppB::Internal {
     virtual void wrap(lua_State *, const void *) = 0;
     virtual void wrapUnique(lua_State *, void *) = 0;
     virtual void wrapShared(lua_State *, std::shared_ptr<void>) = 0;
-    virtual std::string getClassName() = 0;
+    virtual const std::string &getClassName() = 0;
     virtual void copyFields(std::map<std::string, std::shared_ptr<LuaCppObjectFieldPusher>> &) = 0;
   };
 
@@ -45,7 +45,7 @@ namespace LuaCppB::Internal {
       : state(state) {}
     
     template <typename T>
-    std::string getClassName();
+    const std::string &getClassName();
 
     template <typename T>
     void copyFields(std::map<std::string, std::shared_ptr<LuaCppObjectFieldPusher>> &);

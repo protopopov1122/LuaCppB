@@ -81,6 +81,6 @@ namespace LuaCppB::Internal {
   }
 
   LuaValue LuaRegistryReference::toValue() {
-    return LuaValue::fromRegistry(this->handle).value_or(LuaValue());
+    return LuaValue::fromRegistry(this->handle).value_or(LuaValue::Nil);
   }
 }

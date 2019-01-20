@@ -210,6 +210,12 @@ namespace LuaCppB {
     return static_cast<T>(this->get<EnumType>());
   }
 
+  template <typename T>
+  typename std::enable_if<std::is_same<T, LuaEmpty>::value, T>::type
+    LuaValue::get() const {
+    return LuaEmpty {};
+  }
+
   template <typename T, typename Type>
   LuaValue::operator T () {
     return this->get<Type>();

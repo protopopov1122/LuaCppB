@@ -37,7 +37,8 @@ namespace LuaCppB {
 																		std::is_same<T, LuaTable>::value ||
 																		std::is_same<T, LuaUserData>::value ||
 																		std::is_same<T, LuaThread>::value ||
-																		std::is_same<T, LuaFunction>::value;
+																		std::is_same<T, LuaFunction>::value ||
+																		std::is_same<T, LuaEmpty>::value;
 		};
 
 		template <typename T, typename E = typename std::enable_if<std::is_reference<T>::value>::type>
@@ -69,6 +70,8 @@ namespace LuaCppB {
 		void push(lua_State *state) const override;
 		static std::optional<LuaValue> peek(lua_State *, lua_Integer = -1);
 		static std::optional<LuaValue>	fromRegistry(Internal::LuaSharedRegistryHandle &);
+
+		static LuaValue Nil;
 
 		template <typename T>
 		typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, bool>::value, T>::type get(T = 0) const;
@@ -111,6 +114,9 @@ namespace LuaCppB {
 
 		template <typename T>
 		typename std::enable_if<std::is_enum<T>::value, T>::type get() const;
+
+		template <typename T>
+		typename std::enable_if<std::is_same<T, LuaEmpty>::value, T>::type get() const;
 
 		template <typename T, typename Type = typename std::enable_if<!std::is_class<T>::value || Internal::LuaValueGetSpecialCase<T>::value, T>::type>
 		operator T ();

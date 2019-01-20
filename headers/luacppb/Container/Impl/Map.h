@@ -93,7 +93,7 @@ namespace LuaCppB::Internal {
     using Handle = LuaCppObjectWrapper<M>;
     Handle *handle = stack.toPointer<Handle *>(1);
     LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(1));
-    K key = stack.get(2).value_or(LuaValue()).get<K>();
+    K key = stack.get(2).value_or(LuaValue::Nil).get<K>();
     M *map = handle->get();
     if (map && map->count(key) > 0) {
       P::push(state, runtime, map->at(key));
@@ -111,10 +111,10 @@ namespace LuaCppB::Internal {
     Internal::LuaStack stack(state);
     using Handle = LuaCppObjectWrapper<M>;
     Handle *handle = stack.toPointer<Handle *>(1);
-    K key = stack.get(2).value_or(LuaValue()).get<K>();
+    K key = stack.get(2).value_or(LuaValue::Nil).get<K>();
     M *map = handle->get();
     if (!stack.is<LuaType::Nil>(3)) {
-      V value = stack.get(3).value_or(LuaValue()).get<V>();
+      V value = stack.get(3).value_or(LuaValue::Nil).get<V>();
       if (map) {
         (*map)[key] = value;
       }
@@ -177,7 +177,7 @@ namespace LuaCppB::Internal {
     }
     typename M::const_iterator iter = map->begin();
     if (!stack.is<LuaType::Nil>(2)) {
-      K key = stack.get(2).value_or(LuaValue()).get<K>();
+      K key = stack.get(2).value_or(LuaValue::Nil).get<K>();
       iter = map->find(key);
       iter++;
     }

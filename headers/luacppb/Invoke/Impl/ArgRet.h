@@ -40,7 +40,7 @@ namespace LuaCppB::Internal {
     if constexpr (NativeFunctionArgument<Index, T>::Virtual) {
       WrappedFunctionArguments_Impl<Index, Offset, Count, Ts...>::get(state, array);
     } else {
-      array[Index] = LuaValue::peek(state, Offset + Index).value_or(LuaValue());
+      array[Index] = LuaValue::peek(state, Offset + Index).value_or(LuaValue::Nil);
       WrappedFunctionArguments_Impl<Index + 1, Offset, Count, Ts...>::get(state, array);	
     }
   }

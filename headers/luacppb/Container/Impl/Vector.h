@@ -36,7 +36,7 @@ namespace LuaCppB::Internal {
     std::size_t index = stack.toInteger(2) - 1;
     V *vec = handle->get();
     if (!stack.is<LuaType::Nil>()) {
-      T value = stack.get(3).value_or(LuaValue()).get<T>();
+      T value = stack.get(3).value_or(LuaValue::Nil).get<T>();
       if (vec) {
         if (index < vec->size()) {
           (*vec)[index] = value;

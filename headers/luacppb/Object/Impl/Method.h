@@ -79,7 +79,7 @@ namespace LuaCppB::Internal {
     }
     stack.getMetatable(index);
     stack.push(std::string("__name"));
-    lua_rawget(state, -2);
+    stack.getField<true>(-2);
     std::string name = stack.toString(-1);
     stack.pop(2);
     if (name.find(className) == 0) {

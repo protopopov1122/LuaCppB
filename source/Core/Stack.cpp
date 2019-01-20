@@ -148,6 +148,16 @@ namespace LuaCppB::Internal {
   }
 
   template <>
+  void LuaStack::setField<true>(int index) {
+    lua_rawset(this->state, index);
+  }
+
+  template <>
+  void LuaStack::getField<true>(int index) {
+    lua_rawget(this->state, index);
+  }
+
+  template <>
   void LuaStack::setIndex<true>(int index, int idx) {
     lua_rawseti(this->state, index, idx);
   }

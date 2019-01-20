@@ -100,7 +100,7 @@ namespace LuaCppB {
     
     stack.copy(lua_upvalueindex(1));
     stack.copy(2);
-    lua_gettable(state, -2);
+    stack.getField(-2);
     stack.remove(-2);
     
     if (stack.isNoneOrNil(-1)) {

@@ -20,7 +20,7 @@
 namespace LuaCppB {
   
   LuaError::LuaError(LuaStatusCode status)
-    : status(status), error(LuaValue()) {}
+    : status(status), error(LuaValue::Nil) {}
 
   LuaError::LuaError(LuaStatusCode status, LuaValue error)
     : status(status), error(error) {}
@@ -84,7 +84,7 @@ namespace LuaCppB {
         LuaStack stack(state);
         std::optional<LuaValue> value = stack.get();
         stack.pop();
-        LuaError error(status, value.value_or(LuaValue()));
+        LuaError error(status, value.value_or(LuaValue::Nil));
         return handle->getContinuation().call(state, luaState, error, result);
       }
     }

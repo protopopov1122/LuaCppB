@@ -64,6 +64,12 @@ namespace LuaCppB::Internal {
     void getField(int, const std::string &);
 
     template <bool R = false>
+    void setField(int);
+
+    template <bool R = false>
+    void getField(int);
+
+    template <bool R = false>
     void setIndex(int, int);
 
     template <bool R = false>

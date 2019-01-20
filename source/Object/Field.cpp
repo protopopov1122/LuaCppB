@@ -27,7 +27,7 @@ namespace LuaCppB::Internal {
     if (this->fields.count(key)) {
       this->fields[key]->push(state, object);
     } else {
-      LuaValue().push(state);
+      LuaValue::Nil.push(state);
     }
   }
 

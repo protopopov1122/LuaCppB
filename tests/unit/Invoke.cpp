@@ -73,6 +73,10 @@ void test_ref_prm(int factor, LuaState state, LuaReferenceHandle ref) {
 
 void test_unsupported_object_wrap(LuaEnvironment *env) {}
 
+int test_ignore_argument(int x, LuaEmpty e, int y) {
+  return x * y;
+}
+
 TEST_CASE("Native function call") {
   LuaEnvironment env;
   SECTION("Function call") {
@@ -159,6 +163,14 @@ TEST_CASE("Passing callable as parameter") {
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   int res = env["fn"]([](int n) { return n * 10; }, test_function_call3, NativeCallable(fact, &Factor::get, env));
   REQUIRE(res == 850);
+}
+
+TEST_CASE("Parameter ignore") {
+  const std::string &CODE = "res = test(2, 3, 4)";
+  LuaEnvironment env;
+  env["test"] = test_ignore_argument;
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["res"].get<int>() == 8);
 }
 
 TEST_CASE("Returning std::pair") {

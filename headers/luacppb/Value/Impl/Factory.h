@@ -54,7 +54,7 @@ namespace LuaCppB {
   LuaValue LuaFactory::wrap(T &env, V &value) {
     Internal::LuaNativeValue::push(env.getState(), env, value);
     Internal::LuaStack stack(env.getState());
-    LuaValue val = stack.get().value_or(LuaValue());
+    LuaValue val = stack.get().value_or(LuaValue::Nil);
     stack.pop();
     return val;
   }

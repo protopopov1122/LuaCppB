@@ -92,7 +92,7 @@ namespace LuaCppB::Internal {
     Internal::LuaStack stack(state);
     using Handle = LuaCppObjectWrapper<S>;
     Handle *handle = stack.toPointer<Handle *>(1);
-    K key = stack.get(2).value_or(LuaValue()).get<K>();
+    K key = stack.get(2).value_or(LuaValue::Nil).get<K>();
     S *set = handle->get();
     if (set && set->count(key) > 0) {
       stack.push(true);
@@ -109,7 +109,7 @@ namespace LuaCppB::Internal {
     Internal::LuaStack stack(state);
     using Handle = LuaCppObjectWrapper<S>;
     Handle *handle = stack.toPointer<Handle *>(1);
-    K key = stack.get(2).value_or(LuaValue()).get<K>();
+    K key = stack.get(2).value_or(LuaValue::Nil).get<K>();
     bool value = stack.is<LuaType::Boolean>(3) && stack.get(3).value().get<bool>();
     S *set = handle->get();
     if (set) {
@@ -162,7 +162,7 @@ namespace LuaCppB::Internal {
     }
     typename S::const_iterator iter = set->begin();
     if (!stack.is<LuaType::Nil>(2)) {
-      K key = stack.get(2).value_or(LuaValue()).get<K>();
+      K key = stack.get(2).value_or(LuaValue::Nil).get<K>();
       iter = set->find(key);
       iter++;
     }

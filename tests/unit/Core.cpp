@@ -97,6 +97,9 @@ TEST_CASE("Stack") {
   Internal::LuaStack stack(env.getState());
 
   REQUIRE(stack.getTop() == 0);
+  SECTION("Incorrect constructor") {
+    REQUIRE_THROWS(Internal::LuaStack(nullptr));
+  }
   SECTION("Value pushing") {
     SECTION("Nil") {
       stack.push();
@@ -200,6 +203,46 @@ TEST_CASE("Stack") {
     REQUIRE(stack.getTop() == 3);
     stack.pop(3);
     REQUIRE(stack.getTop() == 0);
+  }
+  SECTION("Field access") {
+    stack.pushTable();
+    REQUIRE(stack.getTop() == 1);
+    
+    stack.push(100);
+    stack.setField(-2, "test1");
+    stack.getField(-1, "test1");
+    REQUIRE(stack.toInteger(-1) == 100);
+    stack.pop();
+
+    stack.push(200);
+    stack.setIndex(-2, 1);
+    stack.getIndex(-1, 1);
+    REQUIRE(stack.toInteger(-1) == 200);
+    stack.pop();
+
+    stack.push(300);
+    stack.setIndex<true>(-2, 2);
+    stack.getIndex<true>(-1, 2);
+    REQUIRE(stack.toInteger(-1) == 300);
+    stack.pop();
+
+    stack.push(std::string("test2"));
+    stack.push(400);
+    stack.setField(-3);
+    stack.push(std::string("test2"));
+    stack.getField(-2);
+    REQUIRE(stack.toInteger(-1) == 400);
+    stack.pop();
+
+    stack.push(std::string("test2"));
+    stack.push(500);
+    stack.setField<true>(-3);
+    stack.push(std::string("test2"));
+    stack.getField<true>(-2);
+    REQUIRE(stack.toInteger(-1) == 500);
+    stack.pop();
+
+    REQUIRE(stack.getTop() == 1);
   }
 }
 

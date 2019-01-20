@@ -32,6 +32,16 @@ namespace LuaCppB::Internal {
     lua_geti(this->state, index, idx);
   }
 
+  template <bool R>
+  void LuaStack::setField(int index) {
+    lua_settable(this->state, index);
+  }
+
+  template <bool R>
+  void LuaStack::getField(int index) {
+    lua_gettable(this->state, index);
+  }
+
   template <typename T>
   T LuaStack::toPointer(int index) {
     return reinterpret_cast<T>(const_cast<void *>(lua_topointer(this->state, index)));
@@ -73,6 +83,11 @@ namespace LuaCppB::Internal {
   bool LuaStack::is(int index) {
     return false;
   }
+
+  template <>
+  void LuaStack::setField<true>(int);
+  template <>
+  void LuaStack::getField<true>(int);
 
   template <>
   void LuaStack::setIndex<true>(int, int);

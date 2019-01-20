@@ -31,8 +31,6 @@ namespace LuaCppB {
       return std::make_tuple();
     }
 
-
-
     template <std::size_t I, typename T, typename ... Ts>
     std::tuple<T, Ts...> ContinuationCallbackArguments_Impl<I, T, Ts...>::value(lua_State *state, LuaCppRuntime &runtime, std::vector<LuaValue> &result) {
       if constexpr (!std::is_same<T, LuaState>::value) {

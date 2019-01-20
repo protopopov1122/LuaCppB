@@ -43,7 +43,7 @@ namespace LuaCppB::Internal {
 			stack.getMetatable(-1);
 			if (stack.is<LuaType::Table>(-1)) {
 				stack.push(std::string("__name"));
-				lua_rawget(state, -2);
+				stack.getField<true>(-2);
 				std::string tableName(stack.toString(-1));
 				stack.pop(2);
 				if (tableName.compare(LuaCppBNativeException::LUACPPB_EXCEPTION_POINTER) == 0) {

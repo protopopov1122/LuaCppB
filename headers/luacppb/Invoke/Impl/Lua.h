@@ -55,7 +55,7 @@ namespace LuaCppB::Internal {
       LuaCppBNativeException::check(state);
       std::optional<LuaValue> value = stack.get();
       stack.pop();
-      return LuaError(static_cast<LuaStatusCode>(status), value.value_or(LuaValue()));
+      return LuaError(static_cast<LuaStatusCode>(status), value.value_or(LuaValue::Nil));
     }
   }
 
@@ -93,7 +93,7 @@ namespace LuaCppB::Internal {
 
   template <std::size_t I, typename T, typename ... B>
   std::tuple<T, B...> LuaFunctionCallResultTuple_Impl<I, T, B...>::get(std::vector<LuaValue> &results) {
-    std::tuple<T> begin = std::make_tuple((I < results.size() ? results.at(I) : LuaValue()).get<T>());
+    std::tuple<T> begin = std::make_tuple((I < results.size() ? results.at(I) : LuaValue::Nil).get<T>());
     return std::tuple_cat(begin, LuaFunctionCallResultTuple_Impl<I + 1, B...>::get(results));
   }
 
@@ -121,9 +121,9 @@ namespace LuaCppB::Internal {
     if (result.size() >= 2) {
       return std::make_pair(result.at(0).get<A>(), result.at(1).get<B>());
     } else if (result.size() == 1) {
-      return std::make_pair(result.at(0).get<A>(), LuaValue().get<B>());
+      return std::make_pair(result.at(0).get<A>(), LuaValue::Nil.get<B>());
     } else {
-      return std::make_pair(LuaValue().get<A>(), LuaValue().get<B>());
+      return std::make_pair(LuaValue::Nil.get<A>(), LuaValue::Nil.get<B>());
     }
   }
 

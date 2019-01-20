@@ -42,6 +42,8 @@ namespace LuaCppB {
 	};
 
 	class LuaValueBase : public LuaData {};
+
+	struct LuaEmpty {};
 }
 
 #endif

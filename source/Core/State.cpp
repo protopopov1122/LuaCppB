@@ -80,7 +80,7 @@ namespace LuaCppB {
 				Internal::LuaStack stack(this->state);
 				std::optional<LuaValue> value = stack.get();
 				stack.pop();
-				LuaFunction func = value.value_or(LuaValue()).get<LuaFunction>();
+				LuaFunction func = value.value_or(LuaValue::Nil).get<LuaFunction>();
 				return func.ref(*this)();
 			} else {
 				return Internal::LuaFunctionCallResult(LuaError(status));
@@ -132,7 +132,7 @@ namespace LuaCppB {
 	Internal::LuaFunctionCallResult LuaEnvironment::pollResult(bool err, int delta) {
 		std::vector<LuaValue> result;
 		while (delta-- > 0) {
-			result.push_back(LuaValue::peek(this->state, -1).value_or(LuaValue()));
+			result.push_back(LuaValue::peek(this->state, -1).value_or(LuaValue::Nil));
 			lua_pop(this->state, 1);
 		}
 		if (err) {

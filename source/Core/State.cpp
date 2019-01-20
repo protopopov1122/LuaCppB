@@ -137,8 +137,8 @@ namespace LuaCppB {
 		}
 		if (err) {
 			if (result.size() > 0) {
-				LuaError err(LuaStatusCode::RuntimeError, result.at(0));
-				return Internal::LuaFunctionCallResult(err);
+				LuaError error(LuaStatusCode::RuntimeError, result.at(0));
+				return Internal::LuaFunctionCallResult(std::move(error));
 			} else {
 				return Internal::LuaFunctionCallResult(LuaError(LuaStatusCode::RuntimeError));	
 			}

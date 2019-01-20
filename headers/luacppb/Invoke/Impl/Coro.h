@@ -26,7 +26,7 @@ namespace LuaCppB {
   Internal::LuaFunctionCallResult LuaCoroutine::operator()(A &&... args) const {
     std::vector<LuaValue> result;
     LuaError error = this->call<A...>(result, std::forward<A>(args)...);
-    return Internal::LuaFunctionCallResult(result, error);
+    return Internal::LuaFunctionCallResult(result, std::move(error));
   }
 
   template <typename ... A>

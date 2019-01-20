@@ -58,7 +58,7 @@ namespace LuaCppB {
     public:
       LuaContinuationHandler(F, std::function<void(LuaError)>);
       
-      int call(lua_State *, LuaCppRuntime &, LuaError, std::vector<LuaValue> &) override;
+      int call(lua_State *, LuaCppRuntime &, LuaError &, std::vector<LuaValue> &) override;
     private:
       F callback;
       std::function<void(LuaError)> errorHandler;

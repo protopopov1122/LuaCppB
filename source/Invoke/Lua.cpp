@@ -28,6 +28,15 @@ namespace LuaCppB {
   LuaError::LuaError(const LuaError &err)
     : status(err.status), error(err.error) {}
 
+  LuaError::LuaError(LuaError &&err)
+    : status(std::move(err.status)), error(std::move(err.error)) {}
+
+  LuaError &LuaError::operator=(const LuaError &err) {
+    this->status = err.status;
+    this->error = err.error;
+    return *this;
+  }
+
   LuaStatusCode LuaError::getStatus() const {
     return this->status;
   }
@@ -78,7 +87,8 @@ namespace LuaCppB {
       std::vector<LuaValue> result;
       if (status == LuaStatusCode::Ok || status == LuaStatusCode::Yield) {
         handle->getResult(state, result);
-        return handle->getContinuation().call(state, luaState, LuaError(status), result);
+        LuaError error(status);
+        return handle->getContinuation().call(state, luaState, error, result);
       } else {
         LuaCppBNativeException::check(state);
         LuaStack stack(state);
@@ -89,10 +99,10 @@ namespace LuaCppB {
       }
     }
 
-    LuaFunctionCallResult::LuaFunctionCallResult(std::vector<LuaValue> &result, LuaError err)
+    LuaFunctionCallResult::LuaFunctionCallResult(std::vector<LuaValue> &result, LuaError &&err)
       : result(result), errorVal(err) {}
     
-    LuaFunctionCallResult::LuaFunctionCallResult(LuaError err)
+    LuaFunctionCallResult::LuaFunctionCallResult(LuaError &&err)
       : result(), errorVal(err) {}
     
     LuaFunctionCallResult &LuaFunctionCallResult::status(LuaStatusCode &status) {

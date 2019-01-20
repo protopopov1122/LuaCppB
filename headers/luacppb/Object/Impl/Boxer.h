@@ -49,7 +49,7 @@ namespace LuaCppB::Internal {
 
   template <typename T>
   void LuaCppObjectBoxerRegistry::wrap(lua_State *state, T *object) {
-    if (this->canWrap<T>()) {
+    if (this->canWrap<T>()) { // lgtm [cpp/empty-block]
       if constexpr (std::is_const<T>::value) {
         this->wrappers[typeid(T)]->wrap(state, reinterpret_cast<const void *>(object));
       } else {

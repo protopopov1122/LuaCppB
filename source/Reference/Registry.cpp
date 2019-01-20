@@ -117,6 +117,11 @@ namespace LuaCppB::Internal {
     });
   }
 
+  LuaSharedRegistryHandle &LuaSharedRegistryHandle::operator=(const LuaSharedRegistryHandle &handle) {
+    this->handle = handle.handle;
+    return *this;
+  }
+
   lua_State *LuaSharedRegistryHandle::getState() {
     return this->handle != nullptr ? this->handle->getState() : nullptr;
   }

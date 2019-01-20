@@ -63,8 +63,8 @@ namespace LuaCppB {
 		LuaValue(LuaThread);
 		
 		LuaValue(LuaValue &&);
-		LuaValue(const LuaValue &) = default;
-		LuaValue &operator=(const LuaValue &) = default;
+		LuaValue(const LuaValue &);
+		LuaValue &operator=(const LuaValue &);
 
 		LuaType getType() const noexcept;
 		void push(lua_State *state) const override;

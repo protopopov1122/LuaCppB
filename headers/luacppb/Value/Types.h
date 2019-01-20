@@ -86,6 +86,7 @@ namespace LuaCppB {
 		LuaReferencedValue(lua_State *, int = -1);
 		LuaReferencedValue(const LuaReferencedValue &);
 		LuaReferencedValue(Internal::LuaSharedRegistryHandle &);
+		LuaReferencedValue &operator=(const LuaReferencedValue &);
 		
 		void push(lua_State *) const override;
 		bool hasValue() const;

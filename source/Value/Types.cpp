@@ -114,6 +114,11 @@ namespace LuaCppB {
 
   LuaReferencedValue::LuaReferencedValue(Internal::LuaSharedRegistryHandle &handle)
     : handle(handle) {}
+  
+  LuaReferencedValue &LuaReferencedValue::operator=(const LuaReferencedValue &handle) {
+    this->handle = handle.handle;
+    return *this;
+  }
 
   void LuaReferencedValue::push(lua_State *state) const {
     this->handle.push(state);

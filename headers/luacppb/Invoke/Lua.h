@@ -52,7 +52,7 @@ namespace LuaCppB::Internal {
   class LuaFunctionContinuation {
   public:
     virtual ~LuaFunctionContinuation() = default;
-    virtual int call(lua_State *, LuaCppRuntime &, LuaError, std::vector<LuaValue> &) = 0;
+    virtual int call(lua_State *, LuaCppRuntime &, LuaError &, std::vector<LuaValue> &) = 0;
   };
 
   class LuaFunctionContinuationHandle {
@@ -116,8 +116,8 @@ namespace LuaCppB::Internal {
 
   class LuaFunctionCallResult {
   public:
-    LuaFunctionCallResult(std::vector<LuaValue> &, LuaError = LuaError());
-    LuaFunctionCallResult(LuaError);
+    LuaFunctionCallResult(std::vector<LuaValue> &, LuaError && = LuaError());
+    LuaFunctionCallResult(LuaError &&);
     LuaFunctionCallResult(const LuaFunctionCallResult &) = delete;
     LuaFunctionCallResult &operator=(const LuaFunctionCallResult &) = delete;
 

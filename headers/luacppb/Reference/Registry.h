@@ -57,6 +57,7 @@ namespace LuaCppB::Internal {
     LuaSharedRegistryHandle(lua_State *, int = -1);
     LuaSharedRegistryHandle(const LuaSharedRegistryHandle &);
     LuaSharedRegistryHandle(const LuaRegistryHandle &);
+    LuaSharedRegistryHandle &operator=(const LuaSharedRegistryHandle &);
 
     lua_State *getState() override;
     bool hasValue() const override;

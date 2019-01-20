@@ -37,7 +37,7 @@ namespace LuaCppB::Internal {
 #endif
       }
     });
-    return LuaFunctionCallResult(results, error);
+    return LuaFunctionCallResult(results, std::move(error));
   }
 
   template <typename T, typename ... A>
@@ -51,7 +51,7 @@ namespace LuaCppB::Internal {
         std::vector<LuaValue> results;
         LuaCoroutine coro(LuaThread(state, -1), runtime);
         LuaError error = coro.call(results, args...);
-        cont->call(state, runtime, error.getStatus(), results);
+        cont->call(state, runtime, error, results);
 #endif
       }
     });

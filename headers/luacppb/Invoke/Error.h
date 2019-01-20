@@ -29,6 +29,8 @@ namespace LuaCppB {
     LuaError(LuaStatusCode = LuaStatusCode::Ok);
     LuaError(LuaStatusCode, LuaValue);
     LuaError(const LuaError &);
+    LuaError(LuaError &&);
+    LuaError &operator=(const LuaError &);
 
     LuaStatusCode getStatus() const;
     LuaValue getError() const;

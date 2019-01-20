@@ -51,10 +51,10 @@ namespace LuaCppB {
       : callback(callback), errorHandler(errorHandler) {}
     
     template <typename F, typename ... A>
-    int LuaContinuationHandler<F, A...>::call(lua_State *state, LuaCppRuntime &runtime, LuaError error, std::vector<LuaValue> &result) {
+    int LuaContinuationHandler<F, A...>::call(lua_State *state, LuaCppRuntime &runtime, LuaError &error, std::vector<LuaValue> &result) {
       std::tuple<A...> args = ContinuationCallbackArguments<A...>::value(state, runtime, result);
       Internal::LuaStack stack(state);
-      if (!error.hasError()) {
+      if (!error.hasError()) {  // lgtm [cpp/empty-block]
         if constexpr (std::is_void<R>::value) {
             std::apply(this->callback, args);
             return 0;

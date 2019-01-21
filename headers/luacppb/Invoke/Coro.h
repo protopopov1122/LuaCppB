@@ -48,7 +48,7 @@ namespace LuaCppB {
    private:
     
     LuaThread thread;
-    LuaCppRuntime &runtime;
+    std::reference_wrapper<LuaCppRuntime> runtime;
   };
 }
 

@@ -32,7 +32,7 @@ namespace LuaCppB {
   template <typename ... A>
   LuaError LuaCoroutine::call(std::vector<LuaValue> &result, A &&... args) const {
     Internal::LuaStack stack(this->thread.toState());
-    Internal::LuaFunctionArgument<Internal::LuaNativeValue, A...>::push(thread.toState(), this->runtime, std::forward<A>(args)...);
+    Internal::LuaFunctionArgument<Internal::LuaNativeValue, A...>::push(thread.toState(), this->runtime.get(), std::forward<A>(args)...);
     LuaStatusCode status = static_cast<LuaStatusCode>(lua_resume(thread.toState(), nullptr, sizeof...(args)));
     if (status == LuaStatusCode::Ok || status == LuaStatusCode::Yield) {
       int results = stack.getTop();

@@ -22,23 +22,23 @@
 namespace LuaCppB {
 
   LuaCoroutine::LuaCoroutine(lua_State *state, int index, LuaCppRuntime &runtime)
-    : thread(LuaThread::create(state)), runtime(runtime) {
+    : thread(LuaThread::create(state)), runtime(std::ref(runtime)) {
     Internal::LuaStack stack(state);
     stack.copy(index);
     stack.move(thread.toState(), 1);
   }
 
   LuaCoroutine::LuaCoroutine(LuaThread &thread, LuaCppRuntime &runtime)
-    : thread(thread), runtime(runtime) {}
+    : thread(thread), runtime(std::ref(runtime)) {}
   
   LuaCoroutine::LuaCoroutine(LuaThread &&thread, LuaCppRuntime &runtime)
-    : thread(thread), runtime(runtime) {}
+    : thread(thread), runtime(std::ref(runtime)) {}
 
   LuaCoroutine::LuaCoroutine(LuaCppRuntime &runtime)
-    : thread(), runtime(runtime) {}
+    : thread(), runtime(std::ref(runtime)) {}
 
   LuaCoroutine::LuaCoroutine(const LuaCoroutine &coro)
-    : thread(coro.thread), runtime(coro.runtime) {}
+    : thread(coro.thread), runtime(std::ref(coro.runtime)) {}
   
   LuaCoroutine &LuaCoroutine::operator=(const LuaCoroutine &coro) {
     this->thread = coro.thread;

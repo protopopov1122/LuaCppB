@@ -66,6 +66,8 @@ namespace LuaCppB {
       stack.push(this->className);
       stack.push(&LuaCppClass<C, P>::gcObject, 1);
       stack.setField(-2, "__gc");
+      stack.pushTable();
+      stack.setField(-2, "__metatable");
     }
   }
 

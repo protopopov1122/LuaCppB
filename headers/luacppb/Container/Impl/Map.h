@@ -81,6 +81,8 @@ namespace LuaCppB::Internal {
       stack.setField(-2, "__pairs");
       stack.push(&LuaCppMap<P>::map_gc<M>);
       stack.setField(-2, "__gc");
+      stack.pushTable();
+      stack.setField(-2, "__metatable");
     }
     stack.setMetatable(-2);
   }

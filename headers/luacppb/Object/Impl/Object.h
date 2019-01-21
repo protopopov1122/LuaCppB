@@ -90,6 +90,8 @@ namespace LuaCppB {
       stack.setField(-2, "__index");
       stack.push(&LuaCppObject<T>::gcObject);
       stack.setField(-2, "__gc");
+      stack.pushTable();
+      stack.setField(-2, "__metatable");
     }
     stack.setMetatable(-2);
   }

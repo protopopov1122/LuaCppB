@@ -115,6 +115,8 @@ namespace LuaCppB::Internal {
       stack.setField(-2, "__len");
       stack.push(&LuaCppVector::vector_gc<V>);
       stack.setField(-2, "__gc");
+      stack.pushTable();
+      stack.setField(-2, "__metatable");
     }
     stack.setMetatable(-2);
   }

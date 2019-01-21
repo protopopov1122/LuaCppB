@@ -1,6 +1,7 @@
 ## Lua C++ Bindings
 
 [![Build Status](https://travis-ci.org/protopopov1122/LuaCppB.svg?branch=master)](https://travis-ci.org/protopopov1122/LuaCppB)
+[![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/protopopov1122/LuaCppB.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/protopopov1122/LuaCppB/context:cpp)
 
 This repo contains the prototype of Lua-C++ bindings. Currently it has following features:
 * support of scalar data types and strings.

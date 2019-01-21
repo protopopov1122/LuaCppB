@@ -140,7 +140,7 @@ namespace LuaCppB {
 		static typename std::enable_if<std::is_same<T, const char *>::value, LuaValue>::type create(T) noexcept;
 
 		template <typename T>
-		static typename std::enable_if<std::is_array<T>::value && std::is_same<typename std::remove_extent<T>::type, const char>::value, LuaValue>::type
+		static typename std::enable_if<std::is_array<typename std::remove_reference<T>::type>::value && std::is_same<typename std::remove_extent<typename std::remove_reference<T>::type>::type, const char>::value, LuaValue>::type
 			create(T) noexcept;
 
 		template <typename T>
@@ -155,7 +155,7 @@ namespace LuaCppB {
 				std::is_same<T, LuaCFunction>::value ||
 				std::is_same<T, const char *>::value ||
 				(std::is_same<typename std::remove_cv<typename std::remove_reference<T>::type>::type, std::string>::value) ||
-				(std::is_array<T>::value && std::is_same<typename std::remove_extent<T>::type, const char>::value);
+				(std::is_array<typename std::remove_reference<T>::type>::value && std::is_same<typename std::remove_extent<typename std::remove_reference<T>::type>::type, const char>::value);
 		}
 	 private:
 		LuaType type;

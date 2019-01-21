@@ -257,7 +257,7 @@ namespace LuaCppB {
   }
 
   template <typename T>
-  typename std::enable_if<std::is_array<T>::value && std::is_same<typename std::remove_extent<T>::type, const char>::value, LuaValue>::type
+  typename std::enable_if<std::is_array<typename std::remove_reference<T>::type>::value && std::is_same<typename std::remove_extent<typename std::remove_reference<T>::type>::type, const char>::value, LuaValue>::type
     LuaValue::create(T s) noexcept {
     return LuaValue(LuaString(s));
   }

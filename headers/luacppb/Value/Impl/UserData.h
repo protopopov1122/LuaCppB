@@ -135,14 +135,22 @@ namespace LuaCppB {
   template <typename T>
   template <typename F>
   void CustomUserDataClass<T>::bind(const std::string &key, F &&fn) {
-    this->methods[key] = Internal::CustomUserDataCallBuilder<T, F>::create(std::forward<F>(fn), this->className, this->runtime);
+    if constexpr (Internal::is_callable<F>::value) {
+      this->methods[key] = Internal::CustomUserDataCallBuilder<T, F>::create(std::forward<F>(fn), this->className, this->runtime);
+    } else {
+      this->methods[key] = std::make_shared<LuaValue>(Internal::LuaValueWrapper<F>::wrap(fn));
+    }
   }
 
   template <typename T>
   template <typename F>
   bool CustomUserDataClass<T>::bind(LuaMetamethod key, F &&fn) {
     if (CustomUserDataClass<T>::metamethods.count(key)) {
-      this->bind(CustomUserDataClass<T>::metamethods[key], std::forward<F>(fn));
+      if constexpr (Internal::is_callable<F>::value) {
+        this->bind(CustomUserDataClass<T>::metamethods[key], std::forward<F>(fn));
+      } else {
+        this->methods[CustomUserDataClass<T>::metamethods[key]] = std::make_shared<LuaValue>(Internal::LuaValueWrapper<F>::wrap(fn));
+      }
       return true;
     } else {
       return false;

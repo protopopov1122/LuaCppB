@@ -37,7 +37,8 @@ TEST_CASE("Custom userdata") {
                             "for i = 1, #arr do\n"
                             "    sum = sum + arr[i]\n"
                             "end\n"
-                            "arr2[50] = arr2[50] + (arr2 + 50)";
+                            "arr2[50] = arr2[50] + (arr2 + 50)\n"
+                            "metaNil = getmetatable(arr).__len == nil";
   LuaEnvironment env;
 
   CustomUserDataClass<IntegerArray> arrayUD(env);
@@ -71,6 +72,7 @@ TEST_CASE("Custom userdata") {
   arrayUD.bind(LuaMetamethod::Add, [](IntegerArray &arr, int num) {
     return arr.length + num;
   });
+  arrayUD.bind("__metatable", *LuaFactory::newTable(env));
 
   auto filledArray = arrayUD.create(env, [](IntegerArray &arr) {
     new(&arr) IntegerArray(100);
@@ -90,4 +92,5 @@ TEST_CASE("Custom userdata") {
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(env["sum"].get<int>() == 4950);
   REQUIRE(array2.array[49] == 150);
+  REQUIRE(env["metaNil"].get<bool>());
 }

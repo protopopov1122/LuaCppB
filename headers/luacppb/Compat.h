@@ -24,6 +24,10 @@
 #error "Minimal supported Lua version is 5.1"
 #elif (LUA_VERSION_NUM == 501)
 #define LUACPPB_COMPAT_501
+#elif (LUA_VERSION_NUM == 502)
+#define LUACPPB_COMPAT_502
+#else
+#define LUACPPB_COMPAT_503
 #endif
 
 #ifdef LUACPPB_COMPAT_501
@@ -45,9 +49,15 @@ void lua_rawsetp (lua_State *, int, const void *);
 #ifdef LUACPPB_COROUTINE_SUPPORT
 #undef LUACPPB_COROUTINE_SUPPORT
 #endif
-#ifdef LUACPPB_EXCEPTION_PROPAGATION
-#undef LUACPPB_EXCEPTION_PROPAGATION
 #endif
+
+#ifdef LUACPPB_COMPAT_502
+#error "Lua 5.2 build is untested and temporarily not supported"
+#endif
+
+#ifdef LUACPPB_COMPAT_503
+#define LUACPPB_GC_ISRUNNING
+#define LUACPPB_CONTAINER_PAIRS
 #endif
 
 #endif

@@ -29,7 +29,7 @@ namespace LuaCppB::Internal {
 
   bool LuaGC::isRunning() const {
     if (this->state) {
-      #ifdef LUA_GCISRUNNING
+      #ifdef LUACPPB_GC_ISRUNNING
       return static_cast<bool>(lua_gc(this->state, LUA_GCISRUNNING, 0));
       #else
       return false;

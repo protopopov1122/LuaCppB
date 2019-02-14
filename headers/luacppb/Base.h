@@ -48,8 +48,9 @@ extern "C" {
 #include <lualib.h>
 #include <lauxlib.h>
 }
-#define LUACPPB_EXCEPTION_PROPAGATION
 #endif
+#define LUACPPB_EXCEPTION_PROPAGATION
+#define LUACPPB_ERROR_SUPPORT
 
 #endif
 

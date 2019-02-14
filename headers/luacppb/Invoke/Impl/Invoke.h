@@ -40,19 +40,18 @@ namespace LuaCppB::Internal {
     return LuaFunctionCallResult(results, std::move(error));
   }
 
+#ifdef LUACPPB_COROUTINE_SUPPORT
   template <typename T, typename ... A>
   void LuaFunctionInvoke::invokeK(T &ref, LuaCppRuntime &runtime, std::unique_ptr<LuaFunctionContinuation> cont, A &&... args) {
     ref.putOnTop([&](lua_State *state) {
       Internal::LuaStack stack(state);
       if (stack.is<LuaType::Function>(-1)) {
         LuaFunctionCall::callK<A...>(state, -1, runtime, std::move(cont), std::forward<A>(args)...);
-#ifdef LUACPPB_COROUTINE_SUPPORT
       } else if (stack.is<LuaType::Thread>(-1)) {
         std::vector<LuaValue> results;
         LuaCoroutine coro(LuaThread(state, -1), runtime);
         LuaError error = coro.call(results, args...);
         cont->call(state, runtime, error, results);
-#endif
       }
     });
   }
@@ -61,6 +60,7 @@ namespace LuaCppB::Internal {
   void LuaFunctionInvoke::yieldK(lua_State *state, LuaCppRuntime &runtime, std::unique_ptr<LuaFunctionContinuation> cont, A &&... args) {
     LuaFunctionCall::yieldK<A...>(state, runtime, std::move(cont), std::forward<A>(args)...);
   }
+#endif
 }
 
 #endif

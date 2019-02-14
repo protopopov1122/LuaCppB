@@ -40,7 +40,7 @@ custom_lua_source = [
 if get_option('system_lua')
   LUACPPB_CXX_MODE = []
   LUA_HEADERS = []
-  LUA = dependency('lua')
+  LUA = dependency('luajit')
 else
   LUACPPB_CXX_MODE = '-DLUACPPB_CXX_MODE'
   LUA_HEADERS = include_directories(custom_lua_source_dir)

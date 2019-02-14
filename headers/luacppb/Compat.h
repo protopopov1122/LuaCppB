@@ -15,37 +15,36 @@
   IN THE SOFTWARE.
 */
 
-#ifndef LUACPPB_BASE_H_
-#define LUACPPB_BASE_H_
+#ifndef LUACPPB_COMPAT_H_
+#define LUACPPB_COMPAT_H_
 
-#include "luacppb/Config.h"
+#include "luacppb/Base.h"
 
-#ifdef LUACPPB_CXX_MODE
-
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-
-#ifndef LUACPPB_NO_COROUTINE_SUPPORT
-#define LUACPPB_COROUTINE_SUPPORT
+#if (LUA_VERSION_NUM < 501)
+#error "Minimal supported Lua version is 5.1"
+#elif (LUA_VERSION_NUM == 501)
+#define LUACPPB_COMPAT_501
 #endif
 
-#ifndef LUACPPB_NO_ERROR_SUPPORT
-#define LUACPPB_ERROR_SUPPORT
+#ifdef LUACPPB_COMPAT_501
+#define LUA_OK 0
+#define LUA_ERRGCMM LUA_ERRRUN
+#define LUA_OPEQ 0
+#define LUA_OPLT 1
+#define LUA_OPLE 2
+
+int lua_geti(lua_State *, int, lua_Integer);
+void lua_seti(lua_State *, int, lua_Integer);
+int lua_isinteger (lua_State *, int);
+int lua_absindex (lua_State *, int);
+void luaL_setmetatable (lua_State *, const char *);
+int lua_compare (lua_State *, int, int, int);
+int lua_rawgetp (lua_State *, int, const void *);
+void lua_rawsetp (lua_State *, int, const void *);
+
+#ifdef LUACPPB_COROUTINE_SUPPORT
+#undef LUACPPB_COROUTINE_SUPPORT
 #endif
-
-#ifndef LUACPPB_NO_EXCEPTION_PROPAGATION
-#define LUACPPB_EXCEPTION_PROPAGATION
 #endif
-
-#else
-
-#include <luajit-2.0/lua.hpp>
-#define LUACPPB_EXCEPTION_PROPAGATION
-
-#endif
-
-#include <cstddef>
-#include "luacppb/Compat.h"
 
 #endif

@@ -59,6 +59,8 @@ namespace LuaCppB::Internal {
     }
   }
 
+#ifdef LUACPPB_COROUTINE_SUPPORT
+
   template <typename ... A>
   void LuaFunctionCall::callK(lua_State *state, int index, LuaCppRuntime &runtime, std::unique_ptr<LuaFunctionContinuation> cont, A &&... args) {
     Internal::LuaStack stack(state);
@@ -85,6 +87,8 @@ namespace LuaCppB::Internal {
                 ctx, &LuaFunctionContinuationHandle::fnContinuation),
       ctx);
   }
+
+#endif
 
   template <std::size_t I>
   std::tuple<> LuaFunctionCallResultTuple_Impl<I>::get(std::vector<LuaValue> &results) {

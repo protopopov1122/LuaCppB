@@ -1,3 +1,4 @@
 This product uses software developed as part of:
 * Lua <https://www.lua.org>
 * Catch2 <https://github.com/catchorg/Catch2>
+* lua-compat-5.3 <https://github.com/keplerproject/lua-compat-5.3>

@@ -59,6 +59,7 @@ namespace LuaCppB {
 
   namespace Internal {
 
+#ifdef LUACPPB_COROUTINE_SUPPORT
     LuaFunctionContinuationHandle::LuaFunctionContinuationHandle(std::unique_ptr<LuaFunctionContinuation> cont, LuaCppRuntime &runtime, int top)
       : cont(std::move(cont)), runtime(runtime.getRuntimeInfo()), top(top) {}
     
@@ -98,6 +99,7 @@ namespace LuaCppB {
         return handle->getContinuation().call(state, luaState, error, result);
       }
     }
+#endif
 
     LuaFunctionCallResult::LuaFunctionCallResult(std::vector<LuaValue> &result, LuaError &&err)
       : result(result), errorVal(err) {}

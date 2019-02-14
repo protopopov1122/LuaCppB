@@ -327,13 +327,19 @@ TEST_CASE("Garbage collector") {
   SECTION("Empty GC") {
     Internal::LuaGC gc;
     REQUIRE_FALSE(gc.valid());
+    #ifndef LUACPPB_COMPAT_501
     REQUIRE_FALSE(gc.isRunning());
+    #endif
     REQUIRE(gc.count() == 0);
     REQUIRE(gc.countBytes() == 0);
     REQUIRE_NOTHROW(gc.stop());
+    #ifndef LUACPPB_COMPAT_501
     REQUIRE_FALSE(gc.isRunning());
+    #endif
     REQUIRE_NOTHROW(gc.restart());
+    #ifndef LUACPPB_COMPAT_501
     REQUIRE_FALSE(gc.isRunning());
+    #endif
     REQUIRE_NOTHROW(gc.collect());
     REQUIRE_FALSE(gc.step(0));
     REQUIRE_FALSE(gc.step(100));
@@ -346,11 +352,17 @@ TEST_CASE("Garbage collector") {
     LuaEnvironment env;
     Internal::LuaGC gc(env.getState());
     REQUIRE(gc.valid());
+    #ifndef LUACPPB_COMPAT_501
     REQUIRE(gc.isRunning());
+    #endif
     REQUIRE_NOTHROW(gc.stop());
+    #ifndef LUACPPB_COMPAT_501
     REQUIRE_FALSE(gc.isRunning());
+    #endif
     REQUIRE_NOTHROW(gc.restart());
+    #ifndef LUACPPB_COMPAT_501
     REQUIRE(gc.isRunning());
+    #endif
     REQUIRE_NOTHROW(gc.step(0));
 
     int pause = gc.setPause(100);

@@ -45,6 +45,9 @@ void lua_rawsetp (lua_State *, int, const void *);
 #ifdef LUACPPB_COROUTINE_SUPPORT
 #undef LUACPPB_COROUTINE_SUPPORT
 #endif
+#ifdef LUACPPB_EXCEPTION_PROPAGATION
+#undef LUACPPB_EXCEPTION_PROPAGATION
+#endif
 #endif
 
 #endif

@@ -21,6 +21,7 @@
 using namespace LuaCppB;
 
 void test_basic_operations(LuaEnvironment &env) {
+#ifndef LUACPPB_COMPAT_501
   const std::string &CODE = "vec[1] = nil\n"
                             "sum = 0\n"
                             "for i = 1, #vec do\n"
@@ -41,6 +42,7 @@ void test_basic_operations(LuaEnvironment &env) {
   REQUIRE(env["sum"].get<int>() == 10);
   REQUIRE(env["psum"].get<int>() == 30);
   REQUIRE(env["isum"].get<int>() == 55);
+#endif
 }
 
 TEST_CASE("Vector") {
@@ -130,7 +132,8 @@ TEST_CASE("Tuple") {
   }
 }
 
-void test_map(LuaEnvironment &env) {
+bool test_map(LuaEnvironment &env) {
+#ifndef LUACPPB_COMPAT_501
   const std::string &CODE = "map[3] = map[1] + map[2]\n"
                             "map[10] = nil\n"
                             "sz = #map\n"
@@ -148,6 +151,10 @@ void test_map(LuaEnvironment &env) {
   int isum = env["isum"].get<int>();
   REQUIRE(psum == 140);
   REQUIRE(isum == 140);
+  return true;
+#else
+  return false;
+#endif
 }
 
 TEST_CASE("Map") {
@@ -159,10 +166,12 @@ TEST_CASE("Map") {
   };
   SECTION("By reference") {
     env["map"] = map;
-    test_map(env);
-    REQUIRE(map[3] == 30);
+    if (test_map(env)) {
+      REQUIRE(map[3] == 30);
+    }
   }
   SECTION("By const reference") {
+#ifndef LUACPPB_COMPAT_501
    const std::string &CODE = "sz = #map\n"
                              "psum = 0\n"
                              "for k, v in pairs(map) do\n"
@@ -180,6 +189,7 @@ TEST_CASE("Map") {
     int isum = env["isum"];
     REQUIRE(psum == 1050);
     REQUIRE(isum == 50);
+#endif
   }
   SECTION("Unique pointer") {
     env["map"] = std::make_unique<std::map<int, int>>(map);
@@ -188,8 +198,9 @@ TEST_CASE("Map") {
   SECTION("Shared pointer") {
     auto ptr = std::make_shared<std::map<int, int>>(map);
     env["map"] = ptr;
-    test_map(env);
-    REQUIRE(ptr->at(3) == 30);
+    if (test_map(env)) {
+      REQUIRE(ptr->at(3) == 30);
+    }
   }
 }
 
@@ -208,7 +219,8 @@ TEST_CASE("Optional") {
 }
 
 
-void test_set(LuaEnvironment &env) {
+bool test_set(LuaEnvironment &env) {
+#ifndef LUACPPB_COMPAT_501
   const std::string &CODE = "numbers[10] = true\n"
                             "numbers[1] = nil\n"
                             "sz = #numbers\n"
@@ -223,6 +235,10 @@ void test_set(LuaEnvironment &env) {
   bool res = env["res"];
   REQUIRE(psum == 24);
   REQUIRE(res);
+  return true;
+#else
+  return false;
+#endif
 }
 
 TEST_CASE("Set") {
@@ -230,11 +246,13 @@ TEST_CASE("Set") {
   std::set<int> numbers = { 1, 2, 3, 4, 5 };
   SECTION("By reference") {
     env["numbers"] = numbers;
-    test_set(env);
-    REQUIRE(numbers.count(10) != 0);
-    REQUIRE(numbers.count(1) == 0);
+    if (test_set(env)) {
+      REQUIRE(numbers.count(10) != 0);
+      REQUIRE(numbers.count(1) == 0);
+    }
   }
   SECTION("By constant reference") {
+#ifndef LUACPPB_COMPAT_501
   const std::string &CODE = "sz = #numbers\n"
                             "psum = 0\n"
                             "for k, v in pairs(numbers) do\n"
@@ -249,6 +267,7 @@ TEST_CASE("Set") {
     bool res = env["res"];
     REQUIRE(psum == 15);
     REQUIRE(res);
+#endif
   }
   SECTION("Unique pointer") {
     env["numbers"] = std::make_unique<std::set<int>>(numbers);

@@ -104,7 +104,8 @@ namespace LuaCppB::Internal {
   }
 
   std::string LuaStack::toString(int index) {
-    return std::string(lua_tostring(this->state, index));
+    const char *raw = lua_tostring(this->state, index);
+    return std::string(raw != nullptr ? raw : "");
   }
 
   LuaCFunction LuaStack::toCFunction(int index) {
@@ -124,7 +125,13 @@ namespace LuaCppB::Internal {
   }
   
   bool LuaStack::metatable(const std::string &name) {
-    return static_cast<bool>(luaL_newmetatable(this->state, name.c_str()));
+    bool res = static_cast<bool>(luaL_newmetatable(this->state, name.c_str()));
+    if (res) {
+      this->push(std::string("__name"));
+      this->push(name);
+      lua_rawset(this->state, -3);
+    }
+    return res;
   }
 
   void LuaStack::getMetatable(int index) {

@@ -51,7 +51,8 @@ namespace LuaCppB {
       lua_getmetatable(state, -1);
       if (lua_istable(state, -1)) {
         lua_getfield(state, -1, "__name");
-        std::string className(lua_tostring(state, -1));
+        const char *rawClassName = lua_tostring(state, -1);
+        std::string className(rawClassName != nullptr ? rawClassName : "");
         lua_pop(state, 1);
 
         std::stringstream ss;

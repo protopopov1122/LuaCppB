@@ -321,6 +321,7 @@ TEST_CASE("Costant object references") {
 #endif
 }
 
+#ifdef LUACPPB_EXCEPTION_PROPAGATION
 TEST_CASE("Exception handling") {
   const std::string &CODE = "arith:set(5)\n"
                             "res = arith:add(5)";
@@ -336,6 +337,7 @@ TEST_CASE("Exception handling") {
   env.setExceptionHandler([](std::exception &ex) {});
   REQUIRE_NOTHROW(env.execute(CODE) != LuaStatusCode::Ok);
 }
+#endif
 
 enum class EnumTest {
   A = 1,

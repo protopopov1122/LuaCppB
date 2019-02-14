@@ -1,6 +1,7 @@
 /*
   SPDX short identifier: MIT
 
+  Copyright (c) 2015 Kepler Project.
   Copyright 2018-2019 Jevgēnijs Protopopovs
 
   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
@@ -13,6 +14,11 @@
   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
   IN THE SOFTWARE.
+*/
+
+/*
+  Following compatibility functions were borrowed from lua-compat-5.3 project by Kepler Project.
+  See <https://github.com/keplerproject/lua-compat-5.3>.
 */
 
 #include "luacppb/Compat.h"

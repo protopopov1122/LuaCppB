@@ -40,8 +40,16 @@
 
 #else
 
+#ifdef LUACPPB_LUAJIT
 #include <luajit-2.0/lua.hpp>
+#else
+extern "C" {
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+}
 #define LUACPPB_EXCEPTION_PROPAGATION
+#endif
 
 #endif
 

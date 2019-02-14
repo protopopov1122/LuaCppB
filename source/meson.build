@@ -25,7 +25,7 @@ luacppb_source = [
 luacppb_headers = include_directories('../headers')
 LuaCppBLib = static_library('luacppb', luacppb_source,
   include_directories : [luacppb_headers, LUA_HEADERS],
-  cpp_args : LUACPPB_CXX_MODE)
+  cpp_args : LUACPPB_CXX_FLAGS)
 LUACPPB_DEPENDENCY = declare_dependency(dependencies : LUA,
   link_with : LuaCppBLib,
   include_directories : [luacppb_headers, LUA_HEADERS])

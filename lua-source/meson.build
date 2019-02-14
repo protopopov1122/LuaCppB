@@ -38,11 +38,16 @@ custom_lua_source = [
 ]
 
 if get_option('system_lua')
-  LUACPPB_CXX_MODE = []
   LUA_HEADERS = []
-  LUA = dependency('luajit')
+  if get_option('luajit')
+    LUACPPB_CXX_FLAGS = '-DLUACPPB_LUAJIT'
+    LUA = dependency('luajit')
+  else
+    LUACPPB_CXX_FLAGS = []
+    LUA = dependency('lua')
+  endif
 else
-  LUACPPB_CXX_MODE = '-DLUACPPB_CXX_MODE'
+  LUACPPB_CXX_FLAGS = '-DLUACPPB_CXX_MODE'
   LUA_HEADERS = include_directories(custom_lua_source_dir)
   lua = static_library('lua-cpp', custom_lua_source,
     include_directories : LUA_HEADERS)

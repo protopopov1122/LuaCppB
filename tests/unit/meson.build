@@ -13,5 +13,5 @@ luacppb_test_source = [
 
 lcppbunit = executable('lcppbunit', luacppb_test_source,
   dependencies : LUACPPB_DEPENDENCY,
-  cpp_args : LUACPPB_CXX_MODE)
+  cpp_args : LUACPPB_CXX_FLAGS)
 test('Unit tests', lcppbunit)

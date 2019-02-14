@@ -38,7 +38,7 @@ custom_lua_source = [
 ]
 
 if get_option('system_lua')
-  LUACPPB_CXX_MODE = ''
+  LUACPPB_CXX_MODE = []
   LUA_HEADERS = []
   LUA = dependency('lua')
 else

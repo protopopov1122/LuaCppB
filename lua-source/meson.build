@@ -14,16 +14,12 @@ custom_lua_source = [
   custom_lua_source_dir + '/ldump.c',
   custom_lua_source_dir + '/liolib.c',
   custom_lua_source_dir + '/lzio.c',
-  custom_lua_source_dir + '/lctype.c',
   custom_lua_source_dir + '/lstring.c',
-  custom_lua_source_dir + '/lbitlib.c',
   custom_lua_source_dir + '/llex.c',
   custom_lua_source_dir + '/linit.c',
   custom_lua_source_dir + '/ldebug.c',
   custom_lua_source_dir + '/ldo.c',
   custom_lua_source_dir + '/lauxlib.c',
-  custom_lua_source_dir + '/lcorolib.c',
-  custom_lua_source_dir + '/lutf8lib.c',
   custom_lua_source_dir + '/lgc.c',
   custom_lua_source_dir + '/lstate.c',
   custom_lua_source_dir + '/lundump.c',
@@ -36,6 +32,21 @@ custom_lua_source = [
   custom_lua_source_dir + '/lapi.c',
   custom_lua_source_dir + '/lstrlib.c'
 ]
+
+if custom_lua_version.startswith('5.3')
+  custom_lua_source += [
+    custom_lua_source_dir + '/lutf8lib.c',
+    custom_lua_source_dir + '/lctype.c',
+    custom_lua_source_dir + '/lbitlib.c',
+    custom_lua_source_dir + '/lcorolib.c'
+  ]
+elif custom_lua_version.startswith('5.2')
+  custom_lua_source += [
+    custom_lua_source_dir + '/lctype.c',
+    custom_lua_source_dir + '/lbitlib.c',
+    custom_lua_source_dir + '/lcorolib.c'
+  ]
+endif
 
 if get_option('system_lua')
   LUA_HEADERS = []

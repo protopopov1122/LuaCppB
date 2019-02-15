@@ -22,9 +22,9 @@
 
 #ifdef LUACPPB_CXX_MODE
 
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
+#include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
 
 #ifndef LUACPPB_NO_COROUTINE_SUPPORT
 #define LUACPPB_COROUTINE_SUPPORT
@@ -49,8 +49,13 @@ extern "C" {
 #include <lauxlib.h>
 }
 #endif
+#ifndef LUACPPB_NO_EXCEPTION_PROPAGATION
 #define LUACPPB_EXCEPTION_PROPAGATION
+#endif
+
+#ifndef LUACPPB_NO_ERROR_SUPPORT
 #define LUACPPB_ERROR_SUPPORT
+#endif
 
 #endif
 

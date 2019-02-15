@@ -36,31 +36,6 @@ void luaL_setmetatable (lua_State *L, const char *tname) {
   lua_setmetatable(L, -2);
 }
 
-int lua_geti (lua_State *L, int index, lua_Integer i) {
-  index = lua_absindex(L, index);
-  lua_pushinteger(L, i);
-  lua_gettable(L, index);
-  return lua_type(L, -1);
-}
-
-void lua_seti (lua_State *L, int index, lua_Integer i) {
-  luaL_checkstack(L, 1, "not enough stack slots available");
-  index = lua_absindex(L, index);
-  lua_pushinteger(L, i);
-  lua_insert(L, -2);
-  lua_settable(L, index);
-}
-
-int lua_isinteger (lua_State *L, int index) {
-  if (lua_type(L, index) == LUA_TNUMBER) {
-    lua_Number n = lua_tonumber(L, index);
-    lua_Integer i = lua_tointeger(L, index);
-    if (i == n)
-      return 1;
-  }
-  return 0;
-}
-
 int lua_rawgetp (lua_State *L, int i, const void *p) {
   int abs_i = lua_absindex(L, i);
   lua_pushlightuserdata(L, (void*)p);
@@ -115,5 +90,32 @@ int lua_compare (lua_State *L, int idx1, int idx2, int op) {
       luaL_error(L, "invalid 'op' argument for lua_compare");
   }
   return 0;
+}
+#endif
+
+#ifdef LUACPPB_COMPAT_502
+int lua_isinteger (lua_State *L, int index) {
+  if (lua_type(L, index) == LUA_TNUMBER) {
+    lua_Number n = lua_tonumber(L, index);
+    lua_Integer i = lua_tointeger(L, index);
+    if (i == n)
+      return 1;
+  }
+  return 0;
+}
+
+int lua_geti (lua_State *L, int index, lua_Integer i) {
+  index = lua_absindex(L, index);
+  lua_pushinteger(L, i);
+  lua_gettable(L, index);
+  return lua_type(L, -1);
+}
+
+void lua_seti (lua_State *L, int index, lua_Integer i) {
+  luaL_checkstack(L, 1, "not enough stack slots available");
+  index = lua_absindex(L, index);
+  lua_pushinteger(L, i);
+  lua_insert(L, -2);
+  lua_settable(L, index);
 }
 #endif

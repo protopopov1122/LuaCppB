@@ -24,10 +24,13 @@
 #error "Minimal supported Lua version is 5.1"
 #elif (LUA_VERSION_NUM == 501)
 #define LUACPPB_COMPAT_501
+#define LUACPPB_COMPAT_502
 #elif (LUA_VERSION_NUM == 502)
 #define LUACPPB_COMPAT_502
+#define LUACPPB_GC_ISRUNNING
 #else
-#define LUACPPB_COMPAT_503
+#define LUACPPB_GC_ISRUNNING
+#define LUACPPB_CONTAINER_PAIRS
 #endif
 
 #ifdef LUACPPB_COMPAT_501
@@ -37,27 +40,21 @@
 #define LUA_OPLT 1
 #define LUA_OPLE 2
 
-int lua_geti(lua_State *, int, lua_Integer);
-void lua_seti(lua_State *, int, lua_Integer);
-int lua_isinteger (lua_State *, int);
 int lua_absindex (lua_State *, int);
 void luaL_setmetatable (lua_State *, const char *);
 int lua_compare (lua_State *, int, int, int);
 int lua_rawgetp (lua_State *, int, const void *);
 void lua_rawsetp (lua_State *, int, const void *);
 
-#ifdef LUACPPB_COROUTINE_SUPPORT
-#undef LUACPPB_COROUTINE_SUPPORT
-#endif
 #endif
 
 #ifdef LUACPPB_COMPAT_502
-#error "Lua 5.2 build is untested and temporarily not supported"
+int lua_isinteger (lua_State *, int);
+int lua_geti(lua_State *, int, lua_Integer);
+void lua_seti(lua_State *, int, lua_Integer);
+#ifdef LUACPPB_COROUTINE_SUPPORT
+#undef LUACPPB_COROUTINE_SUPPORT
 #endif
-
-#ifdef LUACPPB_COMPAT_503
-#define LUACPPB_GC_ISRUNNING
-#define LUACPPB_CONTAINER_PAIRS
 #endif
 
 #endif

@@ -41,7 +41,13 @@
 #else
 
 #ifdef LUACPPB_LUAJIT
+
+#if __has_include(<luajit-2.0/lua.hpp>)
+#include <luajit-2.0/lua.hpp>
+#else
 #include <lua.hpp>
+#endif
+
 #else
 extern "C" {
 #include <lua.h>

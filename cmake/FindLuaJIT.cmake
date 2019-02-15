@@ -1,0 +1,6 @@
+if (NOT DEFINED LUAJIT_DIR)
+	message(FATAL_ERROR "Provide LUAJIT_DIR")
+endif (NOT DEFINED LUAJIT_DIR)
+
+set(LUAJIT_HEADERS ${LUAJIT_DIR}/src)
+find_library(LUAJIT_LIBS NAMES luajit-5.1 lua51 PATHS ${LUAJIT_DIR}/src)

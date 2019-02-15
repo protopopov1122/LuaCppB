@@ -4,7 +4,7 @@
 [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/protopopov1122/LuaCppB.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/protopopov1122/LuaCppB/context:cpp)
 
 This repo contains the implementation of Lua-C++ bindings. Currently it has following features:
-* support of Lua 5.1+.
+* support of Lua 5.1+ (including LuaJIT).
 * support of scalar data types and strings.
 * access and modification of Lua variables an tables.
 * basic support of C++ enums.
@@ -17,7 +17,6 @@ This repo contains the implementation of Lua-C++ bindings. Currently it has foll
 * support of coroutines (only for Lua 5.3).
 * support of std::exception-based exception propagation and handlers.
 * wrappers for Lua stack and garbage collector.
-* experimental support of LuaJIT.
 
 Supported platforms: Windows (MinGW only), Linux (GCC and Clang), macOS(Clang), FreeBSD (Clang and GCC) & OpenBSD (Clang). \
 Project requires C++17-compliant compiler version. It uses RTTI and exceptions.

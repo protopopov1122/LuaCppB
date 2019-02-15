@@ -3,6 +3,7 @@
 #	LUACPPB_LUA_SOURCE (path) - Lua source code directory (only if LUACPPB_COMPILE_LUA is defined)
 #	LUACPPB_LUA_HEADERS (path)	- Lua header directory (if LUACPPB_COMPILE_LUA is not defined)
 # LUACPPB_CXX_MODE (on/off) - Lua compiled as C++
+# LUACPPB_LUAJIT (on/off) - use LuaJIT
 # LUACPPB_FPIC (on/off) - produce position-independent code
 # Results:
 #	LUACPPB_CUSTOM_LUA - custom Lua was build as the static library 'luacppb_lua'
@@ -27,6 +28,9 @@ endif (LUACPPB_COMPILE_LUA)
 file(GLOB_RECURSE LUACPPB_SRC ${CMAKE_CURRENT_LIST_DIR}/../source/*.cpp)
 set(LUACPPB_HEADERS ${CMAKE_CURRENT_LIST_DIR}/../headers)
 add_library(luacppb STATIC ${LUACPPB_SRC})
+if (LUACPPB_LUAJIT)
+	target_compile_definitions(luacppb PUBLIC -DLUACPPB_LUAJIT)
+endif (LUACPPB_LUAJIT)
 if (LUACPPB_CXX_MODE)
 	target_compile_definitions(luacppb PUBLIC -DLUACPPB_CXX_MODE)
 endif (LUACPPB_CXX_MODE)

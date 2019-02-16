@@ -15,34 +15,48 @@
   IN THE SOFTWARE.
 */
 
-#ifndef LUACPPB_LUACPPB_H_
-#define LUACPPB_LUACPPB_H_
+#ifndef LUACPPB_LUAJIT_H_
+#define LUACPPB_LUAJIT_H_
 
 #include "luacppb/Base.h"
-#include "luacppb/Meta.h"
-#include "luacppb/Core/State.h"
-#include "luacppb/Reference/Base.h"
-#include "luacppb/Reference/Primary.h"
-#include "luacppb/Reference/Field.h"
-#include "luacppb/Reference/Registry.h"
-#include "luacppb/Reference/Handle.h"
-#include "luacppb/Value/Value.h"
-#include "luacppb/Value/Native.h"
-#include "luacppb/Invoke/Callable.h"
-#include "luacppb/Invoke/Continuation.h"
-#include "luacppb/Invoke/Coro.h"
-#include "luacppb/Object/Registry.h"
-#include "luacppb/Object/Object.h"
-#include "luacppb/Object/Class.h"
-#include "luacppb/Object/Bind.h"
-#include "luacppb/Value/UserData.h"
-#include "luacppb/Core/Status.h"
-#include "luacppb/Core/Throw.h"
-#include "luacppb/Core/StackGuard.h"
-#include "luacppb/Core/Stack.h"
-#include "luacppb/Core/GC.h"
-#include "luacppb/Value/Factory.h"
-#include "luacppb/Value/Iterator.h"
-#include "luacppb/LuaJIT.h"
 
+#ifdef LUACPPB_HAS_JIT
+
+namespace LuaCppB {
+
+  enum class LuaJITFlag {
+    Mask = LUAJIT_MODE_MASK,
+    Off = LUAJIT_MODE_OFF,
+    On = LUAJIT_MODE_ON,
+    Flush = LUAJIT_MODE_FLUSH
+  };
+
+  enum class LuaJITMode {
+
+    Engine = LUAJIT_MODE_ENGINE,
+    Debug = LUAJIT_MODE_DEBUG,
+
+    Func = LUAJIT_MODE_FUNC,
+    AllFunc = LUAJIT_MODE_ALLFUNC,
+    AllSubFunc = LUAJIT_MODE_ALLSUBFUNC,
+
+    Trace = LUAJIT_MODE_TRACE,
+
+    WrapFunc = LUAJIT_MODE_WRAPCFUNC,
+
+    Max = LUAJIT_MODE_MAX
+  };
+
+  class LuaJIT {
+   public:
+    LuaJIT(lua_State *);
+
+    bool setMode(LuaJITMode, LuaJITFlag, int = 0);
+    int version();
+   private:
+    lua_State *state;
+  };
+}
+
+#endif
 #endif

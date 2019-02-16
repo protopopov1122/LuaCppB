@@ -65,6 +65,10 @@ extern "C" {
 
 #endif
 
+#ifdef LUAJIT_VERSION_NUM
+#define LUACPPB_HAS_JIT
+#endif
+
 #include <cstddef>
 #include "luacppb/Compat.h"
 

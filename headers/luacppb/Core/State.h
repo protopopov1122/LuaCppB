@@ -22,6 +22,7 @@
 #include "luacppb/Core/Status.h"
 #include "luacppb/Core/Runtime.h"
 #include "luacppb/Invoke/Error.h"
+#include "luacppb/LuaJIT.h"
 #include <string>
 #include <memory>
 
@@ -39,6 +40,9 @@ namespace LuaCppB {
 		virtual ~LuaState() = default;
 		lua_State *getState() const;
 		Internal::LuaCppClassRegistry &getClassRegistry();
+#ifdef LUACPPB_HAS_JIT
+		LuaJIT &getJit();
+#endif
 		Internal::LuaCppObjectBoxerRegistry &getObjectBoxerRegistry() override;
 		std::shared_ptr<Internal::LuaRuntimeInfo> &getRuntimeInfo() override;
     void setExceptionHandler(std::function<void(std::exception &)>) override;
@@ -51,6 +55,9 @@ namespace LuaCppB {
 		lua_State *state;
 		std::shared_ptr<Internal::LuaRuntimeInfo> runtime;
 		std::function<void(std::exception &)> exception_handler;
+#ifdef LUACPPB_HAS_JIT
+		LuaJIT luaJit;
+#endif
 	};
 
 	class LuaUniqueState : public LuaState {

@@ -29,7 +29,11 @@
 namespace LuaCppB {
 
 	LuaState::LuaState(lua_State *state, std::shared_ptr<Internal::LuaRuntimeInfo> runtime)
-		: state(state), runtime(runtime == nullptr ? std::make_shared<Internal::LuaRuntimeInfo>(std::make_shared<Internal::LuaCppClassRegistry>(state)) : runtime) {
+		: state(state), runtime(runtime == nullptr ? std::make_shared<Internal::LuaRuntimeInfo>(std::make_shared<Internal::LuaCppClassRegistry>(state)) : runtime)
+#ifdef LUACPPB_HAS_JIT
+		, luaJit(state)
+#endif
+		{
 		assert(this->state != nullptr);
 		this->exception_handler = [](std::exception &ex) {
 			throw ex;
@@ -43,6 +47,12 @@ namespace LuaCppB {
 	Internal::LuaCppClassRegistry &LuaState::getClassRegistry() {
 		return this->runtime->getClassRegistry();
 	}
+
+#ifdef LUACPPB_HAS_JIT
+	LuaJIT &LuaState::getJit() {
+		return this->luaJit;
+	}
+#endif
 
 	Internal::LuaCppObjectBoxerRegistry &LuaState::getObjectBoxerRegistry() {
 		return this->runtime->getClassRegistry();

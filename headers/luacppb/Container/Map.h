@@ -43,15 +43,14 @@ namespace LuaCppB::Internal {
     static typename std::enable_if<is_instantiation<std::map, M>::value>::type
       push(lua_State *, LuaCppRuntime &, std::shared_ptr<M> &);
     
+    template <typename M>
+    static int map_put(lua_State *);
    private:
     template <typename M>
     static void set_map_meta(lua_State *, LuaCppRuntime &);
 
     template <typename M>
     static int map_get(lua_State *);
-
-    template <typename M>
-    static int map_put(lua_State *);
 
     template <typename M>
     static int map_size(lua_State *);

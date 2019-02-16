@@ -148,11 +148,9 @@ namespace LuaCppB::Internal {
 
 	template <typename P>
 	class NativeInvocable {
-		template <typename R, typename ... A>
-		using FType = R(*)(A...);
 	 public:
 		template <typename R, typename ... A>
-		static NativeFunctionCall<P, R, A...> create(FType<R, A...>, LuaCppRuntime &);
+		static NativeFunctionCall<P, R, A...> create(R(*)(A...), LuaCppRuntime &);
 
 	 	template <typename F>
 		static typename NativeInvocableCallBuilder<P, F>::Type create(F, LuaCppRuntime &);

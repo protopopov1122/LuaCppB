@@ -15,6 +15,7 @@
   IN THE SOFTWARE.
 */
 
+#include "luacppb/Base.h"
 #include "luacppb/Invoke/Continuation.h"
 
 namespace LuaCppB {

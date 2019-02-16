@@ -192,8 +192,8 @@ namespace LuaCppB::Internal {
 
 	template <typename P>
   template <typename R, typename ... A>
-  NativeFunctionCall<P, R, A...> NativeInvocable<P>::create(FType<R, A...> func, LuaCppRuntime &runtime) {
-    return NativeFunctionCall<P, R, A...>(std::forward<FType<R, A...>>(func), runtime);
+  NativeFunctionCall<P, R, A...> NativeInvocable<P>::create(R(*func)(A...), LuaCppRuntime &runtime) {
+    return NativeFunctionCall<P, R, A...>(std::forward<R(*)(A...)>(func), runtime);
   }
 
   template <typename P>

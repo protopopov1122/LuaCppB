@@ -43,15 +43,15 @@ namespace LuaCppB::Internal {
     template <typename S>
     static typename std::enable_if<is_instantiation<std::set, S>::value>::type
       push(lua_State *, LuaCppRuntime &, std::shared_ptr<S> &);
+	
+    template <typename S>
+    static int set_put(lua_State *);
    private:
     template <typename S>
     static void set_set_meta(lua_State *, LuaCppRuntime &);
 
     template <typename S>
     static int set_get(lua_State *);
-
-    template <typename S>
-    static int set_put(lua_State *);
 
     template <typename S>
     static int set_size(lua_State *);

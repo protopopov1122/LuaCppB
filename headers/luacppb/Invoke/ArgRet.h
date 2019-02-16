@@ -71,6 +71,9 @@ namespace LuaCppB::Internal {
 	struct NativeFunctionResult {
 		static int set(lua_State *, LuaCppRuntime &, T &&);
 	};
+	
+	template <typename P, typename T>
+	struct NativeFunctionResult<P, T, typename std::enable_if<std::is_same<void, T>::value>::type> {};
 
 	template <typename P, typename T>
 	struct NativeFunctionResult<P, T, typename std::enable_if<is_instantiation<std::pair, T>::value>::type> {

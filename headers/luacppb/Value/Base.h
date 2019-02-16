@@ -22,6 +22,7 @@
 
 namespace LuaCppB {
 
+
 	enum class LuaType {
 		None = LUA_TNONE,
 		Nil = LUA_TNIL,
@@ -35,7 +36,7 @@ namespace LuaCppB {
 		LightUserData = LUA_TLIGHTUSERDATA
 	};
 
-  class LuaData {
+    class LuaData {
 	 public:
 		virtual ~LuaData() = default;
 		virtual void push(lua_State *state) const = 0;

@@ -61,9 +61,9 @@ namespace LuaCppB::Internal {
     LuaCppMap<P>::set_map_meta<M>(state, runtime);
   }
   
-  template <typename P, typename M>
-  static int LuaCppMap_put(lua_State *state) {
-	return LuaCppMap<P>::template map_put<M>(state);
+  template <class T1, typename T2>
+  int LuaCppMap_put(lua_State *state) {
+	return LuaCppMap<T1>::template map_put<T2>(state);
   }
   
   template <typename P>

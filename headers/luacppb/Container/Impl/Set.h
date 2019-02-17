@@ -62,9 +62,9 @@ namespace LuaCppB::Internal {
     LuaCppSet<P>::set_set_meta<S>(state, runtime);
   }
 
-  template <typename P, typename S>
-  static int LuaCppSet_put(lua_State *state) {
-	return LuaCppSet<P>::template set_put<S>(state);
+  template <class T1, typename T2>
+  int LuaCppSet_put(lua_State *state) {
+	return LuaCppSet<T1>::template set_put<T2>(state);
   }
   
   template <typename P>

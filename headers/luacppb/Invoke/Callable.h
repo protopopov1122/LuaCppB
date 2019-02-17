@@ -27,15 +27,15 @@ namespace LuaCppB {
 	
   namespace Internal {
 	template <typename F>
-	struct NativeCallableFunctionReturnType {
-	  using type = decltype(NativeInvocable<LuaNativeValue>::create(std::declval<F>(), std::declval<LuaCppRuntime &>()));
-	};
-	  
-    template <typename C, typename M>
-	struct NativeCallableReturnType {
-	  using type = decltype(NativeMethod<LuaNativeValue>::create(std::declval<C &>(), std::declval<M>(), std::declval<LuaCppRuntime &>()));
-	};
-  };
+    struct NativeCallableFunctionReturnType {
+      using type = decltype(NativeInvocable<LuaNativeValue>::create(std::declval<F>(), std::declval<LuaCppRuntime &>()));
+    };
+      
+      template <typename C, typename M>
+    struct NativeCallableReturnType {
+      using type = decltype(NativeMethod<LuaNativeValue>::create(std::declval<C &>(), std::declval<M>(), std::declval<LuaCppRuntime &>()));
+    };
+  }
 
   template <typename F>
   typename Internal::NativeCallableFunctionReturnType<F>::type NativeCallable(F &&, LuaCppRuntime &);

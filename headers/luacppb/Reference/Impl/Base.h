@@ -30,13 +30,13 @@ namespace LuaCppB::Internal {
 
 #ifdef LUACPPB_COROUTINE_SUPPORT
   template <typename T>
-  typename std::enable_if<std::is_convertible<LuaValue, T>::value && !std::is_same<T, LuaValue>::value && !std::is_same<T, LuaCoroutine>::value, T>::type
+  typename std::enable_if<std::is_convertible<LuaValue, T>::value && !std::is_same<T, LuaValue>::value && !LuaReferenceIsCoroutine<T>::value, T>::type
     LuaReference::get() {
     return this->get<LuaValue>().get<T>();
   }
 
   template <typename T>
-  typename std::enable_if<std::is_same<T, LuaCoroutine>::value, T>::type
+  typename std::enable_if<LuaReferenceIsCoroutine<T>::value, T>::type
     LuaReference::get() {
     LuaCoroutine coro(this->getRuntime());
     this->putOnTop([&](lua_State *state) {

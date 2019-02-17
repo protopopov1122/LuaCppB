@@ -191,7 +191,7 @@ TEST_CASE("Returning std::tuple") {
   REQUIRE(env["sum"].get<int>() == -95);
 }
 
-#if !defined(__clang_major__) && !defined(_MSC_VER)
+#if !defined(LUACPPB_COMPILER_CLANG) && !defined(LUACPPB_COMPILER_MSC)
 TEST_CASE("Bypassing Lua function call result") {
   const std::string &CODE = "function fn(x)\n"
                             "    return x, x*2\n"

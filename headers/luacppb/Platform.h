@@ -15,62 +15,28 @@
   IN THE SOFTWARE.
 */
 
-#ifndef LUACPPB_BASE_H_
-#define LUACPPB_BASE_H_
+#ifndef LUACPPB_PLATFORM_H_
+#define LUACPPB_PLATFORM_H_
 
-#include "luacppb/Config.h"
-#include "luacppb/Platform.h"
+#if defined(__clang__)
+#define LUACPPB_COMPILER_CLANG
 
-#ifdef LUACPPB_CXX_MODE
+#elif defined(__ICC) || defined(__INTEL_COMPILER)
+#define LUACPPB_COMPILER_UNSUPPORTED
 
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
+#elif defined(__GNUC__) || defined(__GNUG__)
+#define LUACPPB_COMPILER_GCC
 
-#ifndef LUACPPB_NO_COROUTINE_SUPPORT
-#define LUACPPB_COROUTINE_SUPPORT
-#endif
-
-#ifndef LUACPPB_NO_ERROR_SUPPORT
-#define LUACPPB_ERROR_SUPPORT
-#endif
-
-#ifndef LUACPPB_NO_EXCEPTION_PROPAGATION
-#define LUACPPB_EXCEPTION_PROPAGATION
-#endif
+#elif defined(_MSC_VER)
+#define LUACPPB_COMPILER_MSC
 
 #else
-
-#ifdef LUACPPB_LUAJIT
-
-#if __has_include(<luajit-2.0/lua.hpp>)
-#include <luajit-2.0/lua.hpp>
-#else
-#include <lua.hpp>
-#endif
-
-#else
-extern "C" {
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
-#endif
-#ifndef LUACPPB_NO_EXCEPTION_PROPAGATION
-#define LUACPPB_EXCEPTION_PROPAGATION
-#endif
-
-#ifndef LUACPPB_NO_ERROR_SUPPORT
-#define LUACPPB_ERROR_SUPPORT
-#endif
+#define LUACPPB_COMPILER_UNSUPPORTED
 
 #endif
 
-#ifdef LUAJIT_VERSION_NUM
-#define LUACPPB_HAS_JIT
+#ifdef LUACPPB_COMPILER_UNSUPPORTED
+#warning "Build using your compiler is not tested and may fail"
 #endif
-
-#include <cstddef>
-#include "luacppb/Compat.h"
 
 #endif

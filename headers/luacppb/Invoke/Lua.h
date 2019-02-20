@@ -165,6 +165,12 @@ namespace LuaCppB::Internal {
     static FunctionType create(H &&);
   };
 
+  template<typename H, typename C, typename R, typename ... A>
+  struct LuaLambdaBuilder<H, R (C::*)(A...)> {
+    using FunctionType = std::function<R(A...)>;
+    static FunctionType create(H &&);
+  };
+
   template <typename H>
   class LuaLambdaHandle {
   public:

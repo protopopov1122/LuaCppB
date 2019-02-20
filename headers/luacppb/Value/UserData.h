@@ -68,6 +68,12 @@ namespace LuaCppB {
       using FunctionType = std::function<R(T &, A...)>;
       using Type = CustomUserDataCall<T, FunctionType, A...>;
     };
+
+    template<typename T, typename C, typename R, typename ... A>
+    struct CustomUserDataCallBuilder<T, R (C::*)(T &, A...)> {
+      using FunctionType = std::function<R(T &, A...)>;
+      using Type = CustomUserDataCall<T, FunctionType, A...>;
+    };
   }
 
   enum class LuaMetamethod {

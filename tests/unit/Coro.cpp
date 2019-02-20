@@ -114,7 +114,7 @@ void test_cont_error(LuaState env, int val) {
 
 void test_cont_coro(LuaState env, int val) {
   LuaContinuation(env["coro"], env).call([val](LuaState env) {
-    LuaContinuation(env["coro"], env).call([val](int res) {
+    LuaContinuation(env["coro"], env).call([val](int res) mutable {
       REQUIRE(res == val * 2);
     }, [](auto) {}, val);
   }, [](auto) {}, val);

@@ -60,7 +60,7 @@ TEST_CASE("Custom userdata") {
       return -1;
     }
   });
-  arrayUD.bind("__newindex", [](IntegerArray &arr, std::size_t idx, int value) {
+  arrayUD.bind("__newindex", [](IntegerArray &arr, std::size_t idx, int value) mutable {
     idx--;
     if (idx < arr.length) {
       arr.array[idx] = value;

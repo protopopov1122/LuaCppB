@@ -73,6 +73,12 @@ namespace LuaCppB {
       return std::make_unique<Internal::LuaContinuationHandler<F, A...>>(callback, errorHandler);
     }
 
+    template <typename C, typename R, typename ... A>
+    template <typename F>
+    std::unique_ptr<Internal::LuaContinuationHandler<F, A...>> LuaContinuationHandlerType<R(C::*)(A...)>::newHandler(F callback, std::function<void(LuaError)> errorHandler) {
+      return std::make_unique<Internal::LuaContinuationHandler<F, A...>>(callback, errorHandler);
+    }
+
     template <typename R, typename ... A>
     template <typename F>
     std::unique_ptr<Internal::LuaContinuationHandler<F, A...>> LuaContinuationHandlerType<R(*)(A...)>::newHandler(F callback, std::function<void(LuaError)> errorHandler) {

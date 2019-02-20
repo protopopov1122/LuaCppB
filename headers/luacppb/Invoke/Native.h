@@ -146,6 +146,12 @@ namespace LuaCppB::Internal {
 		using Type = NativeInvocableCall<P, FunctionType, A...>;
 	};
 
+	template<typename P, typename C, typename R, typename ... A>
+	struct NativeInvocableCallBuilder<P, R (C::*)(A...)> {
+		using FunctionType = std::function<R(A...)>;
+		using Type = NativeInvocableCall<P, FunctionType, A...>;
+	};
+
 	template <typename P>
 	class NativeInvocable {
 		template <typename R, typename ... A>

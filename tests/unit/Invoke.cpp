@@ -113,6 +113,21 @@ TEST_CASE("Native method call") {
   REQUIRE(env["res3"].get<float>() == 100.0f);
 }
 
+TEST_CASE("Native lambda call") {
+  const std::string &CODE = "set(5)\n"
+                            "res = get() * 10";
+  LuaEnvironment env;
+  int value = 0;
+  env["set"] = [&](int v) mutable {
+    value = v;
+  };
+  env["get"] = [&] {
+    return value;
+  };
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["res"].get<int>() == 50);
+}
+
 TEST_CASE("Reference as function parameter") {
   const std::string &CODE = "tbl = { a = 3, b = 10 }\n"
                             "test(2, tbl)\n"

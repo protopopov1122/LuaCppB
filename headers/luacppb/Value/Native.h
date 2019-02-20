@@ -41,6 +41,43 @@ namespace LuaCppB::Internal {
                                   Internal::LuaCppContainer::is_container<T>() ||
                                   std::is_same<T, LuaFunctionCallResult>::value;
   };
+  
+  template <typename T>
+  struct LuaNativeValueObjectSmartPointer_Impl {
+	static constexpr bool value() {
+		if constexpr (is_smart_pointer<T>::value) {
+			return !Internal::LuaCppContainer::is_container<typename T::element_type>();
+		} else {
+			return false;
+		}
+	}
+  };
+  
+  template <typename T>
+  struct LuaNativeValueObjectSmartPointer {
+	static constexpr bool value = LuaNativeValueObjectSmartPointer_Impl<T>::value();
+  };
+  
+  template <typename T>
+  struct LuaNativeValueContainer {
+	static constexpr bool value = Internal::LuaCppContainer::is_container<T>();
+  };
+  
+  template <typename T>
+  struct LuaNativeValueContainerSmartPointer_Impl {
+	static constexpr bool value() {
+		if constexpr (is_smart_pointer<T>::value) {
+			return Internal::LuaCppContainer::is_container<typename T::element_type>();
+		} else {
+			return false;
+		}
+	}
+  };
+  
+  template <typename T>
+  struct LuaNativeValueContainerSmartPointer {
+	static constexpr bool value = LuaNativeValueContainerSmartPointer_Impl<T>::value();
+  };
 
   class LuaNativeValue {
    public:
@@ -65,7 +102,7 @@ namespace LuaCppB::Internal {
       push(lua_State *, LuaCppRuntime &, T &);
     
     template <typename T>
-    static typename std::enable_if<is_smart_pointer<T>::value && !Internal::LuaCppContainer::is_container<typename T::element_type>()>::type
+    static typename std::enable_if<LuaNativeValueObjectSmartPointer<T>::value>::type
       push(lua_State *, LuaCppRuntime &, T &);
     
     template <typename T>
@@ -73,15 +110,15 @@ namespace LuaCppB::Internal {
       push(lua_State *, LuaCppRuntime &, T &);
     
     template <typename T>
-    static typename std::enable_if<Internal::LuaCppContainer::is_container<T>()>::type
+    static typename std::enable_if<LuaNativeValueContainer<T>::value>::type
       push(lua_State *, LuaCppRuntime &, T &);
 
     template <typename T>
-    static typename std::enable_if<is_smart_pointer<T>::value && Internal::LuaCppContainer::is_container<typename T::element_type>()>::type
+    static typename std::enable_if<LuaNativeValueContainerSmartPointer<T>::value>::type
       push(lua_State *, LuaCppRuntime &, T &);
     
     template <typename T>
-    static typename std::enable_if<is_callable<T>::value>::type
+    static typename std::enable_if<is_callable<T>::value && !is_instantiation<std::reference_wrapper, T>::value>::type
       push(lua_State *, LuaCppRuntime &, T &);
     
     template <typename T>

@@ -19,6 +19,7 @@
 #define LUACPPB_BASE_H_
 
 #include "luacppb/Config.h"
+#include "luacppb/Platform.h"
 
 #ifdef LUACPPB_CXX_MODE
 

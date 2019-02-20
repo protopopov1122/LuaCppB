@@ -62,6 +62,11 @@ namespace LuaCppB::Internal {
     LuaCppSet<P>::set_set_meta<S>(state, runtime);
   }
 
+  template <class T1, typename T2>
+  int LuaCppSet_put(lua_State *state) {
+	return LuaCppSet<T1>::template set_put<T2>(state);
+  }
+  
   template <typename P>
   template <typename S>
   void LuaCppSet<P>::set_set_meta(lua_State *state, LuaCppRuntime &runtime) {
@@ -71,7 +76,7 @@ namespace LuaCppB::Internal {
       stack.push(&LuaCppSet<P>::set_get<S>);
       stack.setField(-2, "__index");
       if constexpr (!std::is_const<S>::value) {
-        stack.push(&LuaCppSet<P>::set_put<S>);
+        stack.push(&LuaCppSet_put<P, S>);
         stack.setField(-2, "__newindex");
       }
       stack.push(&LuaCppSet<P>::set_size<S>);

@@ -49,7 +49,7 @@ namespace LuaCppB::Internal {
 
     template <typename S>
     static int set_get(lua_State *);
-
+	
     template <typename S>
     static int set_put(lua_State *);
 
@@ -64,6 +64,9 @@ namespace LuaCppB::Internal {
 
     template <typename S>
     static int set_gc(lua_State *);
+	
+	template <class T1, typename T2>
+	friend int LuaCppSet_put(lua_State *);
   };
 }
 

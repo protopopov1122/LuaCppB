@@ -33,12 +33,13 @@ namespace LuaCppB {
 	namespace Internal {
 		template <typename T>
 		struct LuaValueGetSpecialCase {
+			using T2 = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 			static constexpr bool value = std::is_same<T, std::string>::value ||
-																		std::is_same<T, LuaTable>::value ||
-																		std::is_same<T, LuaUserData>::value ||
-																		std::is_same<T, LuaThread>::value ||
-																		std::is_same<T, LuaFunction>::value ||
-																		std::is_same<T, LuaEmpty>::value;
+																		std::is_same<T2, LuaTable>::value ||
+																		std::is_same<T2, LuaUserData>::value ||
+																		std::is_same<T2, LuaThread>::value ||
+																		std::is_same<T2, LuaFunction>::value ||
+																		std::is_same<T2, LuaEmpty>::value;
 		};
 
 		template <typename T, typename E = typename std::enable_if<std::is_reference<T>::value>::type>
@@ -171,14 +172,18 @@ namespace LuaCppB {
 
 		template <typename T>
 		struct LuaValueWrapper<T, typename std::enable_if<LuaValue::is_constructible<T>()>::type> {
-			static LuaValue wrap(T);
+			static LuaValue wrap(T value) {
+			  return LuaValue::create(value);
+			}
 
 			static constexpr bool Conversible = true;
 		};
 
 		template <typename T>
 		struct LuaValueWrapper<T, typename std::enable_if<std::is_convertible<T, LuaValue>::value>::type> {
-			static LuaValue wrap(T);
+			static LuaValue wrap(T value) {
+			  return LuaValue(value);
+			}
 
 			static constexpr bool Conversible = true;
 		};

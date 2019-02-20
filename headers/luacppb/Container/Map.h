@@ -49,7 +49,7 @@ namespace LuaCppB::Internal {
 
     template <typename M>
     static int map_get(lua_State *);
-
+	
     template <typename M>
     static int map_put(lua_State *);
 
@@ -64,6 +64,9 @@ namespace LuaCppB::Internal {
 
     template <typename M>
     static int map_iter(lua_State *);
+	
+	template <class T1, typename T2>
+	friend int LuaCppMap_put(lua_State *);
   };
 }
 

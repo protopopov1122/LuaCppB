@@ -22,6 +22,7 @@
 
 namespace LuaCppB {
 
+
 	enum class LuaType {
 		None = LUA_TNONE,
 		Nil = LUA_TNIL,

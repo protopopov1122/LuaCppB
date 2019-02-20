@@ -15,14 +15,28 @@
   IN THE SOFTWARE.
 */
 
-#include "luacppb/Base.h"
-#include "luacppb/Invoke/Continuation.h"
+#ifndef LUACPPB_PLATFORM_H_
+#define LUACPPB_PLATFORM_H_
 
-namespace LuaCppB {
+#if defined(__clang__)
+#define LUACPPB_COMPILER_CLANG
 
-#ifdef LUACPPB_COROUTINE_SUPPORT
+#elif defined(__ICC) || defined(__INTEL_COMPILER)
+#define LUACPPB_COMPILER_UNSUPPORTED
 
-  LuaContinuation::LuaContinuation(const LuaReferenceHandle &handle, LuaCppRuntime &runtime)
-    : handle(handle), runtime(runtime) {}
+#elif defined(__GNUC__) || defined(__GNUG__)
+#define LUACPPB_COMPILER_GCC
+
+#elif defined(_MSC_VER)
+#define LUACPPB_COMPILER_MSC
+
+#else
+#define LUACPPB_COMPILER_UNSUPPORTED
+
 #endif
-}
+
+#ifdef LUACPPB_COMPILER_UNSUPPORTED
+#warning "Build using your compiler is not tested and may fail"
+#endif
+
+#endif

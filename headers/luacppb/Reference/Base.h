@@ -31,9 +31,15 @@ namespace LuaCppB::Internal {
 
 #ifdef LUACPPB_COROUTINE_SUPPORT
 	template <typename T>
+	struct LuaReferenceIsCoroutine {
+		using T2 = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
+		static constexpr bool value = std::is_same<T2, LuaCoroutine>::value;
+	};
+
+	template <typename T>
 	struct LuaReferenceGetSpecialCase {
 		static constexpr bool value = LuaValueGetSpecialCase<T>::value ||
-		                              std::is_same<T, LuaCoroutine>::value;
+			                          LuaReferenceIsCoroutine<T>::value;
 	};
 #else
 	template <typename T>
@@ -53,11 +59,11 @@ namespace LuaCppB::Internal {
 		typename std::enable_if<std::is_same<T, LuaValue>::value, T>::type get();
 #ifdef LUACPPB_COROUTINE_SUPPORT
 		template <typename T>
-		typename std::enable_if<std::is_convertible<LuaValue, T>::value && !std::is_same<T, LuaValue>::value && !std::is_same<T, LuaCoroutine>::value, T>::type
+		typename std::enable_if<std::is_convertible<LuaValue, T>::value && !std::is_same<T, LuaValue>::value && !LuaReferenceIsCoroutine<T>::value, T>::type
 			get();
 
 		template <typename T>
-		typename std::enable_if<std::is_same<T, LuaCoroutine>::value, T>::type
+		typename std::enable_if<LuaReferenceIsCoroutine<T>::value, T>::type
 			get();
 #else
 		template <typename T>

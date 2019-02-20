@@ -18,7 +18,7 @@ This repo contains the implementation of Lua-C++ bindings. Currently it has foll
 * support of std::exception-based exception propagation and handlers.
 * wrappers for Lua stack and garbage collector.
 
-Supported platforms: Windows (MinGW only), Linux (GCC and Clang), macOS(Clang), FreeBSD (Clang and GCC) & OpenBSD (Clang). \
+Supported platforms: Windows (MS Visual C++ and MinGW), Linux (GCC and Clang), macOS(Clang), FreeBSD (Clang and GCC) & OpenBSD (Clang). \
 Project requires C++17-compliant compiler version. It uses RTTI and exceptions.
 
 ### Documentation & examples

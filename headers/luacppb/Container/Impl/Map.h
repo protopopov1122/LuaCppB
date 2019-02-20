@@ -61,6 +61,11 @@ namespace LuaCppB::Internal {
     LuaCppMap<P>::set_map_meta<M>(state, runtime);
   }
   
+  template <class T1, typename T2>
+  int LuaCppMap_put(lua_State *state) {
+	return LuaCppMap<T1>::template map_put<T2>(state);
+  }
+  
   template <typename P>
   template <typename M>
   void LuaCppMap<P>::set_map_meta(lua_State *state, LuaCppRuntime &runtime) {
@@ -71,7 +76,7 @@ namespace LuaCppB::Internal {
       stack.push(&LuaCppMap<P>::map_get<M>, 1);
       stack.setField(-2, "__index");
       if constexpr (!std::is_const<M>::value) {
-        stack.push(&LuaCppMap<P>::map_put<M>);
+        stack.push(&LuaCppMap_put<P, M>);
         stack.setField(-2, "__newindex");
       }
       stack.push(&LuaCppMap<P>::map_size<M>);

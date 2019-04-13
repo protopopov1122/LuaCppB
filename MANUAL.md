@@ -238,6 +238,31 @@ env.setExceptionHandler([](std::exception &ex) {
 });
 ```
 
+#### Custom memory allocators
+Custom memory allocators are supported on standard Lua engine (not LuaJIT). To implement custom allocation mechanism, you should create `LuaAllocator` subclass as following:
+```C++
+class CustomLuaAllocator : public LuaAllocator {
+ public:
+  void *allocate(LuaType type, std::size_t size) override {
+    // Allocation logic
+    // Type may be Table, Function, String, Thread, Userdata or None (if it can be determined)
+  }
+
+  void *reallocate(void *ptr, std::size_t old_size, std::size_t new_size) override {
+    // Reallocation logic
+  }
+  
+  void deallocate(void *ptr, std::size_t size) override {
+    // Deallocation login
+  }
+};
+```
+And bind it to `LuaState`:
+```C++
+auto alloc = std::make_shared<CustomLuaAllocator>();
+state.setCustomAllocator(alloc);
+```
+
 #### Custom userdata types
 `LuaCppB` supports custom userdata type definitions. You should use `CustomUserDataClass` to build userdata metatable and then use method `CustomUserDataClass::create` to instantiate `CustomUserData` objects. These objects can be implicitly converted into appropriate pointers and references, as well as passed to Lua. Example:
 ```C++

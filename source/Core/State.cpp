@@ -30,6 +30,9 @@ namespace LuaCppB {
 
 	LuaState::LuaState(lua_State *state, std::shared_ptr<Internal::LuaRuntimeInfo> runtime)
 		: state(state), runtime(runtime == nullptr ? std::make_shared<Internal::LuaRuntimeInfo>(std::make_shared<Internal::LuaCppClassRegistry>(state)) : runtime)
+#ifndef LUACPPB_NO_CUSTOM_ALLOCATOR
+		, allocator(nullptr)
+#endif
 #ifdef LUACPPB_HAS_JIT
 		, luaJit(state)
 #endif
@@ -69,6 +72,17 @@ namespace LuaCppB {
 	std::function<void(std::exception &)> LuaState::getExceptionHandler() {
 		return this->exception_handler;
 	}
+
+#ifndef LUACPPB_NO_CUSTOM_ALLOCATOR
+
+	void LuaState::setCustomAllocator(std::shared_ptr<LuaAllocator> alloc) {
+		if (alloc) {
+			this->allocator = alloc;
+			LuaAllocator::bind(this->state, *alloc);
+		}
+	}
+
+#endif
 
 	LuaReferenceHandle LuaState::operator[](const std::string &name) {
 		return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaGlobalVariable>(*this, name));

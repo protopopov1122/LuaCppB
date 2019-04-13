@@ -21,6 +21,7 @@
 #include "luacppb/Base.h"
 #include "luacppb/Core/Status.h"
 #include "luacppb/Core/Runtime.h"
+#include "luacppb/Core/Alloc.h"
 #include "luacppb/Invoke/Error.h"
 #include "luacppb/LuaJIT.h"
 #include <string>
@@ -40,6 +41,9 @@ namespace LuaCppB {
 		virtual ~LuaState() = default;
 		lua_State *getState() const;
 		Internal::LuaCppClassRegistry &getClassRegistry();
+#ifndef LUACPPB_NO_CUSTOM_ALLOCATOR
+		void setCustomAllocator(std::shared_ptr<LuaAllocator>);
+#endif
 #ifdef LUACPPB_HAS_JIT
 		LuaJIT &getJit();
 #endif
@@ -55,6 +59,9 @@ namespace LuaCppB {
 		lua_State *state;
 		std::shared_ptr<Internal::LuaRuntimeInfo> runtime;
 		std::function<void(std::exception &)> exception_handler;
+#ifndef LUACPPB_NO_CUSTOM_ALLOCATOR
+		std::shared_ptr<LuaAllocator> allocator;
+#endif
 #ifdef LUACPPB_HAS_JIT
 		LuaJIT luaJit;
 #endif

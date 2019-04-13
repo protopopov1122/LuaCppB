@@ -18,7 +18,9 @@
 #include "catch.hpp"
 #include <fstream>
 #include <cstdio>
+#include <cstring>
 #include <iostream>
+#include <algorithm>
 #include "luacppb/LuaCppB.h"
 
 using namespace LuaCppB;
@@ -373,3 +375,57 @@ TEST_CASE("Garbage collector") {
     REQUIRE(gc.setStepMultiplier(step) == step);
   }
 }
+
+#ifndef LUACPPB_NO_CUSTOM_ALLOCATOR
+
+class TestLuaAllocator : public LuaAllocator {
+ public:
+  TestLuaAllocator() : current(0), max(0) {}
+
+  void *allocate(LuaType type, std::size_t size) override {
+    void *ptr = ::operator new(size);
+    this->current += size;
+    this->updateMax();
+    return ptr;
+  }
+
+  void *reallocate(void *ptr, std::size_t osize, std::size_t nsize) override {
+    void *nptr = ::operator new(nsize);
+    std::memmove(nptr, ptr, std::min(osize, nsize));
+    this->current += nsize - osize;
+    ::operator delete(ptr);
+    this->updateMax();
+    return nptr;
+  }
+  
+  void deallocate(void *ptr, std::size_t size) override {
+    ::operator delete(ptr);
+    this->current -= size;
+  }
+
+  std::size_t getMaxAllocation() const {
+    return this->max;
+  }
+ private:
+  void updateMax() {
+    if (this->current > this->max) {
+      this->max = this->current;
+    }
+  }
+  std::size_t current;
+  std::size_t max;
+};
+
+TEST_CASE("Allocator") {
+  LuaEnvironment env;
+  auto alloc = std::make_shared<TestLuaAllocator>();
+  env.setCustomAllocator(alloc);
+  const std::string &CODE = "tbl = {}\n"
+                            "for i = 1,100 do\n"
+                            "    tbl[i] = 'Hello, ' .. i\n"
+                            "end";
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(alloc->getMaxAllocation() > 0);
+}
+
+#endif

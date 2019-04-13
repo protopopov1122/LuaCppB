@@ -68,6 +68,7 @@ extern "C" {
 
 #ifdef LUAJIT_VERSION_NUM
 #define LUACPPB_HAS_JIT
+#define LUACPPB_NO_CUSTOM_ALLOCATOR
 #endif
 
 #include <cstddef>

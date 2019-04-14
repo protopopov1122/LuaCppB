@@ -112,7 +112,11 @@ namespace LuaCppB::Internal {
     if (!result.empty()) {
       ret = result.at(0);
     }
-    return ret.get<T>();
+    if constexpr (!std::is_same<T, LuaValue>::value) {
+      return ret.get<T>();
+    } else {
+      return ret;
+    }
   }
 
   template <typename ... T>

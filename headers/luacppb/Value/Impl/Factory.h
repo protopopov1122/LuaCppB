@@ -68,7 +68,7 @@ namespace LuaCppB {
   LuaReferenceHandle LuaFactory::mkref(T &env, LuaData &data) {
     Internal::LuaStack stack(env.getState());
     stack.push(data);
-    LuaReferenceHandle ref(env.getState(), std::make_unique<>(env.getState(), env, -1));
+    LuaReferenceHandle ref(env.getState(), std::make_unique<Internal::LuaRegistryReference>(env.getState(), env, -1));
     stack.pop();
     return ref;
   }

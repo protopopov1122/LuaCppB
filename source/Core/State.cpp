@@ -51,6 +51,10 @@ namespace LuaCppB {
 		return this->runtime->getClassRegistry();
 	}
 
+	LuaDebugFrame LuaState::getDebugFrame(int level) {
+		return LuaDebugFrame(this->state, level);
+	}
+
 #ifdef LUACPPB_HAS_JIT
 	LuaJIT &LuaState::getJit() {
 		return this->luaJit;

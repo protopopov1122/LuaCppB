@@ -1,6 +1,7 @@
 luacppb_source = [
   'Compat.cpp',
   'Core/Alloc.cpp',
+  'Core/Debug.cpp',
   'Core/Error.cpp',
   'Core/GC.cpp',
   'Core/RuntimeInfo.cpp',

@@ -22,6 +22,7 @@
 #include "luacppb/Core/Status.h"
 #include "luacppb/Core/Runtime.h"
 #include "luacppb/Core/Alloc.h"
+#include "luacppb/Core/Debug.h"
 #include "luacppb/Invoke/Error.h"
 #include "luacppb/LuaJIT.h"
 #include <string>
@@ -41,6 +42,7 @@ namespace LuaCppB {
 		virtual ~LuaState() = default;
 		lua_State *getState() const;
 		Internal::LuaCppClassRegistry &getClassRegistry();
+		LuaDebugFrame getDebugFrame(int = 0);
 #ifndef LUACPPB_NO_CUSTOM_ALLOCATOR
 		void setCustomAllocator(std::shared_ptr<LuaAllocator>);
 #endif
@@ -70,7 +72,11 @@ namespace LuaCppB {
 	class LuaUniqueState : public LuaState {
 	 public:
 		LuaUniqueState(lua_State * = nullptr);
+		LuaUniqueState(const LuaUniqueState &) = delete;
+		LuaUniqueState(LuaUniqueState &&) = default;
 		virtual ~LuaUniqueState();
+		LuaUniqueState &operator=(const LuaUniqueState &) = delete;
+		LuaUniqueState &operator=(LuaUniqueState &&) = default;
 	};
 
 	class LuaEnvironment : public LuaUniqueState {

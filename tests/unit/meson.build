@@ -1,6 +1,7 @@
 luacppb_test_source = [
   'main.cpp',
   'Core.cpp',
+  'Debug.cpp',
   'Reference.cpp',
   'Value.cpp',
   'Invoke.cpp',

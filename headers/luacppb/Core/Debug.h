@@ -99,6 +99,9 @@ namespace LuaCppB {
     bool setLocal(int, Reference);
     bool setUpvalue(Reference, int, Reference);
     void joinUpvalues(Reference, int, Reference, int);
+    Reference getCurrentFunction();
+    Reference getLines(Reference);
+    Reference getLines();
   };
 }
 

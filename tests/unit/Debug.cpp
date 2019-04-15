@@ -34,7 +34,7 @@ TEST_CASE("Local variables") {
     auto debug = env.getDebugFrame(1);
     std::size_t i = 1;
     std::optional<LuaDebugFrame::Variable> var = debug.getLocal(i);
-    for (; var.has_value(); var = debug.getLocal(i++)) {
+    for (; var.has_value(); var = debug.getLocal(++i)) {
       values[var.value().key] = var.value().value.get<int>();
     }
   };
@@ -58,7 +58,7 @@ TEST_CASE("Local variable symbols") {
     auto debug = env.getDebugFrame(1);
     std::size_t i = 1;
     std::optional<std::string> var = debug.getLocal(env["sum"], i);
-    for (; var.has_value(); var = debug.getLocal(env["sum"], i++)) {
+    for (; var.has_value(); var = debug.getLocal(env["sum"], ++i)) {
       symbols.emplace(var.value());
     }
   };
@@ -81,7 +81,7 @@ TEST_CASE("Upvalues") {
     auto debug = env.getDebugFrame(1);
     std::size_t i = 1;
     std::optional<LuaDebugFrame::Variable> var = debug.getUpvalue(fn, i);
-    for (; var.has_value(); var = debug.getUpvalue(fn, i++)) {
+    for (; var.has_value(); var = debug.getUpvalue(fn, ++i)) {
       values[var.value().key] = var.value().value.get<int>();
       idents[var.value().key] = debug.getUpvalueId(fn, i);
     }
@@ -223,4 +223,60 @@ TEST_CASE("Joining upvalues") {
   auto res = env["sum"](2, 3);
   REQUIRE(res == LuaStatusCode::Ok);
   REQUIRE(res.get<int>() == 4);
+}
+
+TEST_CASE("Getting current function") {
+  const std::string &CODE = "function sum(a, b)\n"
+                            "  callback()\n"
+                            "  return a+b\n"
+                            "end\n"
+                            "sum(10, 20)";
+  LuaEnvironment env;
+  LuaReferenceHandle fn;
+  env["callback"] = [&]() {
+    auto debug = env.getDebugFrame(1);
+    fn = debug.getCurrentFunction();
+  };
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  auto res = fn(2, 3);
+  REQUIRE(res == LuaStatusCode::Ok);
+  REQUIRE(res.get<int>() == 5);
+}
+
+TEST_CASE("Getting current function lines") {
+  const std::string &CODE = "function sum(a, b)\n"
+                            "  callback()\n"
+                            "  return a+b\n"
+                            "end\n"
+                            "sum(10, 20)";
+  LuaEnvironment env;
+  LuaReferenceHandle lines;
+  env["callback"] = [&]() {
+    auto debug = env.getDebugFrame(1);
+    lines = debug.getLines();
+  };
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(lines.getType() == LuaType::Table);
+  REQUIRE(lines[2].getType() == LuaType::Boolean);
+  REQUIRE(lines[3].getType() == LuaType::Boolean);
+  REQUIRE(lines[4].getType() == LuaType::Boolean);
+}
+
+TEST_CASE("Getting function lines") {
+  const std::string &CODE = "function sum(a, b)\n"
+                            "  callback(sum)\n"
+                            "  return a+b\n"
+                            "end\n"
+                            "sum(10, 20)";
+  LuaEnvironment env;
+  LuaReferenceHandle lines;
+  env["callback"] = [&](LuaReferenceHandle fn) {
+    auto debug = env.getDebugFrame();
+    lines = debug.getLines(fn);
+  };
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(lines.getType() == LuaType::Table);
+  REQUIRE(lines[2].getType() == LuaType::Boolean);
+  REQUIRE(lines[3].getType() == LuaType::Boolean);
+  REQUIRE(lines[4].getType() == LuaType::Boolean);
 }

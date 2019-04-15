@@ -191,6 +191,51 @@ namespace LuaCppB {
     });
     canary.assume();
   }
+
+  template <typename Reference, typename ReferenceInternal>
+  Reference LuaAbstractDebugFrame<Reference, ReferenceInternal>::getCurrentFunction() {
+    int top = lua_gettop(this->state);
+    lua_getinfo(this->state, "f", &this->debug);
+    int total = lua_gettop(this->state) - top;
+    if (total > 0) {
+      Reference res(this->state, std::make_unique<ReferenceInternal>(this->state, this->runtime, -1));
+      lua_pop(this->state, total);
+      return res;
+    } else {
+      return Reference();
+    }
+  }
+
+  template <typename Reference, typename ReferenceInternal>
+  Reference LuaAbstractDebugFrame<Reference, ReferenceInternal>::getLines(Reference fn) {
+    Reference res;
+    fn.getReference().putOnTop([&](lua_State *state) {
+      Internal::LuaStack stack(state);
+      int top = stack.getTop();
+      stack.copy(-1);
+      lua_getinfo(state, ">L", &this->debug);
+      int total = stack.getTop() - top;
+      if (total > 0) {
+        res = Reference(state, std::make_unique<ReferenceInternal>(state, this->runtime, -1));
+        stack.pop(total);
+      }
+    });
+    return res;
+  }
+
+  template <typename Reference, typename ReferenceInternal>
+  Reference LuaAbstractDebugFrame<Reference, ReferenceInternal>::getLines() {
+    int top = lua_gettop(this->state);
+    lua_getinfo(this->state, "L", &this->debug);
+    int total = lua_gettop(this->state) - top;
+    if (total > 0) {
+      Reference res(this->state, std::make_unique<ReferenceInternal>(this->state, this->runtime, -1));
+      lua_pop(this->state, total);
+      return res;
+    } else {
+      return Reference();
+    }
+  }
 }
 
 #endif

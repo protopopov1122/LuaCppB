@@ -17,6 +17,8 @@
 
 #include "luacppb/Core/Debug.h"
 
+#ifndef LUACPPB_NO_DEBUG
+
 namespace LuaCppB {
 
   LuaDebugBaseFrame::LuaDebugBaseFrame(lua_State *state, LuaCppRuntime &runtime, lua_Debug *debug)
@@ -78,4 +80,192 @@ namespace LuaCppB {
   bool LuaDebugBaseFrame::isTailCall() const {
     return static_cast<bool>(this->debug.istailcall);
   }
+
+  namespace Internal {
+
+    LuaDebugHookDispatcher LuaDebugHookDispatcher::singleton;
+
+    LuaDebugHookDispatcher::DetachHook::DetachHook()
+      : dispatcher(LuaDebugHookDispatcher::getGlobal()), type(Type::Call) {}
+
+    LuaDebugHookDispatcher::DetachHook::DetachHook(LuaDebugHookDispatcher &dispatcher, Type type, std::size_t id)
+      : dispatcher(dispatcher), type(type), id(id) {}
+    
+    LuaDebugHookDispatcher::DetachHook::DetachHook(DetachHook &&hook)
+      : dispatcher(hook.dispatcher), type(hook.type), id(hook.id) {
+      hook.id.reset();
+    }
+
+    LuaDebugHookDispatcher::DetachHook &LuaDebugHookDispatcher::DetachHook::operator=(DetachHook &&hook) {
+      this->dispatcher = hook.dispatcher;
+      this->type = hook.type;
+      this->id = hook.id;
+      hook.id.reset();
+      return *this;
+    }
+
+    bool LuaDebugHookDispatcher::DetachHook::attached() const {
+      return this->id.has_value();
+    }
+    
+    void LuaDebugHookDispatcher::DetachHook::operator()() {
+      if (this->id.has_value()) {
+        lua_Hook hookFn;
+        std::map<lua_State *, std::set<std::size_t>> *map;
+        switch (this->type) {
+          case Type::Call:
+            hookFn = &LuaDebugHookDispatcher::callHook;
+            map = &this->dispatcher.get().callHooks;
+            break;
+          case Type::Count:
+            hookFn = &LuaDebugHookDispatcher::countHook;
+            map = &this->dispatcher.get().countHooks;
+            break;
+          case Type::Line:
+            hookFn = &LuaDebugHookDispatcher::lineHook;
+            map = &this->dispatcher.get().lineHooks;
+            break;
+          case Type::Return:
+            hookFn = &LuaDebugHookDispatcher::returnHook;
+            map = &this->dispatcher.get().returnHooks;
+            break;
+        }
+        auto hook = this->dispatcher.get().hooks[this->id.value()];
+        this->dispatcher.get().hooks.erase(this->id.value());
+        (*map)[hook.first].erase(this->id.value());
+        this->dispatcher.get().unbindState(*map, hook.first, hookFn);
+        this->id.reset();
+      }
+    }
+
+    LuaDebugHookDispatcher::LuaDebugHookDispatcher()
+      : nextId(0) {}
+
+    LuaDebugHookDispatcher::DetachHook LuaDebugHookDispatcher::attachCall(lua_State *state, Hook hook) {
+      std::size_t id = this->nextId++;
+      this->hooks[id] = std::make_pair(state, hook);
+      this->bindState(this->callHooks, state, &LuaDebugHookDispatcher::callHook, LUA_MASKCALL);
+      this->callHooks[state].emplace(id);
+      return DetachHook(*this, DetachHook::Type::Call, id);
+    }
+
+    LuaDebugHookDispatcher::DetachHook LuaDebugHookDispatcher::attachReturn(lua_State *state, Hook hook) {
+      std::size_t id = this->nextId++;
+      this->hooks[id] = std::make_pair(state, hook);
+      this->bindState(this->callHooks, state, &LuaDebugHookDispatcher::returnHook, LUA_MASKRET);
+      this->returnHooks[state].emplace(id);
+      return DetachHook(*this, DetachHook::Type::Return, id);
+    }
+
+    LuaDebugHookDispatcher::DetachHook LuaDebugHookDispatcher::attachLine(lua_State *state, Hook hook) {
+      std::size_t id = this->nextId++;
+      this->hooks[id] = std::make_pair(state, hook);
+      this->bindState(this->callHooks, state, &LuaDebugHookDispatcher::lineHook, LUA_MASKLINE);
+      this->lineHooks[state].emplace(id);
+      return DetachHook(*this, DetachHook::Type::Line, id);
+    }
+
+    LuaDebugHookDispatcher::DetachHook LuaDebugHookDispatcher::attachCount(lua_State *state, Hook hook) {
+      std::size_t id = this->nextId++;
+      this->hooks[id] = std::make_pair(state, hook);
+      this->bindState(this->callHooks, state, &LuaDebugHookDispatcher::countHook, LUA_MASKCOUNT);
+      this->countHooks[state].emplace(id);
+      return DetachHook(*this, DetachHook::Type::Count, id);
+    }
+
+    void LuaDebugHookDispatcher::attach(lua_State *state) {
+      if (this->attached.count(state)) {
+        this->attached[state]++;
+      } else {
+        this->attached[state] = 1;
+      }
+    }
+
+    void LuaDebugHookDispatcher::detach(lua_State *state) {
+      if (this->attached.count(state)) {
+        this->attached[state]--;
+        if (this->attached[state] > 0) {
+          return;
+        }
+      }
+      if (this->callHooks.count(state)) {
+        this->detachSet(this->callHooks[state]);
+        this->callHooks.erase(state);
+      }
+      if (this->returnHooks.count(state)) {
+        this->detachSet(this->returnHooks[state]);
+        this->returnHooks.erase(state);
+      }
+      if (this->lineHooks.count(state)) {
+        this->detachSet(this->lineHooks[state]);
+        this->lineHooks.erase(state);
+      }
+      if (this->countHooks.count(state)) {
+        this->detachSet(this->countHooks[state]);
+        this->countHooks.erase(state);
+      }
+    }
+
+    void LuaDebugHookDispatcher::bindState(std::map<lua_State *, std::set<std::size_t>> &map, lua_State *state, lua_Hook hook, int mask) {
+      if (map.count(state) == 0) {
+        map[state] = std::set<std::size_t>();
+        lua_sethook(state, hook, mask, 1);
+      }
+    }
+
+    void LuaDebugHookDispatcher::unbindState(std::map<lua_State *, std::set<std::size_t>> &map, lua_State *state, lua_Hook hook) {
+      if (map[state].empty()) {
+        lua_sethook(state, hook, 0, 0);
+        map.erase(state);
+      }
+    }
+
+    void LuaDebugHookDispatcher::callHook(lua_State *state, lua_Debug *debug) {
+      if (LuaDebugHookDispatcher::getGlobal().callHooks.count(state)) {
+        const auto &hooks = LuaDebugHookDispatcher::getGlobal().callHooks[state];
+        for (std::size_t id : hooks) {
+          LuaDebugHookDispatcher::getGlobal().hooks[id].second(state, debug);
+        }
+      }
+    }
+
+    void LuaDebugHookDispatcher::returnHook(lua_State *state, lua_Debug *debug) {
+      if (LuaDebugHookDispatcher::getGlobal().callHooks.count(state)) {
+        const auto &hooks = LuaDebugHookDispatcher::getGlobal().returnHooks[state];
+        for (std::size_t id : hooks) {
+          LuaDebugHookDispatcher::getGlobal().hooks[id].second(state, debug);
+        }
+      }
+    }
+
+    void LuaDebugHookDispatcher::lineHook(lua_State *state, lua_Debug *debug) {
+      if (LuaDebugHookDispatcher::getGlobal().callHooks.count(state)) {
+        const auto &hooks = LuaDebugHookDispatcher::getGlobal().lineHooks[state];
+        for (std::size_t id : hooks) {
+          LuaDebugHookDispatcher::getGlobal().hooks[id].second(state, debug);
+        }
+      }
+    }
+
+    void LuaDebugHookDispatcher::countHook(lua_State *state, lua_Debug *debug) {
+      if (LuaDebugHookDispatcher::getGlobal().callHooks.count(state)) {
+        const auto &hooks = LuaDebugHookDispatcher::getGlobal().countHooks[state];
+        for (std::size_t id : hooks) {
+          LuaDebugHookDispatcher::getGlobal().hooks[id].second(state, debug);
+        }
+      }
+    }
+
+    void LuaDebugHookDispatcher::detachSet(std::set<std::size_t> &set) {
+      for (std::size_t id : set) {
+        this->hooks.erase(id);
+      }
+    }
+
+    LuaDebugHookDispatcher &LuaDebugHookDispatcher::getGlobal() {
+      return LuaDebugHookDispatcher::singleton;
+    }
+  }
 }
+
+#endif

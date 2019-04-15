@@ -17,9 +17,10 @@
 
 #include "catch.hpp"
 #include "luacppb/LuaCppB.h"
-#include <iostream>
 #include <map>
 #include <set>
+
+#ifndef LUACPPB_NO_DEBUG
 
 using namespace LuaCppB;
 
@@ -280,3 +281,20 @@ TEST_CASE("Getting function lines") {
   REQUIRE(lines[3].getType() == LuaType::Boolean);
   REQUIRE(lines[4].getType() == LuaType::Boolean);
 }
+
+TEST_CASE("Debug hooks") {
+  const std::string &CODE = "a = 1\n"
+                            "b = 2\n"
+                            "c = 3\n"
+                            "res = a + b + c";
+  LuaEnvironment env;
+  auto &debug = env.getDebugHooks();
+  std::size_t total = 0;
+  debug.onLine([&](LuaDebugFrame &frame) {
+    total += frame.getCurrentLine();
+  });
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(total == 10);
+}
+
+#endif

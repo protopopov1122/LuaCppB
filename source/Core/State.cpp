@@ -36,11 +36,15 @@ namespace LuaCppB {
 #ifdef LUACPPB_HAS_JIT
 		, luaJit(state)
 #endif
+#ifndef LUACPPB_NO_DEBUG
+		, debug(nullptr)
+#endif
 		{
 		assert(this->state != nullptr);
 		this->exception_handler = [](std::exception &ex) {
 			throw ex;
 		};
+		this->debug = std::make_shared<LuaDebugHooks>(this->state, *this);
 	}
 
 	lua_State *LuaState::getState() const {
@@ -51,9 +55,15 @@ namespace LuaCppB {
 		return this->runtime->getClassRegistry();
 	}
 
+#ifndef LUACPPB_NO_DEBUG
 	LuaDebugFrame LuaState::getDebugFrame(int level) {
 		return LuaDebugFrame(this->state, *this, level);
 	}
+
+	LuaDebugHooks &LuaState::getDebugHooks() {
+		return *this->debug;
+	}
+#endif
 
 #ifdef LUACPPB_HAS_JIT
 	LuaJIT &LuaState::getJit() {

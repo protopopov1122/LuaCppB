@@ -1,3 +1,20 @@
+/*
+  SPDX short identifier: MIT
+
+  Copyright 2018-2019 Jevgēnijs Protopopovs
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+*/
+
 #ifndef LUACPPB_CORE_IMPL_DEBUG_H_
 #define LUACPPB_CORE_IMPL_DEBUG_H_
 
@@ -234,6 +251,80 @@ namespace LuaCppB {
       return res;
     } else {
       return Reference();
+    }
+  }
+
+  template <typename Debug>
+  LuaDebugAbstractHooks<Debug>::LuaDebugAbstractHooks(lua_State *state, LuaCppRuntime &runtime)
+    : state(state), runtime(runtime) {
+    Internal::LuaDebugHookDispatcher::getGlobal().attach(this->state);
+  }
+
+  template <typename Debug>
+  LuaDebugAbstractHooks<Debug>::LuaDebugAbstractHooks(LuaDebugAbstractHooks &&hooks)
+    : state(hooks.state) {
+    hooks.state = nullptr;
+  }
+
+  template <typename Debug>
+  LuaDebugAbstractHooks<Debug>::~LuaDebugAbstractHooks() {
+    if (this->state != nullptr) {
+      Internal::LuaDebugHookDispatcher::getGlobal().detach(this->state);
+    }
+  }
+
+  template <typename Debug>
+  LuaDebugAbstractHooks<Debug> &LuaDebugAbstractHooks<Debug>::operator=(LuaDebugAbstractHooks &&hooks) {
+    this->state = hooks.state;
+    hooks.state = nullptr;
+    return *this;
+  }
+  
+  template <typename Debug>
+  typename LuaDebugAbstractHooks<Debug>::Detach LuaDebugAbstractHooks<Debug>::onCall(Hook hook) {
+    if (this->state) {
+      return Internal::LuaDebugHookDispatcher::getGlobal().attachCall(this->state, [this, hook](lua_State *state, lua_Debug *debug) {
+        Debug dbg(state, this, runtime, debug);
+        hook(dbg);
+      });
+    } else {
+      return Detach();
+    }
+  }
+  
+  template <typename Debug>
+  typename LuaDebugAbstractHooks<Debug>::Detach LuaDebugAbstractHooks<Debug>::onReturn(Hook hook) {
+    if (this->state) {
+      return Internal::LuaDebugHookDispatcher::getGlobal().attachReturn(this->state, [this, hook](lua_State *state, lua_Debug *debug) {
+        Debug dbg(state, this, runtime, debug);
+        hook(dbg);
+      });
+    } else {
+      return Detach();
+    }
+  }
+  
+  template <typename Debug>
+  typename LuaDebugAbstractHooks<Debug>::Detach LuaDebugAbstractHooks<Debug>::onLine(Hook hook) {
+    if (this->state) {
+      return Internal::LuaDebugHookDispatcher::getGlobal().attachLine(this->state, [this, hook](lua_State *state, lua_Debug *debug) {
+        Debug dbg(state, this->runtime, debug);
+        hook(dbg);
+      });
+    } else {
+      return Detach();
+    }
+  }
+  
+  template <typename Debug>
+  typename LuaDebugAbstractHooks<Debug>::Detach LuaDebugAbstractHooks<Debug>::onCount(Hook hook) {
+    if (this->state) {
+      return Internal::LuaDebugHookDispatcher::getGlobal().attachCount(this->state, [this, hook](lua_State *state, lua_Debug *debug) {
+        Debug dbg(state, this->runtime, debug);
+        hook(dbg);
+      });
+    } else {
+      return Detach();
     }
   }
 }

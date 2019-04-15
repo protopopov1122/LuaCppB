@@ -37,7 +37,10 @@ namespace LuaCppB {
 		class LuaRegistryReference;
 	}
 
+#ifndef LUACPPB_NO_DEBUG
 	using LuaDebugFrame = LuaAbstractDebugFrame<LuaReferenceHandle, Internal::LuaRegistryReference>;
+	using LuaDebugHooks = LuaDebugAbstractHooks<LuaDebugFrame>;
+#endif
 
 	class LuaState : public LuaCppRuntime {
 	 public:
@@ -45,7 +48,10 @@ namespace LuaCppB {
 		virtual ~LuaState() = default;
 		lua_State *getState() const;
 		Internal::LuaCppClassRegistry &getClassRegistry();
+#ifndef LUACPPB_NO_DEBUG
 		LuaDebugFrame getDebugFrame(int = 0);
+		LuaDebugHooks &getDebugHooks();
+#endif
 #ifndef LUACPPB_NO_CUSTOM_ALLOCATOR
 		void setCustomAllocator(std::shared_ptr<LuaAllocator>);
 #endif
@@ -69,6 +75,9 @@ namespace LuaCppB {
 #endif
 #ifdef LUACPPB_HAS_JIT
 		LuaJIT luaJit;
+#endif
+#ifndef LUACPPB_NO_DEBUG
+	std::shared_ptr<LuaDebugHooks> debug;
 #endif
 	};
 

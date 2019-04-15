@@ -52,7 +52,7 @@ namespace LuaCppB {
 	}
 
 	LuaDebugFrame LuaState::getDebugFrame(int level) {
-		return LuaDebugFrame(this->state, level);
+		return LuaDebugFrame(this->state, *this, level);
 	}
 
 #ifdef LUACPPB_HAS_JIT

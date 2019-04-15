@@ -34,7 +34,10 @@ namespace LuaCppB {
 	namespace Internal {
 		class LuaCppClassRegistry;
 		class LuaFunctionCallResult;
+		class LuaRegistryReference;
 	}
+
+	using LuaDebugFrame = LuaAbstractDebugFrame<LuaReferenceHandle, Internal::LuaRegistryReference>;
 
 	class LuaState : public LuaCppRuntime {
 	 public:

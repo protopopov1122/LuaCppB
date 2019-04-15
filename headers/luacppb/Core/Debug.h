@@ -96,6 +96,9 @@ namespace LuaCppB {
     std::optional<std::string> getLocal(Reference, int);
     std::optional<Variable> getUpvalue(Reference, int);
     UpvalueId getUpvalueId(Reference, int);
+    bool setLocal(int, Reference);
+    bool setUpvalue(Reference, int, Reference);
+    void joinUpvalues(Reference, int, Reference, int);
   };
 }
 

@@ -2,6 +2,7 @@
 #define LUACPPB_CORE_IMPL_DEBUG_H_
 
 #include "luacppb/Core/Debug.h"
+#include "luacppb/Core/StackGuard.h"
 
 namespace LuaCppB {
 
@@ -104,6 +105,91 @@ namespace LuaCppB {
       id = lua_upvalueid(state, -1, index);
     });
     return id;
+  }
+
+  template <typename Reference, typename ReferenceInternal>
+  bool LuaAbstractDebugFrame<Reference, ReferenceInternal>::setLocal(int index, Reference value) {
+    bool result = false;
+    value.getReference().putOnTop([&](lua_State *state) {
+      Internal::LuaStack stack(state);
+      stack.copy(-1);
+      if (state == this->state) {
+        result = lua_setlocal(state, &this->debug, index) != nullptr;
+        if (!result) {
+          stack.pop();
+        }
+      } else {
+        stack.move(this->state, 1);
+        result = lua_setlocal(this->state, &this->debug, index) != nullptr;
+        if (!result) {
+          lua_pop(this->state, 1);
+        }
+      }
+    });
+    return result;
+  }
+
+  template <typename Reference, typename ReferenceInternal>
+  bool LuaAbstractDebugFrame<Reference, ReferenceInternal>::setUpvalue(Reference func, int index, Reference value) {
+    bool result = false;
+    Internal::LuaStackGuard guard(this->state);
+    auto canary = guard.canary();
+    func.getReference().putOnTop([&](lua_State *fstate) {
+      if (fstate != this->state) {
+        Internal::LuaStack fstack(fstate);
+        fstack.copy(-1);
+        fstack.move(this->state, 1);
+      }
+      value.getReference().putOnTop([&](lua_State *vstate) {
+        Internal::LuaStack vstack(vstate);
+        vstack.copy(-1);
+        if (vstate == this->state) {
+          result = lua_setupvalue(this->state, -3, index) != nullptr;
+          if (!result) {
+            lua_pop(this->state, 1);
+          }
+        } else {
+          vstack.move(this->state, 1);
+          result = lua_setupvalue(this->state, -2, index) != nullptr;
+          if (!result) {
+            lua_pop(this->state, 1);
+          }
+        }
+      });
+      if (fstate != this->state) {
+        lua_pop(this->state, 1);
+      }
+    });
+    canary.assume();
+    return result;
+  }
+
+  template <typename Reference, typename ReferenceInternal>
+  void LuaAbstractDebugFrame<Reference, ReferenceInternal>::joinUpvalues(Reference fn1, int idx1, Reference fn2, int idx2) {
+    Internal::LuaStackGuard guard(this->state);
+    auto canary = guard.canary();
+    fn1.getReference().putOnTop([&](lua_State *state1) {
+      if (state1 != this->state) {
+        Internal::LuaStack fstack(state1);
+        fstack.copy(-1);
+        fstack.move(this->state, 1);
+      }
+      fn2.getReference().putOnTop([&](lua_State *state2) {
+        if (state2 != this->state) {
+          Internal::LuaStack fstack(state1);
+          fstack.copy(-1);
+          fstack.move(this->state, 1);
+        }
+        lua_upvaluejoin(this->state, -2, idx1, -1, idx2);
+        if (state2 != this->state) {
+          lua_pop(this->state, 1);
+        }
+      });
+      if (state1 != this->state) {
+        lua_pop(this->state, 1);
+      }
+    });
+    canary.assume();
   }
 }
 

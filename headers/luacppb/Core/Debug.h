@@ -34,28 +34,12 @@ namespace LuaCppB {
 
     template <typename F>
     struct LuaDebugFunction_Impl<F> {
-      static void getWhat(std::string &line) {}
+      static void getWhat(std::string &);
     };
 
     template <typename F, typename A, typename ... B>
     struct LuaDebugFunction_Impl<F, A, B...> {
-      static void getWhat(std::string &line, A a, B... b) {
-        switch (a) {
-          case F::Name:
-            line += 'n';
-            break;
-          case F::Source:
-            line += 'S';
-            break;
-          case F::Line:
-            line += 'l';
-            break;
-          case F::Params:
-            line += 'u';
-            break;
-        }
-        LuaDebugFunction_Impl<F, B...>::getWhat(line, b...);
-      }
+      static void getWhat(std::string &, A, B...);
     };
   }
 
@@ -103,76 +87,18 @@ namespace LuaCppB {
     using UpvalueId = void *;
 
     template <typename ... T>
-    void getFunctionInfo(Reference ref, T ... args) {
-      std::string what = ">";
-      Internal::LuaDebugFunction_Impl<Function, T...>::getWhat(what, args...);
-      ref.getReference().putOnTop([&](lua_State *state) {
-        Internal::LuaStack stack(state);
-        stack.copy(-1);
-        if (state == this->state) {
-          lua_getinfo(state, what.c_str(), &this->debug);
-        } else {
-          stack.move(this->state, 1);
-          lua_getinfo(this->state, what.c_str(), &this->debug);
-        }
-      });
-    }
-
+    void getFunctionInfo(Reference, T...);
+    
     template <typename ... T>
-    void getCurrentFunctionInfo(T ... args) {
-      std::string what;
-      Internal::LuaDebugFunction_Impl<Function, T...>::getWhat(what, args...);
-      lua_getinfo(this->state, what.c_str(), &this->debug);
-    }
+    void getCurrentFunctionInfo(T...);
 
-    std::optional<Variable> getLocal(int index) {
-      const char *key = lua_getlocal(this->state, &this->debug, index);
-      if (key == nullptr) {
-        return std::optional<Variable>();
-      } else {
-        Reference value(this->state, std::make_unique<ReferenceInternal>(this->state, this->runtime, -1));
-        lua_pop(this->state, 1);
-        return Variable { std::string(key), value };
-      }
-    }
-
-    std::optional<std::string> getLocal(Reference ref, int index) {
-      const char *key = nullptr;
-      ref.getReference().putOnTop([&](lua_State *state) {
-        key = lua_getlocal(state, nullptr, index);
-      });
-      if (key) {
-        return std::string(key);
-      } else {
-        return std::optional<std::string>();
-      }
-    }
-
-    std::optional<Variable> getUpvalue(Reference ref, int index) {
-      const char *key = nullptr;
-      Reference result;
-      ref.getReference().putOnTop([&](lua_State *state) {
-        key = lua_getupvalue(state, -1, index);
-        if (key) {
-          result = Reference(this->state, std::make_unique<ReferenceInternal>(state, this->runtime, -1));
-          lua_pop(state, 1);
-        }
-      });
-      if (key) {
-        return Variable { std::string(key), result };
-      } else {
-        return std::optional<Variable>();
-      }
-    }
-
-    UpvalueId getUpvalueId(Reference ref, int index) {
-      UpvalueId id = nullptr;
-      ref.getReference().putOnTop([&](lua_State *state) {
-        id = lua_upvalueid(state, -1, index);
-      });
-      return id;
-    }
+    std::optional<Variable> getLocal(int);
+    std::optional<std::string> getLocal(Reference, int);
+    std::optional<Variable> getUpvalue(Reference, int);
+    UpvalueId getUpvalueId(Reference, int);
   };
 }
+
+#include "luacppb/Core/Impl/Debug.h"
 
 #endif

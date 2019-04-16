@@ -317,12 +317,12 @@ namespace LuaCppB {
   }
   
   template <typename Debug>
-  typename LuaDebugAbstractHooks<Debug>::Detach LuaDebugAbstractHooks<Debug>::onCount(Hook hook) {
+  typename LuaDebugAbstractHooks<Debug>::Detach LuaDebugAbstractHooks<Debug>::onCount(Hook hook, unsigned int counter) {
     if (this->state) {
       return Internal::LuaDebugHookDispatcher::getGlobal().attachCount(this->state, [this, hook](lua_State *state, lua_Debug *debug) {
         Debug dbg(state, this->runtime, debug);
         hook(dbg);
-      });
+      }, counter);
     } else {
       return Detach();
     }

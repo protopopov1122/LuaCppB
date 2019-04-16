@@ -120,6 +120,7 @@ namespace LuaCppB {
           case Type::Count:
             hookFn = &LuaDebugHookDispatcher::countHook;
             map = &this->dispatcher.get().countHooks;
+            this->dispatcher.get().counter.erase(this->id.value());
             break;
           case Type::Line:
             hookFn = &LuaDebugHookDispatcher::lineHook;
@@ -165,11 +166,12 @@ namespace LuaCppB {
       return DetachHook(*this, DetachHook::Type::Line, id);
     }
 
-    LuaDebugHookDispatcher::DetachHook LuaDebugHookDispatcher::attachCount(lua_State *state, Hook hook) {
+    LuaDebugHookDispatcher::DetachHook LuaDebugHookDispatcher::attachCount(lua_State *state, Hook hook, unsigned int counter) {
       std::size_t id = this->nextId++;
       this->hooks[id] = std::make_pair(state, hook);
       this->bindState(this->callHooks, state, &LuaDebugHookDispatcher::countHook, LUA_MASKCOUNT);
       this->countHooks[state].emplace(id);
+      this->counter[id] = std::make_pair(1, counter);
       return DetachHook(*this, DetachHook::Type::Count, id);
     }
 
@@ -251,7 +253,10 @@ namespace LuaCppB {
       if (LuaDebugHookDispatcher::getGlobal().callHooks.count(state)) {
         const auto &hooks = LuaDebugHookDispatcher::getGlobal().countHooks[state];
         for (std::size_t id : hooks) {
-          LuaDebugHookDispatcher::getGlobal().hooks[id].second(state, debug);
+          if (--LuaDebugHookDispatcher::getGlobal().counter[id].first == 0) {
+            LuaDebugHookDispatcher::getGlobal().counter[id].first = LuaDebugHookDispatcher::getGlobal().counter[id].second;
+            LuaDebugHookDispatcher::getGlobal().hooks[id].second(state, debug);
+          }
         }
       }
     }
@@ -259,6 +264,9 @@ namespace LuaCppB {
     void LuaDebugHookDispatcher::detachSet(std::set<std::size_t> &set) {
       for (std::size_t id : set) {
         this->hooks.erase(id);
+        if (this->counter.count(id)) {
+          this->counter.erase(id);
+        }
       }
     }
 

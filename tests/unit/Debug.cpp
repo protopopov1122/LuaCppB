@@ -290,9 +290,9 @@ TEST_CASE("Debug hooks") {
   LuaEnvironment env;
   auto &debug = env.getDebugHooks();
   std::size_t total = 0;
-  debug.onLine([&](LuaDebugFrame &frame) {
-    total += frame.getCurrentLine();
-  });
+  debug.onCount([&](LuaDebugFrame &frame) {
+    total++;
+  }, 1);
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(total == 10);
 }

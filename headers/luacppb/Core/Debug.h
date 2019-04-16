@@ -81,7 +81,7 @@ namespace LuaCppB {
       DetachHook attachCall(lua_State *, Hook);
       DetachHook attachReturn(lua_State *, Hook);
       DetachHook attachLine(lua_State *, Hook);
-      DetachHook attachCount(lua_State *, Hook);
+      DetachHook attachCount(lua_State *, Hook, unsigned int = 1);
       void attach(lua_State *);
       void detach(lua_State *);
 
@@ -105,6 +105,7 @@ namespace LuaCppB {
       std::map<lua_State *, std::set<std::size_t>> countHooks;
       std::map<std::size_t, std::pair<lua_State *, Hook>> hooks;
       std::map<lua_State *, std::size_t> attached;
+      std::map<std::size_t, std::pair<unsigned int, unsigned int>> counter;
     };
   }
 
@@ -186,7 +187,7 @@ namespace LuaCppB {
     Detach onCall(Hook);
     Detach onReturn(Hook);
     Detach onLine(Hook);
-    Detach onCount(Hook);
+    Detach onCount(Hook, unsigned int = 1);
    private:
     lua_State *state;
     LuaCppRuntime &runtime;

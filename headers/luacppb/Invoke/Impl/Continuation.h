@@ -94,8 +94,8 @@ namespace LuaCppB {
     
   template <typename F, typename ... A>
   void LuaContinuation::call(F callback, std::function<void(LuaError)> errorHandler, A &&... args) {
-    Internal::LuaFunctionInvoke::invokeK<Internal::LuaReference, A...>(handle.getReference(),
-      this->runtime, Internal::LuaContinuationHandlerType<F>::newHandler(callback, errorHandler), std::forward<A>(args)...);
+    Internal::LuaFunctionInvoke::invokeK<Internal::LuaReference, A...>(handle.getReference(), this->state.getState(),
+      this->state, Internal::LuaContinuationHandlerType<F>::newHandler(callback, errorHandler), std::forward<A>(args)...);
   }
 
   template <typename S, typename F, typename ... A>

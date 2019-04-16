@@ -112,6 +112,10 @@ namespace LuaCppB::Internal {
     return lua_tocfunction(this->state, index);
   }
 
+  lua_State *LuaStack::toThread(int index) {
+    return lua_tothread(this->state, index);
+  }
+
   bool LuaStack::compare(int idx1, int idx2, LuaCompareOperation op) {
     return static_cast<bool>(lua_compare(this->state, idx1, idx2, static_cast<int>(op)));
   }

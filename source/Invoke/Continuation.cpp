@@ -22,7 +22,7 @@ namespace LuaCppB {
 
 #ifdef LUACPPB_COROUTINE_SUPPORT
 
-  LuaContinuation::LuaContinuation(const LuaReferenceHandle &handle, LuaCppRuntime &runtime)
-    : handle(handle), runtime(runtime) {}
+  LuaContinuation::LuaContinuation(const LuaReferenceHandle &handle, LuaState &state)
+    : handle(handle), state(state) {}
 #endif
 }

@@ -19,7 +19,6 @@
 #include <fstream>
 #include <cstdio>
 #include <cstring>
-#include <iostream>
 #include <algorithm>
 #include "luacppb/LuaCppB.h"
 

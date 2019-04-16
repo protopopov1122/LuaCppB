@@ -42,12 +42,17 @@ namespace LuaCppB::Internal {
 
 #ifdef LUACPPB_COROUTINE_SUPPORT
   template <typename T, typename ... A>
-  void LuaFunctionInvoke::invokeK(T &ref, LuaCppRuntime &runtime, std::unique_ptr<LuaFunctionContinuation> cont, A &&... args) {
+  void LuaFunctionInvoke::invokeK(T &ref, lua_State *thread, LuaCppRuntime &runtime, std::unique_ptr<LuaFunctionContinuation> cont, A &&... args) {
     ref.putOnTop([&](lua_State *state) {
-      Internal::LuaStack stack(state);
-      if (stack.is<LuaType::Function>(-1)) {
-        LuaFunctionCall::callK<A...>(state, -1, runtime, std::move(cont), std::forward<A>(args)...);
-      } else if (stack.is<LuaType::Thread>(-1)) {
+      Internal::LuaStack origStack(state);
+      Internal::LuaStack threadStack(thread);
+      if (thread != state) {
+        origStack.copy(-1);
+        origStack.move(thread, 1);
+      }
+      if (origStack.is<LuaType::Function>(-1)) {
+        LuaFunctionCall::callK<A...>(thread, -1, runtime, std::move(cont), std::forward<A>(args)...);
+      } else if (origStack.is<LuaType::Thread>(-1)) {
         std::vector<LuaValue> results;
         LuaCoroutine coro(LuaThread(state, -1), runtime);
         LuaError error = coro.call(results, args...);

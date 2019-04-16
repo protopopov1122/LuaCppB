@@ -94,7 +94,7 @@ namespace LuaCppB {
   
   class LuaContinuation {
    public:
-    LuaContinuation(const LuaReferenceHandle &, LuaCppRuntime &);
+    LuaContinuation(const LuaReferenceHandle &, LuaState &);
     
     template <typename F, typename ... A>
     void call(F, std::function<void(LuaError)>, A &&...);
@@ -104,7 +104,7 @@ namespace LuaCppB {
    private:
 
     LuaReferenceHandle handle;
-    LuaCppRuntime &runtime;
+    LuaState &state;
   };
 }
 

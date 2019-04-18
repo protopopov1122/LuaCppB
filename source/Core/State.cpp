@@ -25,6 +25,7 @@
 #include "luacppb/Invoke/Native.h"
 #include <cassert>
 #include <memory>
+#include <iostream>
 
 namespace LuaCppB {
 
@@ -45,6 +46,10 @@ namespace LuaCppB {
 			throw ex;
 		};
 		this->debug = std::make_shared<LuaDebugHooks>(this->state, *this);
+	}
+
+	bool LuaState::isValid() const {
+		return this->state != nullptr;
 	}
 
 	lua_State *LuaState::getState() const {
@@ -90,7 +95,7 @@ namespace LuaCppB {
 #ifndef LUACPPB_NO_CUSTOM_ALLOCATOR
 
 	void LuaState::setCustomAllocator(std::shared_ptr<LuaAllocator> alloc) {
-		if (alloc) {
+		if (alloc && this->isValid()) {
 			this->allocator = alloc;
 			LuaAllocator::bind(this->state, *alloc);
 		}
@@ -99,15 +104,26 @@ namespace LuaCppB {
 #endif
 
 	LuaReferenceHandle LuaState::operator[](const std::string &name) {
-		return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaGlobalVariable>(*this, name));
+		if (this->isValid()) {
+			return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaGlobalVariable>(*this, name));
+		} else {
+			return LuaReferenceHandle();
+		}
 	}
 
 
 	LuaReferenceHandle LuaState::operator[](lua_Integer index) {
-		return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaStackReference>(*this, index));
+		if (this->isValid()) {
+			return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaStackReference>(*this, index));
+		} else {
+			return LuaReferenceHandle();
+		}
 	}
 
 	Internal::LuaFunctionCallResult LuaState::operator()(const std::string &code, bool preprendReturn) {
+		if (!this->isValid()) {
+			return Internal::LuaFunctionCallResult(LuaError(LuaStatusCode::RuntimeError));
+		}
 		try {
 			std::string exec(code);
 			if (preprendReturn) {
@@ -130,10 +146,45 @@ namespace LuaCppB {
 	}
 
 	LuaUniqueState::LuaUniqueState(lua_State *state)
-		: LuaState(state != nullptr ? state : luaL_newstate()) {}
+		: LuaState(state != nullptr ? state : luaL_newstate()) {
+#ifdef LUACPPB_EMULATED_MAINTHREAD
+		Internal::LuaStack stack(this->state);
+		stack.push(std::string(LUACPPB_RIDX_MAINTHREAD));
+		stack.pushThread(this->state);
+		stack.setField<true>(LUA_REGISTRYINDEX);
+#endif
+	}
+
+	LuaUniqueState::LuaUniqueState(LuaUniqueState &&state)
+		: LuaState(state.state, std::move(state.runtime)) {
+		state.state = nullptr;
+		this->exception_handler = std::move(state.exception_handler);
+#ifndef LUACPPB_NO_CUSTOM_ALLOCATOR
+		this->allocator = std::move(state.allocator);
+#endif
+#ifdef LUACPPB_HAS_JIT
+		this->luaJit = std::move(state.luaJit);
+#endif
+	}
 
 	LuaUniqueState::~LuaUniqueState() {
-		lua_close(this->state);
+		if (this->state) {
+			lua_close(this->state);
+		}
+	}
+
+	LuaUniqueState &LuaUniqueState::operator=(LuaUniqueState &&state) {
+		this->state = state.state;
+		state.state = nullptr;
+		this->runtime = std::move(state.runtime);
+		this->exception_handler = std::move(state.exception_handler);
+#ifndef LUACPPB_NO_CUSTOM_ALLOCATOR
+		this->allocator = std::move(state.allocator);
+#endif
+#ifdef LUACPPB_HAS_JIT
+		this->luaJit = std::move(state.luaJit);
+#endif
+		return *this;
 	}
 
 	LuaEnvironment::LuaEnvironment(bool openLibs)
@@ -144,6 +195,9 @@ namespace LuaCppB {
 	}
 
 	Internal::LuaFunctionCallResult LuaEnvironment::load(const std::string &path) {
+		if (!this->isValid()) {
+			return Internal::LuaFunctionCallResult(LuaError(LuaStatusCode::RuntimeError));
+		}
 		try {
 			Internal::LuaStackCleaner cleaner(this->state);
 			bool err = static_cast<bool>(luaL_dofile(this->state, path.c_str()));
@@ -156,6 +210,9 @@ namespace LuaCppB {
 	}
 
 	Internal::LuaFunctionCallResult LuaEnvironment::execute(const std::string &code) {
+		if (!this->isValid()) {
+			return Internal::LuaFunctionCallResult(LuaError(LuaStatusCode::RuntimeError));
+		}
 		try {
 			Internal::LuaStackCleaner cleaner(this->state);
 			bool err = static_cast<bool>(luaL_dostring(this->state, code.c_str()));
@@ -168,6 +225,9 @@ namespace LuaCppB {
 	}
 
 	Internal::LuaFunctionCallResult LuaEnvironment::pollResult(bool err, int delta) {
+		if (!this->isValid()) {
+			return Internal::LuaFunctionCallResult(LuaError(LuaStatusCode::RuntimeError));
+		}
 		std::vector<LuaValue> result;
 		while (delta-- > 0) {
 			result.push_back(LuaValue::peek(this->state, -1).value_or(LuaValue::Nil));

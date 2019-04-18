@@ -51,6 +51,7 @@ namespace LuaCppB::Internal {
     void push(LuaData &);
     void pushTable();
     lua_State *pushThread();
+    void pushThread(lua_State *);
     void *pushUserData(std::size_t);
 
     lua_Integer toInteger(int = -1);
@@ -58,6 +59,7 @@ namespace LuaCppB::Internal {
     bool toBoolean(int = -1);
     std::string toString(int = -1);
     LuaCFunction toCFunction(int = -1);
+    lua_State *toThread(int = -1);
     bool compare(int, int, LuaCompareOperation = LuaCompareOperation::Equals);
 
     void setField(int, const std::string &);

@@ -33,7 +33,7 @@ namespace LuaCppB::Internal {
 
 #ifdef LUACPPB_COROUTINE_SUPPORT
 		template <typename T, typename ... A>
-		static void invokeK(T &, LuaCppRuntime &, std::unique_ptr<LuaFunctionContinuation>, A &&...);
+		static void invokeK(T &, lua_State *, LuaCppRuntime &, std::unique_ptr<LuaFunctionContinuation>, A &&...);
 
 		template <typename ... A>
 		static void yieldK(lua_State *, LuaCppRuntime &, std::unique_ptr<LuaFunctionContinuation>, A &&...);

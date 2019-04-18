@@ -37,11 +37,26 @@ namespace LuaCppB::Internal {
     : state(nullptr), ref(0) {}
 
   LuaUniqueRegistryHandle::LuaUniqueRegistryHandle(lua_State *state, int index)
-    : state(state) {
+    : state(nullptr), ref(0) {
     if (state) {
-      Internal::LuaStack stack(state);
-      stack.copy(index);
-      this->ref = stack.ref();
+      Internal::LuaStack originalStack(state);
+#ifndef LUACPPB_EMULATED_MAINTHREAD
+      originalStack.getIndex<true>(LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
+#else
+      originalStack.push(std::string(LUACPPB_RIDX_MAINTHREAD));
+      originalStack.getField<true>(LUA_REGISTRYINDEX);
+#endif
+      this->state = originalStack.toThread();
+      originalStack.pop();
+      Internal::LuaStack mainStack(this->state);
+
+      originalStack.copy(index);
+      if (state == this->state) {
+        this->ref = mainStack.ref();
+      } else {
+        originalStack.move(this->state, 1);
+        this->ref = mainStack.ref();
+      }
     }
   }
 

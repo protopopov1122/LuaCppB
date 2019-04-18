@@ -46,6 +46,7 @@ namespace LuaCppB {
 	 public:
 		LuaState(lua_State *, std::shared_ptr<Internal::LuaRuntimeInfo> = nullptr);
 		virtual ~LuaState() = default;
+		bool isValid() const;
 		lua_State *getState() const;
 		Internal::LuaCppClassRegistry &getClassRegistry();
 #ifndef LUACPPB_NO_DEBUG
@@ -85,10 +86,10 @@ namespace LuaCppB {
 	 public:
 		LuaUniqueState(lua_State * = nullptr);
 		LuaUniqueState(const LuaUniqueState &) = delete;
-		LuaUniqueState(LuaUniqueState &&) = default;
+		LuaUniqueState(LuaUniqueState &&);
 		virtual ~LuaUniqueState();
 		LuaUniqueState &operator=(const LuaUniqueState &) = delete;
-		LuaUniqueState &operator=(LuaUniqueState &&) = default;
+		LuaUniqueState &operator=(LuaUniqueState &&);
 	};
 
 	class LuaEnvironment : public LuaUniqueState {

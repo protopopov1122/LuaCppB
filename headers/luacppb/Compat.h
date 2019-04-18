@@ -46,6 +46,9 @@ int lua_compare (lua_State *, int, int, int);
 int lua_rawgetp (lua_State *, int, const void *);
 void lua_rawsetp (lua_State *, int, const void *);
 
+#define LUACPPB_EMULATED_MAINTHREAD
+constexpr const char LUACPPB_RIDX_MAINTHREAD[] = "LuaCppB_Internal_MainThread";
+
 #endif
 
 #ifdef LUACPPB_COMPAT_502

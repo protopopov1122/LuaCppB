@@ -87,6 +87,10 @@ namespace LuaCppB::Internal {
     return lua_newthread(this->state);
   }
 
+  void LuaStack::pushThread(lua_State *thread) {
+    lua_pushthread(thread);
+  }
+
   void *LuaStack::pushUserData(std::size_t sz) {
     return lua_newuserdata(this->state, sz);
   }
@@ -110,6 +114,10 @@ namespace LuaCppB::Internal {
 
   LuaCFunction LuaStack::toCFunction(int index) {
     return lua_tocfunction(this->state, index);
+  }
+
+  lua_State *LuaStack::toThread(int index) {
+    return lua_tothread(this->state, index);
   }
 
   bool LuaStack::compare(int idx1, int idx2, LuaCompareOperation op) {

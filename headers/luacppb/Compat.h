@@ -46,6 +46,8 @@ int lua_compare (lua_State *, int, int, int);
 int lua_rawgetp (lua_State *, int, const void *);
 void lua_rawsetp (lua_State *, int, const void *);
 
+#define LUACPPB_DISABLE_STATE_FIX
+
 #endif
 
 #ifdef LUACPPB_COMPAT_502

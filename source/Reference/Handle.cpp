@@ -27,9 +27,17 @@ namespace LuaCppB {
     : state(nullptr), ref(nullptr) {}
   
   LuaReferenceHandle::LuaReferenceHandle(lua_State *state, std::unique_ptr<Internal::LuaReference> ref)
-    : state(state), ref(std::move(ref)) {}
+    : state(state), ref(std::move(ref)) {
+    if (this->state) {
+      Internal::LuaStack stack(this->state);
+      stack.getIndex<true>(LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
+      this->state = stack.toThread();
+      stack.pop();
+    }
+  }
 
   LuaReferenceHandle::LuaReferenceHandle(const LuaReferenceHandle &handle) : state(handle.state) {
+    this->state = handle.state;
     handle.getReference().putOnTop([&](lua_State *state) {
       this->ref = std::make_unique<Internal::LuaRegistryReference>(state, handle.getRuntime(), -1);
     });
@@ -39,6 +47,12 @@ namespace LuaCppB {
     : state(handle.state), ref(std::move(handle.ref)) {
     handle.state = nullptr;
     handle.ref = nullptr;
+    if (this->state) {
+      Internal::LuaStack stack(this->state);
+      stack.getIndex<true>(LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
+      this->state = stack.toThread();
+      stack.pop();
+    }
   }
 
   Internal::LuaReference &LuaReferenceHandle::getReference() const {

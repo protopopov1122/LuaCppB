@@ -55,6 +55,24 @@ TEST_CASE("State") {
 #endif
 }
 
+TEST_CASE("State moving") {
+  LuaEnvironment env;
+  env["a"] = 2;
+  REQUIRE(env.isValid());
+  LuaEnvironment env2(std::move(env));
+  REQUIRE_FALSE(env.isValid());
+  REQUIRE(env2.isValid());
+  REQUIRE_FALSE(env["a"].exists());
+  REQUIRE(env2["a"].get<int>() == 2);
+  REQUIRE(env("a+a*a").hasError());
+  REQUIRE(env2("a+a*a").get<int>() == 6);
+  env = std::move(env2);
+  REQUIRE(env.isValid());
+  REQUIRE_FALSE(env2.isValid());
+  REQUIRE(env.execute("b = a+a*a") == LuaStatusCode::Ok);
+  REQUIRE(env["b"].get<int>() == 6);
+}
+
 TEST_CASE("Stack guard") {
   LuaEnvironment env;
   lua_State *state = env.getState();

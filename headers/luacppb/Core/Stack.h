@@ -51,6 +51,7 @@ namespace LuaCppB::Internal {
     void push(LuaData &);
     void pushTable();
     lua_State *pushThread();
+    void pushThread(lua_State *);
     void *pushUserData(std::size_t);
 
     lua_Integer toInteger(int = -1);

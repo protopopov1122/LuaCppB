@@ -87,6 +87,10 @@ namespace LuaCppB::Internal {
     return lua_newthread(this->state);
   }
 
+  void LuaStack::pushThread(lua_State *thread) {
+    lua_pushthread(thread);
+  }
+
   void *LuaStack::pushUserData(std::size_t sz) {
     return lua_newuserdata(this->state, sz);
   }

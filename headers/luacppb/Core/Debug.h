@@ -87,7 +87,7 @@ namespace LuaCppB {
 
       static LuaDebugHookDispatcher &getGlobal();
       friend class DetachHook;
-      private:
+     private:
       LuaDebugHookDispatcher();
       void bindState(std::map<lua_State *, std::set<std::size_t>> &, lua_State *, lua_Hook, int);
       void unbindState(std::map<lua_State *, std::set<std::size_t>> &, lua_State *, lua_Hook);
@@ -131,9 +131,11 @@ namespace LuaCppB {
     int getLineDefined() const;
     int getLastLineDefined() const;
     unsigned char getUpvalues() const;
+#ifndef LUACPPB_NO_DEBUG_EXTRAS
     unsigned char getParameters() const;
     bool isVarArg() const;
     bool isTailCall() const;
+#endif
 
    protected:
     lua_State *state;
@@ -159,12 +161,14 @@ namespace LuaCppB {
     void getCurrentFunctionInfo(T...);
 
     std::optional<Variable> getLocal(int);
-    std::optional<std::string> getLocal(Reference, int);
     std::optional<Variable> getUpvalue(Reference, int);
+#ifndef LUACPPB_NO_DEBUG_EXTRAS
+    std::optional<std::string> getLocal(Reference, int);
     UpvalueId getUpvalueId(Reference, int);
+    void joinUpvalues(Reference, int, Reference, int);
+#endif
     bool setLocal(int, Reference);
     bool setUpvalue(Reference, int, Reference);
-    void joinUpvalues(Reference, int, Reference, int);
     Reference getCurrentFunction();
     Reference getLines(Reference);
     Reference getLines();

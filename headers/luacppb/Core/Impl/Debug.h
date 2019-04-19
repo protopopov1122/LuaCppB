@@ -85,19 +85,6 @@ namespace LuaCppB {
   }
 
   template <typename Reference, typename ReferenceInternal>
-  std::optional<std::string> LuaAbstractDebugFrame<Reference, ReferenceInternal>::getLocal(Reference ref, int index) {
-    const char *key = nullptr;
-    ref.getReference().putOnTop([&](lua_State *state) {
-      key = lua_getlocal(state, nullptr, index);
-    });
-    if (key) {
-      return std::string(key);
-    } else {
-      return std::optional<std::string>();
-    }
-  }
-
-  template <typename Reference, typename ReferenceInternal>
   std::optional<typename LuaAbstractDebugFrame<Reference, ReferenceInternal>::Variable> LuaAbstractDebugFrame<Reference, ReferenceInternal>::getUpvalue(Reference ref, int index) {
     const char *key = nullptr;
     Reference result;
@@ -115,6 +102,20 @@ namespace LuaCppB {
     }
   }
 
+#ifndef LUACPPB_NO_DEBUG_EXTRAS
+  template <typename Reference, typename ReferenceInternal>
+  std::optional<std::string> LuaAbstractDebugFrame<Reference, ReferenceInternal>::getLocal(Reference ref, int index) {
+    const char *key = nullptr;
+    ref.getReference().putOnTop([&](lua_State *state) {
+      key = lua_getlocal(state, nullptr, index);
+    });
+    if (key) {
+      return std::string(key);
+    } else {
+      return std::optional<std::string>();
+    }
+  }
+
   template <typename Reference, typename ReferenceInternal>
   typename LuaAbstractDebugFrame<Reference, ReferenceInternal>::UpvalueId LuaAbstractDebugFrame<Reference, ReferenceInternal>::getUpvalueId(Reference ref, int index) {
     UpvalueId id = nullptr;
@@ -125,21 +126,53 @@ namespace LuaCppB {
   }
 
   template <typename Reference, typename ReferenceInternal>
+  void LuaAbstractDebugFrame<Reference, ReferenceInternal>::joinUpvalues(Reference fn1, int idx1, Reference fn2, int idx2) {
+    Internal::LuaStackGuard guard(this->state);
+    auto canary = guard.canary();
+    fn1.getReference().putOnTop([&](lua_State *state1) {
+      if (state1 != this->state) {
+        Internal::LuaStack fstack(state1);
+        fstack.copy(-1);
+        fstack.move(this->state, 1);
+      }
+      fn2.getReference().putOnTop([&](lua_State *state2) {
+        if (state2 != this->state) {
+          Internal::LuaStack fstack(state1);
+          fstack.copy(-1);
+          fstack.move(this->state, 1);
+        }
+        lua_upvaluejoin(this->state, -2, idx1, -1, idx2);
+        if (state2 != this->state) {
+          lua_pop(this->state, 1);
+        }
+      });
+      if (state1 != this->state) {
+        lua_pop(this->state, 1);
+      }
+    });
+    canary.assume();
+  }
+#endif
+
+  template <typename Reference, typename ReferenceInternal>
   bool LuaAbstractDebugFrame<Reference, ReferenceInternal>::setLocal(int index, Reference value) {
     bool result = false;
     value.getReference().putOnTop([&](lua_State *state) {
       Internal::LuaStack stack(state);
+      int top = stack.getTop();
       stack.copy(-1);
       if (state == this->state) {
         result = lua_setlocal(state, &this->debug, index) != nullptr;
-        if (!result) {
-          stack.pop();
+        if (!result && stack.getTop() > top) {
+          stack.pop(stack.getTop() - top);
         }
       } else {
+        Internal::LuaStack stateStack(this->state);
+        top = stateStack.getTop();
         stack.move(this->state, 1);
         result = lua_setlocal(this->state, &this->debug, index) != nullptr;
-        if (!result) {
-          lua_pop(this->state, 1);
+        if (!result && stateStack.getTop() > top) {
+          lua_pop(this->state, stateStack.getTop() - top);
         }
       }
     });
@@ -179,34 +212,6 @@ namespace LuaCppB {
     });
     canary.assume();
     return result;
-  }
-
-  template <typename Reference, typename ReferenceInternal>
-  void LuaAbstractDebugFrame<Reference, ReferenceInternal>::joinUpvalues(Reference fn1, int idx1, Reference fn2, int idx2) {
-    Internal::LuaStackGuard guard(this->state);
-    auto canary = guard.canary();
-    fn1.getReference().putOnTop([&](lua_State *state1) {
-      if (state1 != this->state) {
-        Internal::LuaStack fstack(state1);
-        fstack.copy(-1);
-        fstack.move(this->state, 1);
-      }
-      fn2.getReference().putOnTop([&](lua_State *state2) {
-        if (state2 != this->state) {
-          Internal::LuaStack fstack(state1);
-          fstack.copy(-1);
-          fstack.move(this->state, 1);
-        }
-        lua_upvaluejoin(this->state, -2, idx1, -1, idx2);
-        if (state2 != this->state) {
-          lua_pop(this->state, 1);
-        }
-      });
-      if (state1 != this->state) {
-        lua_pop(this->state, 1);
-      }
-    });
-    canary.assume();
   }
 
   template <typename Reference, typename ReferenceInternal>
@@ -284,7 +289,7 @@ namespace LuaCppB {
   typename LuaDebugAbstractHooks<Debug>::Detach LuaDebugAbstractHooks<Debug>::onCall(Hook hook) {
     if (this->state) {
       return Internal::LuaDebugHookDispatcher::getGlobal().attachCall(this->state, [this, hook](lua_State *state, lua_Debug *debug) {
-        Debug dbg(state, this, runtime, debug);
+        Debug dbg(state, this->runtime, debug);
         hook(dbg);
       });
     } else {
@@ -296,7 +301,7 @@ namespace LuaCppB {
   typename LuaDebugAbstractHooks<Debug>::Detach LuaDebugAbstractHooks<Debug>::onReturn(Hook hook) {
     if (this->state) {
       return Internal::LuaDebugHookDispatcher::getGlobal().attachReturn(this->state, [this, hook](lua_State *state, lua_Debug *debug) {
-        Debug dbg(state, this, runtime, debug);
+        Debug dbg(state, this->runtime, debug);
         hook(dbg);
       });
     } else {

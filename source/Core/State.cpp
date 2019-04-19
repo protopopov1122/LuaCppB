@@ -25,7 +25,6 @@
 #include "luacppb/Invoke/Native.h"
 #include <cassert>
 #include <memory>
-#include <iostream>
 
 namespace LuaCppB {
 

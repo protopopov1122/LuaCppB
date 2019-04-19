@@ -400,23 +400,21 @@ class TestLuaAllocator : public LuaAllocator {
   TestLuaAllocator() : current(0), max(0) {}
 
   void *allocate(LuaType type, std::size_t size) override {
-    void *ptr = ::operator new(size);
+    void *ptr = malloc(size);
     this->current += size;
     this->updateMax();
     return ptr;
   }
 
   void *reallocate(void *ptr, std::size_t osize, std::size_t nsize) override {
-    void *nptr = ::operator new(nsize);
-    std::memmove(nptr, ptr, std::min(osize, nsize));
+    void *nptr = realloc(ptr, nsize);
     this->current += nsize - osize;
-    ::operator delete(ptr);
     this->updateMax();
     return nptr;
   }
   
   void deallocate(void *ptr, std::size_t size) override {
-    ::operator delete(ptr);
+    free(ptr);
     this->current -= size;
   }
 
@@ -444,5 +442,6 @@ TEST_CASE("Allocator") {
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(alloc->getMaxAllocation() > 0);
 }
+
 
 #endif

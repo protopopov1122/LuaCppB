@@ -56,13 +56,6 @@ extern "C" {
 #include <lauxlib.h>
 }
 #endif
-#ifndef LUACPPB_NO_EXCEPTION_PROPAGATION
-#define LUACPPB_EXCEPTION_PROPAGATION
-#endif
-
-#ifndef LUACPPB_NO_ERROR_SUPPORT
-#define LUACPPB_ERROR_SUPPORT
-#endif
 
 #endif
 

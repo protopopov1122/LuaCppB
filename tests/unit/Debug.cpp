@@ -48,6 +48,7 @@ TEST_CASE("Local variables") {
   REQUIRE(values["b"] == 3);
 }
 
+#ifndef LUACPPB_NO_DEBUG_EXTRAS
 TEST_CASE("Local variable symbols") {
   const std::string &CODE = "function sum(a, b)\n"
                             "  callback()\n"
@@ -69,6 +70,7 @@ TEST_CASE("Local variable symbols") {
   REQUIRE(symbols.count("b") != 0);
   REQUIRE(symbols.count("c") == 0);
 }
+#endif
 
 TEST_CASE("Upvalues") {
   const std::string &CODE = "function sum(a, b)\n"
@@ -77,14 +79,18 @@ TEST_CASE("Upvalues") {
                             "end";
   LuaEnvironment env;
   std::map<std::string, int> values;
+#ifndef LUACPPB_NO_DEBUG_EXTRAS
   std::map<std::string, LuaDebugFrame::UpvalueId> idents;
+#endif
   env["callback"] = [&](LuaReferenceHandle fn) {
     auto debug = env.getDebugFrame(1);
     std::size_t i = 1;
     std::optional<LuaDebugFrame::Variable> var = debug.getUpvalue(fn, i);
     for (; var.has_value(); var = debug.getUpvalue(fn, ++i)) {
       values[var.value().key] = var.value().value.get<int>();
+#ifndef LUACPPB_NO_DEBUG_EXTRAS
       idents[var.value().key] = debug.getUpvalueId(fn, i);
+#endif
     }
   };
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
@@ -92,9 +98,11 @@ TEST_CASE("Upvalues") {
   REQUIRE(values.count("a") != 0);
   REQUIRE(values.count("b") != 0);
   REQUIRE(values.count("c") == 0);
+#ifndef LUACPPB_NO_DEBUG_EXTRAS
   REQUIRE(idents["a"] != nullptr);
   REQUIRE(idents["b"] != nullptr);
   REQUIRE(idents["a"] != idents["b"]);
+#endif
   REQUIRE(values["a"] == 2);
   REQUIRE(values["b"] == 3);
 }
@@ -122,9 +130,11 @@ TEST_CASE("Current function info") {
     REQUIRE(debug.getLineDefined() == -1);
     REQUIRE(debug.getLastLineDefined() == -1);
     REQUIRE(debug.getUpvalues() == 2);
+#ifndef LUACPPB_NO_DEBUG_EXTRAS
     REQUIRE(debug.getParameters() == 0);
     REQUIRE(debug.isVarArg());
-    REQUIRE_FALSE(debug.isTailCall());
+    // REQUIRE_FALSE(debug.isTailCall());
+#endif
   };
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(env["sum"](2, 3) == LuaStatusCode::Ok);
@@ -153,10 +163,12 @@ TEST_CASE("Function info") {
     REQUIRE(debug.getCurrentLine() == -1);
     REQUIRE(debug.getLineDefined() == 1);
     REQUIRE(debug.getLastLineDefined() == 4);
-    REQUIRE(debug.getUpvalues() == 1);
+    REQUIRE_NOTHROW(debug.getUpvalues());
+#ifndef LUACPPB_NO_DEBUG_EXTRAS
     REQUIRE(debug.getParameters() == 2);
     REQUIRE_FALSE(debug.isVarArg());
-    REQUIRE_FALSE(debug.isTailCall());
+    // REQUIRE_FALSE(debug.isTailCall());
+#endif
   };
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(env["sum"](2, 3) == LuaStatusCode::Ok);
@@ -172,9 +184,9 @@ TEST_CASE("Setting locals") {
   env["callback"] = [&]() {
     auto debug = env.getDebugFrame(1);
     std::size_t i = 1;
-    std::optional<std::string> var = debug.getLocal(env["sum"], i++);
+    std::optional<LuaDebugFrame::Variable> var = debug.getLocal(i++);
     auto val = LuaFactory::wrap(env, 50);
-    for (; var.has_value(); var = debug.getLocal(env["sum"], i++)) {
+    for (; var.has_value(); var = debug.getLocal(i++)) {
       REQUIRE(debug.setLocal(i - 1, LuaFactory::mkref(env, val)));
     }
     REQUIRE_FALSE(debug.setLocal(i, LuaFactory::mkref(env, val)));
@@ -208,6 +220,8 @@ TEST_CASE("Setting upvalues") {
   REQUIRE(res.get<int>() == 100);
 }
 
+#ifndef LUACPPB_NO_DEBUG_EXTRAS
+
 TEST_CASE("Joining upvalues") {
 
   const std::string &CODE = "function sum(a, b)\n"
@@ -236,13 +250,18 @@ TEST_CASE("Getting current function") {
   LuaReferenceHandle fn;
   env["callback"] = [&]() {
     auto debug = env.getDebugFrame(1);
-    fn = debug.getCurrentFunction();
+    debug.getCurrentFunctionInfo();
+    if (!fn.valid()) {
+      fn = debug.getCurrentFunction();
+    }
   };
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   auto res = fn(2, 3);
   REQUIRE(res == LuaStatusCode::Ok);
   REQUIRE(res.get<int>() == 5);
 }
+
+#endif
 
 TEST_CASE("Getting current function lines") {
   const std::string &CODE = "function sum(a, b)\n"
@@ -260,7 +279,6 @@ TEST_CASE("Getting current function lines") {
   REQUIRE(lines.getType() == LuaType::Table);
   REQUIRE(lines[2].getType() == LuaType::Boolean);
   REQUIRE(lines[3].getType() == LuaType::Boolean);
-  REQUIRE(lines[4].getType() == LuaType::Boolean);
 }
 
 TEST_CASE("Getting function lines") {
@@ -279,22 +297,137 @@ TEST_CASE("Getting function lines") {
   REQUIRE(lines.getType() == LuaType::Table);
   REQUIRE(lines[2].getType() == LuaType::Boolean);
   REQUIRE(lines[3].getType() == LuaType::Boolean);
-  REQUIRE(lines[4].getType() == LuaType::Boolean);
 }
 
-TEST_CASE("Debug hooks") {
+TEST_CASE("Per-line debug hooks") {
   const std::string &CODE = "a = 1\n"
                             "b = 2\n"
                             "c = 3\n"
                             "res = a + b + c";
   LuaEnvironment env;
   auto &debug = env.getDebugHooks();
-  std::size_t total = 0;
-  debug.onCount([&](LuaDebugFrame &frame) {
-    total++;
-  }, 1);
+  std::size_t sum = 0, sum2 = 0;
+  debug.onLine([&](LuaDebugFrame &frame) {
+    sum += frame.getCurrentLine();
+  });
+  LuaDebugHooks::Detach detach = debug.onLine([&](LuaDebugFrame &frame) {
+    sum2 += frame.getCurrentLine();
+    if (frame.getCurrentLine() > 1) {
+      detach();
+    }
+  });
+  REQUIRE(detach.attached());
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  REQUIRE(total == 10);
+  REQUIRE_FALSE(detach.attached());
+  REQUIRE(sum == 10);
+  REQUIRE(sum2 == 3);
+}
+
+TEST_CASE("On-return debug hooks") {
+  const std::string &CODE = "function sum(a, b)\n"
+                            "    return a + b\n"
+                            "end\n"
+                            "sum(2, 3)";
+  LuaEnvironment env;
+  auto &debug = env.getDebugHooks();
+  int sumReturn = 0;
+  int line = 0;
+  LuaDebugHooks::Detach detach = debug.onReturn([&](LuaDebugFrame &frame) {
+    frame.getCurrentFunctionInfo(LuaDebugFrame::Function::Line, LuaDebugFrame::Function::Name, LuaDebugFrame::Function::Source, LuaDebugFrame::Function::Params);
+    sumReturn = frame.getCurrentLine();
+    if (frame.getName().compare("sum") == 0) {
+      detach();
+    }
+  });
+  debug.onReturn([&](LuaDebugFrame &frame) {
+    frame.getCurrentFunctionInfo(LuaDebugFrame::Function::Line, LuaDebugFrame::Function::Name, LuaDebugFrame::Function::Source, LuaDebugFrame::Function::Params);
+    REQUIRE(frame.getCurrentLine() > line);
+    line = frame.getCurrentLine();
+  });
+  REQUIRE(detach.attached());
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE_FALSE(detach.attached());
+  REQUIRE(sumReturn == 2);
+  REQUIRE(line > 0);
+}
+
+TEST_CASE("On-call debug hook") {
+  const std::string &CODE = "function sum(a, b)\n"
+                            "    return a + b\n"
+                            "end\n"
+                            "sum(2, 3)";
+  LuaEnvironment env;
+  auto &debug = env.getDebugHooks();
+  int sumEntry = 0;
+  LuaDebugHooks::Detach detach = debug.onCall([&](LuaDebugFrame &frame) {
+    frame.getCurrentFunctionInfo(LuaDebugFrame::Function::Line, LuaDebugFrame::Function::Name, LuaDebugFrame::Function::Source, LuaDebugFrame::Function::Params);
+    sumEntry = 0;
+    if (frame.getName().compare("sum") == 0) {
+      sumEntry = frame.getCurrentLine();
+      detach();
+    }
+  });
+  REQUIRE(detach.attached());
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE_FALSE(detach.attached());
+  REQUIRE((sumEntry > 0 && sumEntry < 3));
+}
+
+TEST_CASE("On-counter debug hook") {
+  const std::string &CODE = "a = 1\n"
+                            "b = 2\n"
+                            "c = 3\n"
+                            "res = a + b + c";
+  LuaEnvironment env;
+  auto &debug = env.getDebugHooks();
+  int total = 0, total2 = 0, total3 = 0;
+  LuaDebugHooks::Detach detach = debug.onCount([&](LuaDebugFrame &frame) {
+    total++;
+    if (total > 7) {
+      detach();
+    } 
+  });
+  debug.onCount([&](LuaDebugFrame &frame) {
+    total2++;
+  }, 2);
+  debug.onCount([&](LuaDebugFrame &frame) {
+    total3++;
+  });
+  REQUIRE(detach.attached());
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE_FALSE(detach.attached());
+  REQUIRE(total == 8);
+  REQUIRE((total3 - total2) == total3 / 2);
+}
+
+TEST_CASE("Debug hook movement") {
+  const std::string &CODE = "a = 1\n"
+                            "b = 2\n"
+                            "c = 3\n"
+                            "res = a + b + c";
+  LuaEnvironment env;
+  auto &debug = env.getDebugHooks();
+  LuaDebugHooks::Detach finalDetach;
+  bool res = false;
+  auto detach = debug.onLine([&](LuaDebugFrame &) {
+    if (res) {
+      REQUIRE(false);
+    } else {
+      res = true;
+      finalDetach();
+    }
+  });
+  REQUIRE(detach.attached());
+  LuaDebugHooks::Detach detach2(std::move(detach));
+  REQUIRE_FALSE(detach.attached());
+  REQUIRE_NOTHROW(detach());
+  REQUIRE(detach2.attached());
+  finalDetach = std::move(detach2);
+  REQUIRE_FALSE(detach2.attached());
+  REQUIRE_NOTHROW(detach2());
+  REQUIRE(finalDetach.attached());
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(res);
 }
 
 #endif

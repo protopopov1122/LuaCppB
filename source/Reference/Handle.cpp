@@ -43,9 +43,13 @@ namespace LuaCppB {
 
   LuaReferenceHandle::LuaReferenceHandle(const LuaReferenceHandle &handle) : state(handle.state) {
     this->state = handle.state;
-    handle.getReference().putOnTop([&](lua_State *state) {
-      this->ref = std::make_unique<Internal::LuaRegistryReference>(state, handle.getRuntime(), -1);
-    });
+    if (this->state) {
+      handle.getReference().putOnTop([&](lua_State *state) {
+        this->ref = std::make_unique<Internal::LuaRegistryReference>(state, handle.getRuntime(), -1);
+      });
+    } else {
+      this->ref = nullptr;
+    }
   }
 
   LuaReferenceHandle::LuaReferenceHandle(LuaReferenceHandle &&handle)

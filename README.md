@@ -16,8 +16,9 @@ This repo contains the implementation of Lua-C++ bindings. Currently it has foll
 * support of some STL types - vectors, maps, sets, pairs, tuples and optionals.
 * support of coroutines (only for Lua 5.3).
 * support of std::exception-based exception propagation and handlers.
-* wrappers for Lua stack, garbage collector and custom memory allocator.
+* wrappers for Lua stack, garbage collector, panic wrapper and custom memory allocator.
 * debugger interface.
+* `lua_dump` and `lua_load` wrappers.
 
 Supported platforms: Windows (MS Visual C++ and MinGW), Linux (GCC and Clang), macOS(Clang), FreeBSD (Clang and GCC) & OpenBSD (Clang) on x86_64; Raspbian (experimental, meson-only, tested on armv6l) \
 Project requires C++17-compliant compiler version. It uses RTTI and exceptions.

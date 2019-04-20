@@ -37,4 +37,27 @@ namespace LuaCppB::Internal {
       return 0;
     }
   }
+
+  LuaPanicUnbind::LuaPanicUnbind(LuaPanicDispatcher &dispatcher)
+    : dispatcher(dispatcher), state(nullptr) {}
+  
+  LuaPanicUnbind::LuaPanicUnbind(LuaPanicDispatcher &dispatcher, lua_State *state)
+    : dispatcher(dispatcher), state(state) {}
+    
+  LuaPanicUnbind::LuaPanicUnbind(LuaPanicUnbind &&unbind)
+    : dispatcher(unbind.dispatcher), state(unbind.state) {
+    unbind.state = nullptr;
+  }
+  
+  LuaPanicUnbind &LuaPanicUnbind::operator=(LuaPanicUnbind &&unbind) {
+    this->state = unbind.state;
+    unbind.state = nullptr;
+    return *this;
+  }
+
+  LuaPanicUnbind::~LuaPanicUnbind() {
+    if (this->state) {
+      this->dispatcher.detach(this->state);
+    }
+  }
 }

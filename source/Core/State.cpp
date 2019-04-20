@@ -55,6 +55,7 @@ namespace LuaCppB {
 		return this->state;
 	}
 
+#ifndef LUACPPB_NO_GLOBAL_TABLE
 	LuaReferenceHandle LuaState::getGlobals() {
 		if (this->isValid()) {
 			lua_pushglobaltable(this->state);
@@ -65,6 +66,7 @@ namespace LuaCppB {
 			return LuaReferenceHandle();
 		}
 	}
+#endif
 
 	LuaState LuaState::getMainThread() {
 		if (!this->isValid()) {
@@ -178,7 +180,7 @@ namespace LuaCppB {
 	}
 
 	LuaUniqueState::LuaUniqueState(lua_State *state)
-		: LuaState(state != nullptr ? state : luaL_newstate()) {
+		: LuaState(state != nullptr ? state : luaL_newstate()), panicUnbind(Internal::LuaPanicDispatcher::getGlobal(), this->state) {
 #ifdef LUACPPB_EMULATED_MAINTHREAD
 		Internal::LuaStack stack(this->state);
 		stack.push(std::string(LUACPPB_RIDX_MAINTHREAD));
@@ -188,7 +190,7 @@ namespace LuaCppB {
 	}
 
 	LuaUniqueState::LuaUniqueState(LuaUniqueState &&state)
-		: LuaState(state.state, std::move(state.runtime)) {
+		: LuaState(state.state, std::move(state.runtime)), panicUnbind(std::move(state.panicUnbind)) {
 		state.state = nullptr;
 		this->exception_handler = std::move(state.exception_handler);
 #ifndef LUACPPB_NO_CUSTOM_ALLOCATOR
@@ -201,7 +203,6 @@ namespace LuaCppB {
 
 	LuaUniqueState::~LuaUniqueState() {
 		if (this->state) {
-			Internal::LuaPanicDispatcher::getGlobal().detach(this->state);
 			lua_close(this->state);
 		}
 	}

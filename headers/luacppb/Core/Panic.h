@@ -18,6 +18,20 @@ namespace LuaCppB::Internal {
     static LuaPanicDispatcher singleton;
     std::map<lua_State *, Handler> handlers;
   };
+
+  class LuaPanicUnbind {
+   public:
+    LuaPanicUnbind(LuaPanicDispatcher &);
+    LuaPanicUnbind(LuaPanicDispatcher &, lua_State *);
+    LuaPanicUnbind(const LuaPanicUnbind &) = delete;
+    LuaPanicUnbind(LuaPanicUnbind &&);
+    LuaPanicUnbind &operator=(const LuaPanicUnbind &) = delete;
+    LuaPanicUnbind &operator=(LuaPanicUnbind &&);
+    ~LuaPanicUnbind();
+   private:
+    LuaPanicDispatcher &dispatcher;
+    lua_State *state;
+  };
 }
 
 #endif

@@ -50,7 +50,9 @@ namespace LuaCppB {
 		bool isValid() const;
 		lua_State *getState() const;
 		Internal::LuaCppClassRegistry &getClassRegistry();
+#ifndef LUACPPB_NO_GLOBAL_TABLE
 		LuaReferenceHandle getGlobals();
+#endif
 		LuaState getMainThread();
 #ifndef LUACPPB_NO_DEBUG
 		LuaDebugFrame getDebugFrame(int = 0);
@@ -94,6 +96,8 @@ namespace LuaCppB {
 		virtual ~LuaUniqueState();
 		LuaUniqueState &operator=(const LuaUniqueState &) = delete;
 		LuaUniqueState &operator=(LuaUniqueState &&);
+	 private:
+		Internal::LuaPanicUnbind panicUnbind;
 	};
 
 	class LuaEnvironment : public LuaUniqueState {

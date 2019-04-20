@@ -49,6 +49,7 @@ void lua_rawsetp (lua_State *, int, const void *);
 #define LUACPPB_EMULATED_MAINTHREAD
 constexpr const char LUACPPB_RIDX_MAINTHREAD[] = "LuaCppB_Internal_MainThread";
 #define LUACPPB_NO_DEBUG_EXTRAS
+#define LUACPPB_NO_GLOBAL_TABLE
 
 #endif
 

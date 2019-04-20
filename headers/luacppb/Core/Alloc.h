@@ -3,7 +3,7 @@
 
 #include "luacppb/Base.h"
 
-#ifndef LUACPPB_NO_CUSTOM_ALLOCATOR
+#ifdef LUACPPB_CUSTOM_ALLOCATOR_SUPPORT
 
 #include "luacppb/Value/Types.h"
 

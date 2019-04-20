@@ -15,25 +15,29 @@
   IN THE SOFTWARE.
 */
 
-#ifndef LUACPPB_COMPAT_H_
-#define LUACPPB_COMPAT_H_
+#ifndef LUACPPB_INTERNAL_COMPAT_H_
+#define LUACPPB_INTERNAL_COMPAT_H_
 
 #include "luacppb/Base.h"
 
 #if (LUA_VERSION_NUM < 501)
 #error "Minimal supported Lua version is 5.1"
 #elif (LUA_VERSION_NUM == 501)
-#define LUACPPB_COMPAT_501
-#define LUACPPB_COMPAT_502
+#define LUACPPB_INTERNAL_COMPAT_501
+#define LUACPPB_INTERNAL_COMPAT_502
 #elif (LUA_VERSION_NUM == 502)
-#define LUACPPB_COMPAT_502
+#define LUACPPB_INTERNAL_COMPAT_502
 #define LUACPPB_GC_ISRUNNING
+#define LUACPPB_DEBUG_EXTRAS
+#define LUACPPB_GLOBAL_TABLE
 #else
 #define LUACPPB_GC_ISRUNNING
 #define LUACPPB_CONTAINER_PAIRS
+#define LUACPPB_DEBUG_EXTRAS
+#define LUACPPB_GLOBAL_TABLE
 #endif
 
-#ifdef LUACPPB_COMPAT_501
+#ifdef LUACPPB_INTERNAL_COMPAT_501
 #define LUA_OK 0
 #define LUA_ERRGCMM LUA_ERRRUN
 #define LUA_OPEQ 0
@@ -46,14 +50,12 @@ int lua_compare (lua_State *, int, int, int);
 int lua_rawgetp (lua_State *, int, const void *);
 void lua_rawsetp (lua_State *, int, const void *);
 
-#define LUACPPB_EMULATED_MAINTHREAD
+#define LUACPPB_INTERNAL_EMULATED_MAINTHREAD
 constexpr const char LUACPPB_RIDX_MAINTHREAD[] = "LuaCppB_Internal_MainThread";
-#define LUACPPB_NO_DEBUG_EXTRAS
-#define LUACPPB_NO_GLOBAL_TABLE
 
 #endif
 
-#ifdef LUACPPB_COMPAT_502
+#ifdef LUACPPB_INTERNAL_COMPAT_502
 int lua_isinteger (lua_State *, int);
 int lua_geti(lua_State *, int, lua_Integer);
 void lua_seti(lua_State *, int, lua_Integer);

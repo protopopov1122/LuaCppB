@@ -393,7 +393,7 @@ TEST_CASE("Garbage collector") {
   }
 }
 
-#ifndef LUACPPB_NO_CUSTOM_ALLOCATOR
+#ifdef LUACPPB_CUSTOM_ALLOCATOR_SUPPORT
 
 class TestLuaAllocator : public LuaAllocator {
  public:
@@ -482,7 +482,7 @@ TEST_CASE("Panic handler") {
 }
 #endif
 
-#ifndef LUACPPB_NO_GLOBAL_TABLE
+#ifdef LUACPPB_GLOBAL_TABLE
 TEST_CASE("Global table") {
   LuaEnvironment env;
   env["a"] = 2;

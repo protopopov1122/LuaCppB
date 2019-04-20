@@ -38,7 +38,7 @@ namespace LuaCppB {
 		class LuaRegistryReference;
 	}
 
-#ifndef LUACPPB_NO_DEBUG
+#ifdef LUACPPB_DEBUG_SUPPORT
 	using LuaDebugFrame = LuaAbstractDebugFrame<LuaReferenceHandle, Internal::LuaRegistryReference>;
 	using LuaDebugHooks = LuaDebugAbstractHooks<LuaDebugFrame>;
 #endif
@@ -50,15 +50,15 @@ namespace LuaCppB {
 		bool isValid() const;
 		lua_State *getState() const;
 		Internal::LuaCppClassRegistry &getClassRegistry();
-#ifndef LUACPPB_NO_GLOBAL_TABLE
+#ifdef LUACPPB_GLOBAL_TABLE
 		LuaReferenceHandle getGlobals();
 #endif
 		LuaState getMainThread();
-#ifndef LUACPPB_NO_DEBUG
+#ifdef LUACPPB_DEBUG_SUPPORT
 		LuaDebugFrame getDebugFrame(int = 0);
 		LuaDebugHooks &getDebugHooks();
 #endif
-#ifndef LUACPPB_NO_CUSTOM_ALLOCATOR
+#ifdef LUACPPB_CUSTOM_ALLOCATOR_SUPPORT
 		void setCustomAllocator(std::shared_ptr<LuaAllocator>);
 #endif
 #ifdef LUACPPB_HAS_JIT
@@ -77,13 +77,13 @@ namespace LuaCppB {
 		lua_State *state;
 		std::shared_ptr<Internal::LuaRuntimeInfo> runtime;
 		std::function<void(std::exception &)> exception_handler;
-#ifndef LUACPPB_NO_CUSTOM_ALLOCATOR
+#ifdef LUACPPB_CUSTOM_ALLOCATOR_SUPPORT
 		std::shared_ptr<LuaAllocator> allocator;
 #endif
 #ifdef LUACPPB_HAS_JIT
 		LuaJIT luaJit;
 #endif
-#ifndef LUACPPB_NO_DEBUG
+#ifdef LUACPPB_DEBUG_SUPPORT
 	std::shared_ptr<LuaDebugHooks> debug;
 #endif
 	};

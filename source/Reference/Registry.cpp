@@ -40,7 +40,7 @@ namespace LuaCppB::Internal {
     : state(nullptr), ref(0) {
     if (state) {
       Internal::LuaStack originalStack(state);
-#ifndef LUACPPB_EMULATED_MAINTHREAD
+#ifndef LUACPPB_INTERNAL_EMULATED_MAINTHREAD
       originalStack.getIndex<true>(LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
 #else
       originalStack.push(std::string(LUACPPB_RIDX_MAINTHREAD));

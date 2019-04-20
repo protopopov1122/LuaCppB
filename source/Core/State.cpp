@@ -30,13 +30,13 @@ namespace LuaCppB {
 
 	LuaState::LuaState(lua_State *state, std::shared_ptr<Internal::LuaRuntimeInfo> runtime)
 		: state(state), runtime(runtime == nullptr ? std::make_shared<Internal::LuaRuntimeInfo>(std::make_shared<Internal::LuaCppClassRegistry>(state)) : runtime)
-#ifndef LUACPPB_NO_CUSTOM_ALLOCATOR
+#ifdef LUACPPB_CUSTOM_ALLOCATOR_SUPPORT
 		, allocator(nullptr)
 #endif
 #ifdef LUACPPB_HAS_JIT
 		, luaJit(state)
 #endif
-#ifndef LUACPPB_NO_DEBUG
+#ifdef LUACPPB_DEBUG_SUPPORT
 		, debug(nullptr)
 #endif
 		{
@@ -55,7 +55,7 @@ namespace LuaCppB {
 		return this->state;
 	}
 
-#ifndef LUACPPB_NO_GLOBAL_TABLE
+#ifdef LUACPPB_GLOBAL_TABLE
 	LuaReferenceHandle LuaState::getGlobals() {
 		if (this->isValid()) {
 			lua_pushglobaltable(this->state);
@@ -73,7 +73,7 @@ namespace LuaCppB {
 			return *this;
 		}
 		Internal::LuaStack stack(state);
-#ifndef LUACPPB_EMULATED_MAINTHREAD
+#ifndef LUACPPB_INTERNAL_EMULATED_MAINTHREAD
 		stack.getIndex<true>(LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
 #else
 		stack.push(std::string(LUACPPB_RIDX_MAINTHREAD));
@@ -87,7 +87,7 @@ namespace LuaCppB {
 		return this->runtime->getClassRegistry();
 	}
 
-#ifndef LUACPPB_NO_DEBUG
+#ifdef LUACPPB_DEBUG_SUPPORT
 	LuaDebugFrame LuaState::getDebugFrame(int level) {
 		return LuaDebugFrame(this->state, *this, level);
 	}
@@ -126,7 +126,7 @@ namespace LuaCppB {
 		return this->exception_handler;
 	}
 
-#ifndef LUACPPB_NO_CUSTOM_ALLOCATOR
+#ifdef LUACPPB_CUSTOM_ALLOCATOR_SUPPORT
 
 	void LuaState::setCustomAllocator(std::shared_ptr<LuaAllocator> alloc) {
 		if (alloc && this->isValid()) {
@@ -181,7 +181,7 @@ namespace LuaCppB {
 
 	LuaUniqueState::LuaUniqueState(lua_State *state)
 		: LuaState(state != nullptr ? state : luaL_newstate()), panicUnbind(Internal::LuaPanicDispatcher::getGlobal(), this->state) {
-#ifdef LUACPPB_EMULATED_MAINTHREAD
+#ifdef LUACPPB_INTERNAL_EMULATED_MAINTHREAD
 		Internal::LuaStack stack(this->state);
 		stack.push(std::string(LUACPPB_RIDX_MAINTHREAD));
 		stack.pushThread(this->state);
@@ -193,7 +193,7 @@ namespace LuaCppB {
 		: LuaState(state.state, std::move(state.runtime)), panicUnbind(std::move(state.panicUnbind)) {
 		state.state = nullptr;
 		this->exception_handler = std::move(state.exception_handler);
-#ifndef LUACPPB_NO_CUSTOM_ALLOCATOR
+#ifdef LUACPPB_CUSTOM_ALLOCATOR_SUPPORT
 		this->allocator = std::move(state.allocator);
 #endif
 #ifdef LUACPPB_HAS_JIT
@@ -212,7 +212,7 @@ namespace LuaCppB {
 		state.state = nullptr;
 		this->runtime = std::move(state.runtime);
 		this->exception_handler = std::move(state.exception_handler);
-#ifndef LUACPPB_NO_CUSTOM_ALLOCATOR
+#ifdef LUACPPB_CUSTOM_ALLOCATOR_SUPPORT
 		this->allocator = std::move(state.allocator);
 #endif
 #ifdef LUACPPB_HAS_JIT

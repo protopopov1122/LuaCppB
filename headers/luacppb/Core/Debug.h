@@ -20,7 +20,7 @@
 
 #include "luacppb/Base.h"
 
-#ifndef LUACPPB_NO_DEBUG
+#ifdef LUACPPB_DEBUG_SUPPORT
 
 #include "luacppb/Core/Runtime.h"
 #include "luacppb/Core/Stack.h"
@@ -131,7 +131,7 @@ namespace LuaCppB {
     int getLineDefined() const;
     int getLastLineDefined() const;
     unsigned char getUpvalues() const;
-#ifndef LUACPPB_NO_DEBUG_EXTRAS
+#ifdef LUACPPB_DEBUG_EXTRAS
     unsigned char getParameters() const;
     bool isVarArg() const;
     bool isTailCall() const;
@@ -162,7 +162,7 @@ namespace LuaCppB {
 
     std::optional<Variable> getLocal(int);
     std::optional<Variable> getUpvalue(Reference, int);
-#ifndef LUACPPB_NO_DEBUG_EXTRAS
+#ifdef LUACPPB_DEBUG_EXTRAS
     std::optional<std::string> getLocal(Reference, int);
     UpvalueId getUpvalueId(Reference, int);
     void joinUpvalues(Reference, int, Reference, int);

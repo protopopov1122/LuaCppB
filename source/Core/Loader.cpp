@@ -59,7 +59,7 @@ namespace LuaCppB {
         return;
       }
       Image image;
-#ifndef LUACPPB_COMPAT_502
+#ifndef LUACPPB_INTERNAL_COMPAT_502
       int res = lua_dump(state, LuaLoader_dump, reinterpret_cast<void *>(&image), static_cast<int>(strip));
 #else
       int res = lua_dump(state, LuaLoader_dump, reinterpret_cast<void *>(&image));
@@ -76,7 +76,7 @@ namespace LuaCppB {
       return std::optional<LuaReferenceHandle>();
     }
     LuaImageChunk chunk { img, 0 };
-#ifndef LUACPPB_COMPAT_501
+#ifndef LUACPPB_INTERNAL_COMPAT_501
     int res = lua_load(this->state.getState(), LuaLoader_load, reinterpret_cast<void *>(&chunk), name.c_str(), nullptr);
 #else
     int res = lua_load(this->state.getState(), LuaLoader_load, reinterpret_cast<void *>(&chunk), name.c_str());

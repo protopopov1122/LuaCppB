@@ -30,7 +30,7 @@ namespace LuaCppB {
     : state(state), ref(std::move(ref)) {
     if (this->state) {
       Internal::LuaStack stack(this->state);
-#ifndef LUACPPB_EMULATED_MAINTHREAD
+#ifndef LUACPPB_INTERNAL_EMULATED_MAINTHREAD
       stack.getIndex<true>(LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
 #else
       stack.push(std::string(LUACPPB_RIDX_MAINTHREAD));
@@ -58,7 +58,7 @@ namespace LuaCppB {
     handle.ref = nullptr;
     if (this->state) {
       Internal::LuaStack stack(this->state);
-#ifndef LUACPPB_EMULATED_MAINTHREAD
+#ifndef LUACPPB_INTERNAL_EMULATED_MAINTHREAD
       stack.getIndex<true>(LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
 #else
       stack.push(std::string(LUACPPB_RIDX_MAINTHREAD));

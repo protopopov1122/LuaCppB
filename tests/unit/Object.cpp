@@ -307,7 +307,7 @@ TEST_CASE("Costant object references") {
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
     REQUIRE(env["res"].get<int>() == 15);
   }
-#ifdef LUACPPB_EXCEPTION_PROPAGATION
+#ifdef LUACPPB_EXCEPTION_PROPAGATION_SUPPORT
   SECTION("Class binding") {
     const std::string &CODE = "arith:set(5)\n"
                               "res = arith:add(5)";
@@ -321,7 +321,7 @@ TEST_CASE("Costant object references") {
 #endif
 }
 
-#ifdef LUACPPB_EXCEPTION_PROPAGATION
+#ifdef LUACPPB_EXCEPTION_PROPAGATION_SUPPORT
 TEST_CASE("Exception handling") {
   const std::string &CODE = "arith:set(5)\n"
                             "res = arith:add(5)";

@@ -1,6 +1,6 @@
 #include "luacppb/Core/Alloc.h"
 
-#ifndef LUACPPB_NO_CUSTOM_ALLOCATOR
+#ifdef LUACPPB_CUSTOM_ALLOCATOR_SUPPORT
 
 namespace LuaCppB {
 

@@ -70,7 +70,7 @@ namespace LuaCppB::Internal {
 		return 0;
 	}
 
-#ifdef LUACPPB_EXCEPTION_PROPAGATION
+#ifdef LUACPPB_EXCEPTION_PROPAGATION_SUPPORT
 	int luacpp_handle_exception(lua_State *state, std::exception_ptr eptr) {
 		LuaCppBNativeException::process(state, eptr);
     return 0;

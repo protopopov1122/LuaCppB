@@ -23,7 +23,7 @@
 
 #include "luacppb/Compat.h"
 
-#ifdef LUACPPB_COMPAT_501
+#ifdef LUACPPB_INTERNAL_COMPAT_501
 int lua_absindex (lua_State *L, int i) {
   if (i < 0 && i > LUA_REGISTRYINDEX)
     i += lua_gettop(L) + 1;
@@ -93,7 +93,7 @@ int lua_compare (lua_State *L, int idx1, int idx2, int op) {
 }
 #endif
 
-#ifdef LUACPPB_COMPAT_502
+#ifdef LUACPPB_INTERNAL_COMPAT_502
 int lua_isinteger (lua_State *L, int index) {
   if (lua_type(L, index) == LUA_TNUMBER) {
     lua_Number n = lua_tonumber(L, index);

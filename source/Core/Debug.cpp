@@ -17,7 +17,7 @@
 
 #include "luacppb/Core/Debug.h"
 
-#ifndef LUACPPB_NO_DEBUG
+#ifdef LUACPPB_DEBUG_SUPPORT
 
 namespace LuaCppB {
 
@@ -69,7 +69,7 @@ namespace LuaCppB {
     return this->debug.nups;
   }
 
-#ifndef LUACPPB_NO_DEBUG_EXTRAS
+#ifdef LUACPPB_DEBUG_EXTRAS
 
   unsigned char LuaDebugBaseFrame::getParameters() const {
     return this->debug.nparams;

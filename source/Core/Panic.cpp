@@ -40,7 +40,7 @@ namespace LuaCppB::Internal {
   int LuaPanicDispatcher::atpanic(lua_State *state) {
       LuaStack stack(state);
       if (stack.check(1)) {
-#ifndef LUACPPB_EMULATED_MAINTHREAD
+#ifndef LUACPPB_INTERNAL_EMULATED_MAINTHREAD
         stack.getIndex<true>(LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
 #else
         stack.push(std::string(LUACPPB_RIDX_MAINTHREAD));

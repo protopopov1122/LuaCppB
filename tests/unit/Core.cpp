@@ -443,5 +443,41 @@ TEST_CASE("Allocator") {
   REQUIRE(alloc->getMaxAllocation() > 0);
 }
 
+class LuaNoAllocator : public LuaAllocator {
+ public:
+  void *allocate(LuaType type, std::size_t size) override {
+    return nullptr;
+  }
 
+  void *reallocate(void *ptr, std::size_t osize, std::size_t nsize) override {
+    return nullptr;
+  }
+  
+  void deallocate(void *ptr, std::size_t size) override {
+  }
+};
+
+#endif
+
+#if __has_include("lstate.h")
+#include "lstate.h"
+
+TEST_CASE("Panic handler") {
+  const std::string &CODE = "callback()";
+  LuaEnvironment env;
+  bool panicked = false;
+  env.setPanicHandler([&](LuaState &state)->int {
+    panicked = true;
+    throw std::exception();
+  });
+  env["callback"] = [&](LuaState state) {
+    G(state.getState())->panic(state.getState());  // Poking Lua internals to cause panic
+  };
+  try {
+    env.execute(CODE);
+    REQUIRE(false);
+  } catch (std::exception &ex) {
+    REQUIRE(panicked);
+  }
+}
 #endif

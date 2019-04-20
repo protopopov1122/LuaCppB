@@ -22,6 +22,7 @@
 #include "luacppb/Core/Status.h"
 #include "luacppb/Core/Runtime.h"
 #include "luacppb/Core/Alloc.h"
+#include "luacppb/Core/Panic.h"
 #include "luacppb/Core/Debug.h"
 #include "luacppb/Invoke/Error.h"
 #include "luacppb/LuaJIT.h"
@@ -59,6 +60,7 @@ namespace LuaCppB {
 #ifdef LUACPPB_HAS_JIT
 		LuaJIT &getJit();
 #endif
+		void setPanicHandler(std::function<int(LuaState &)>);
 		Internal::LuaCppObjectBoxerRegistry &getObjectBoxerRegistry() override;
 		std::shared_ptr<Internal::LuaRuntimeInfo> &getRuntimeInfo() override;
     void setExceptionHandler(std::function<void(std::exception &)>) override;

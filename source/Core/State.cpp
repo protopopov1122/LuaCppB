@@ -75,6 +75,13 @@ namespace LuaCppB {
 	}
 #endif
 
+	void LuaState::setPanicHandler(std::function<int(LuaState &)> handler) {
+		Internal::LuaPanicDispatcher::getGlobal().attach(this->state, [this, handler](lua_State *L) {
+			LuaState state(L, this->runtime);
+			return handler(state);
+		});
+	}
+
 	Internal::LuaCppObjectBoxerRegistry &LuaState::getObjectBoxerRegistry() {
 		return this->runtime->getClassRegistry();
 	}
@@ -168,6 +175,7 @@ namespace LuaCppB {
 
 	LuaUniqueState::~LuaUniqueState() {
 		if (this->state) {
+			Internal::LuaPanicDispatcher::getGlobal().detach(this->state);
 			lua_close(this->state);
 		}
 	}

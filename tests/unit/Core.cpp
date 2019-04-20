@@ -21,6 +21,7 @@
 #include <cstring>
 #include <algorithm>
 #include "luacppb/LuaCppB.h"
+#include <iostream>
 
 using namespace LuaCppB;
 
@@ -445,3 +446,52 @@ TEST_CASE("Allocator") {
 
 
 #endif
+
+TEST_CASE("Lua function dump") {
+  LuaEnvironment env;
+  LuaLoader loader(env);
+  SECTION("Empty reference") {
+    LuaReferenceHandle ref;
+    auto res = loader.dump(ref);
+    REQUIRE_FALSE(res.has_value());
+  }
+  SECTION("Non-function reference") {
+    env["a"] = 10;
+    auto res = loader.dump(env["a"]);
+    REQUIRE_FALSE(res.has_value());
+  }
+  SECTION("C-function reference") {
+    env["fn"] = []() {};
+    auto res = loader.dump(env["fn"]);
+    REQUIRE_FALSE(res.has_value());
+  }
+  SECTION("Lua function reference") {
+    const std::string &CODE = "function sum(a, b)\n"
+                              "    return a + b\n"
+                              "end";
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    auto res = loader.dump(env["sum"]);
+    REQUIRE(res.has_value());
+    LuaLoader::Image &img = res.value();
+    REQUIRE_FALSE(img.empty());
+  }
+}
+
+TEST_CASE("Lua function load") {
+  LuaEnvironment env;
+  LuaLoader loader(env);
+  SECTION("Lua function dump") {
+    const std::string &CODE = "function sum(a, b)\n"
+                              "    return a + b\n"
+                              "end";
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    auto res = loader.dump(env["sum"]);
+    REQUIRE(res.has_value());
+    LuaLoader::Image &img = res.value();
+    REQUIRE_FALSE(img.empty());
+    auto fn = loader.load(img, "sumFunc");
+    REQUIRE(fn.has_value());
+    REQUIRE(fn.value().valid());
+    REQUIRE(fn.value()(2, 3).get<int>() == 5);
+  }
+}

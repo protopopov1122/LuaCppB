@@ -4,6 +4,7 @@ luacppb_source = [
   'Core/Debug.cpp',
   'Core/Error.cpp',
   'Core/GC.cpp',
+  'Core/Loader.cpp',
   'Core/RuntimeInfo.cpp',
   'Core/Stack.cpp',
   'Core/StackGuard.cpp',

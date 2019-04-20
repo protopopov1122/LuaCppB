@@ -21,7 +21,6 @@
 #include <cstring>
 #include <algorithm>
 #include "luacppb/LuaCppB.h"
-#include <iostream>
 
 using namespace LuaCppB;
 

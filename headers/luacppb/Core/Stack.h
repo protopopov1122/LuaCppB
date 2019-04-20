@@ -43,6 +43,7 @@ namespace LuaCppB::Internal {
     void copy(int);
     void move(lua_State *, int);
     void remove(int);
+    bool check(int);
 
     void push();
     void push(bool);

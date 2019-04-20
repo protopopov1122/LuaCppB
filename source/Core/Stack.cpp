@@ -47,6 +47,10 @@ namespace LuaCppB::Internal {
     lua_pushvalue(this->state, index);
   }
 
+  bool LuaStack::check(int count) {
+    return static_cast<bool>(lua_checkstack(this->state, count));
+  }
+
   void LuaStack::move(lua_State *state, int count) {
     lua_xmove(this->state, state, count);
   }

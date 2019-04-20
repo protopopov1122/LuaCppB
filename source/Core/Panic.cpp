@@ -39,14 +39,16 @@ namespace LuaCppB::Internal {
 
   int LuaPanicDispatcher::atpanic(lua_State *state) {
       LuaStack stack(state);
+      if (stack.check(1)) {
 #ifndef LUACPPB_EMULATED_MAINTHREAD
-      stack.getIndex<true>(LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
+        stack.getIndex<true>(LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
 #else
-      stack.push(std::string(LUACPPB_RIDX_MAINTHREAD));
-      stack.getField<true>(LUA_REGISTRYINDEX);
+        stack.push(std::string(LUACPPB_RIDX_MAINTHREAD));
+        stack.getField<true>(LUA_REGISTRYINDEX);
 #endif
-    state = stack.toThread();
-    stack.pop();
+      state = stack.toThread();
+      stack.pop();
+    }
     auto &dispatcher = LuaPanicDispatcher::getGlobal();
     if (dispatcher.handlers.count(state)) {
       return dispatcher.handlers[state](state);

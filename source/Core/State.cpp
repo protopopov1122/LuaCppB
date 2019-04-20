@@ -55,6 +55,32 @@ namespace LuaCppB {
 		return this->state;
 	}
 
+	LuaReferenceHandle LuaState::getGlobals() {
+		if (this->isValid()) {
+			lua_pushglobaltable(this->state);
+			LuaReferenceHandle handle(this->state, std::make_unique<Internal::LuaRegistryReference>(this->state, *this, -1));
+			lua_pop(this->state, 1);
+			return handle;
+		} else {
+			return LuaReferenceHandle();
+		}
+	}
+
+	LuaState LuaState::getMainThread() {
+		if (!this->isValid()) {
+			return *this;
+		}
+		Internal::LuaStack stack(state);
+#ifndef LUACPPB_EMULATED_MAINTHREAD
+		stack.getIndex<true>(LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
+#else
+		stack.push(std::string(LUACPPB_RIDX_MAINTHREAD));
+		stack.getField<true>(LUA_REGISTRYINDEX);
+#endif
+    lua_State *state = stack.toThread();
+		return LuaState(state, this->runtime);
+	}
+
 	Internal::LuaCppClassRegistry &LuaState::getClassRegistry() {
 		return this->runtime->getClassRegistry();
 	}

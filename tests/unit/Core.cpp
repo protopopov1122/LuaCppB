@@ -481,3 +481,21 @@ TEST_CASE("Panic handler") {
   }
 }
 #endif
+
+TEST_CASE("Global table") {
+  LuaEnvironment env;
+  env["a"] = 2;
+  env["b"] = true;
+  auto ref = env.getGlobals();
+  REQUIRE(ref["a"].exists());
+  REQUIRE(ref["a"].get<int>() == 2);
+  REQUIRE(ref["b"].exists());
+  REQUIRE(ref["b"].get<bool>());
+}
+
+TEST_CASE("Main thread getter") {
+  LuaEnvironment env;
+  auto thread = env.getMainThread();
+  REQUIRE(thread.isValid());
+  REQUIRE(thread.getState() == env.getState());
+}

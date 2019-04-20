@@ -50,6 +50,8 @@ namespace LuaCppB {
 		bool isValid() const;
 		lua_State *getState() const;
 		Internal::LuaCppClassRegistry &getClassRegistry();
+		LuaReferenceHandle getGlobals();
+		LuaState getMainThread();
 #ifndef LUACPPB_NO_DEBUG
 		LuaDebugFrame getDebugFrame(int = 0);
 		LuaDebugHooks &getDebugHooks();

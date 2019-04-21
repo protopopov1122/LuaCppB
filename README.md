@@ -26,7 +26,7 @@ Project requires C++17-compliant compiler version. It uses RTTI and exceptions.
 ### Documentation & examples
 
 You can read the [manual](MANUAL.md). \
-Example preparation is in progress. You can also consult the unit tests. See `*.cpp` files in `tests/unit` directory.
+Example preparation is in progress. You can also consult the unit tests. See `*.cpp` files in `tests/unit` directory. LuaCppB compatibility issues are briefly discussed [there](COMPAT.md).
 
 ### Building
 

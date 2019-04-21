@@ -5,6 +5,7 @@
 # LUACPPB_CXX_MODE (on/off) - Lua compiled as C++
 # LUACPPB_LUAJIT (on/off) - use LuaJIT
 # LUACPPB_FPIC (on/off) - produce position-independent code
+# LUACPPB_LINK_ATOMIC (on/off) - link libatomic (may be necessary on some platforms)
 # Results:
 #	LUACPPB_LUA_HEADERS (path) - Lua header directory (if LUACPPB_COMPILE_LUA)
 #	LUACPPB_HEADERS (path) - LuaCppB header directory
@@ -39,6 +40,9 @@ set(LUACPPB_HEADERS ${CMAKE_CURRENT_LIST_DIR}/../headers ${LUACPPB_LUA_HEADERS})
 add_library(luacppb STATIC ${LUACPPB_SRC})
 target_include_directories(luacppb PUBLIC ${LUACPPB_HEADERS} ${LUACPPB_LUA_HEADERS})
 target_compile_definitions(luacppb PUBLIC ${LUACPPB_DEFINES})
+if (LUACPPB_LINK_ATOMIC)
+	target_link_libraries(luacppb atomic)
+endif (LUACPPB_LINK_ATOMIC)
 set(LUACPPB_LIBS luacppb ${LUACPPB_LUA})
 
 if (LUACPPB_FPIC)

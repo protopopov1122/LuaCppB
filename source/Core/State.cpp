@@ -55,6 +55,10 @@ namespace LuaCppB {
 		return this->state;
 	}
 
+	lua_Number LuaState::version() const {
+		return *lua_version(this->state);
+	}
+
 #ifdef LUACPPB_GLOBAL_TABLE_SUPPORT
 	LuaReferenceHandle LuaState::getGlobals() {
 		if (this->isValid()) {

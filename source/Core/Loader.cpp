@@ -17,12 +17,20 @@
 
 #include "luacppb/Core/Loader.h"
 #include "luacppb/Reference/Primary.h"
+#include <iostream>
 
 namespace LuaCppB {
 
   struct LuaImageChunk {
     const LuaLoader::Image &image;
     std::size_t position;
+  };
+
+  constexpr std::size_t BUF_SIZE = 128;
+
+  struct LuaTextChunk {
+    std::istream &input;
+    char buffer[BUF_SIZE];
   };
 
   static int LuaLoader_dump(lua_State *state, const void *data, std::size_t sz, void *udata) {
@@ -40,6 +48,17 @@ namespace LuaCppB {
       std::size_t pos = chunk.position;
       chunk.position = chunk.image.size();
       return reinterpret_cast<const char *>(chunk.image.data() + pos);
+    } else {
+      *sz = 0;
+      return nullptr;
+    }
+  }
+
+  static const char *LuaLoader_loadText(lua_State *state, void *udata, std::size_t *sz) {
+    LuaTextChunk &text = *reinterpret_cast<LuaTextChunk *>(udata);
+    if (text.input.good()) {
+      *sz = text.input.readsome(text.buffer, BUF_SIZE);
+      return text.buffer;
     } else {
       *sz = 0;
       return nullptr;
@@ -80,6 +99,28 @@ namespace LuaCppB {
     int res = lua_load(this->state.getState(), LuaLoader_load, reinterpret_cast<void *>(&chunk), name.c_str(), nullptr);
 #else
     int res = lua_load(this->state.getState(), LuaLoader_load, reinterpret_cast<void *>(&chunk), name.c_str());
+#endif
+    switch (res) {
+      case LUA_OK: {
+        LuaReferenceHandle handle(this->state.getState(), std::make_unique<Internal::LuaRegistryReference>(this->state.getState(), this->state, -1));
+        lua_pop(this->state.getState(), 1);
+        return std::optional<LuaReferenceHandle>(handle);
+      } break;
+      default:
+        break;
+    }
+    return std::optional<LuaReferenceHandle>();
+  }
+
+  std::optional<LuaReferenceHandle> LuaLoader::load(std::istream &is, const std::string &name) {
+    if (!this->state.isValid() || !is.good()) {
+      return std::optional<LuaReferenceHandle>();
+    }
+    LuaTextChunk text { is, {} };
+#ifndef LUACPPB_INTERNAL_COMPAT_501
+    int res = lua_load(this->state.getState(), LuaLoader_loadText, reinterpret_cast<void *>(&text), name.c_str(), nullptr);
+#else
+    int res = lua_load(this->state.getState(), LuaLoader_loadText, reinterpret_cast<void *>(&text), name.c_str());
 #endif
     switch (res) {
       case LUA_OK: {

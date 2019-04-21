@@ -49,6 +49,7 @@ namespace LuaCppB {
 		virtual ~LuaState() = default;
 		bool isValid() const;
 		lua_State *getState() const;
+		lua_Number version() const;
 		Internal::LuaCppClassRegistry &getClassRegistry();
 #ifdef LUACPPB_GLOBAL_TABLE_SUPPORT
 		LuaReferenceHandle getGlobals();

@@ -20,6 +20,8 @@
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
+#include <sstream>
+#include <iostream>
 #include "luacppb/LuaCppB.h"
 
 using namespace LuaCppB;
@@ -535,18 +537,33 @@ TEST_CASE("Lua function dump") {
 TEST_CASE("Lua function load") {
   LuaEnvironment env;
   LuaLoader loader(env);
-  SECTION("Lua function dump") {
-    const std::string &CODE = "function sum(a, b)\n"
-                              "    return a + b\n"
-                              "end";
-    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-    auto res = loader.dump(env["sum"]);
-    REQUIRE(res.has_value());
-    LuaLoader::Image &img = res.value();
-    REQUIRE_FALSE(img.empty());
-    auto fn = loader.load(img, "sumFunc");
-    REQUIRE(fn.has_value());
-    REQUIRE(fn.value().valid());
-    REQUIRE(fn.value()(2, 3).get<int>() == 5);
-  }
+  const std::string &CODE = "function sum(a, b)\n"
+                            "    return a + b\n"
+                            "end";
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  auto res = loader.dump(env["sum"]);
+  REQUIRE(res.has_value());
+  LuaLoader::Image &img = res.value();
+  REQUIRE_FALSE(img.empty());
+  auto fn = loader.load(img, "sumFunc");
+  REQUIRE(fn.has_value());
+  REQUIRE(fn.value().valid());
+  REQUIRE(fn.value()(2, 3).get<int>() == 5);
+}
+
+TEST_CASE("Lua function source load") {
+  LuaEnvironment env;
+  LuaLoader loader(env);
+  const std::string &CODE = "return 2+2*2";
+  std::stringstream code(CODE);
+  auto fun = loader.load(code, "fun");
+  REQUIRE(fun.has_value());
+  auto res = fun.value()();
+  REQUIRE(res == LuaStatusCode::Ok);
+  REQUIRE(res.get<int>() == 6);
+}
+
+TEST_CASE("Lua version getter") {
+  LuaEnvironment env;
+  REQUIRE(env.version() == LUA_VERSION_NUM);
 }

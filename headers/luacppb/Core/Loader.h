@@ -22,6 +22,7 @@
 #include "luacppb/Reference/Handle.h"
 #include <vector>
 #include <optional>
+#include <iosfwd>
 
 namespace LuaCppB {
 
@@ -32,6 +33,7 @@ namespace LuaCppB {
 
     std::optional<Image> dump(LuaReferenceHandle, bool = true);
     std::optional<LuaReferenceHandle> load(const Image &, const std::string &);
+    std::optional<LuaReferenceHandle> load(std::istream &, const std::string &);
    private:
     LuaState &state;
   };

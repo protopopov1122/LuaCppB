@@ -55,7 +55,7 @@ namespace LuaCppB {
 		return this->state;
 	}
 
-#ifdef LUACPPB_GLOBAL_TABLE
+#ifdef LUACPPB_GLOBAL_TABLE_SUPPORT
 	LuaReferenceHandle LuaState::getGlobals() {
 		if (this->isValid()) {
 			lua_pushglobaltable(this->state);

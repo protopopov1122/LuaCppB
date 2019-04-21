@@ -26,7 +26,7 @@ void test_basic_operations(LuaEnvironment &env) {
                             "for i = 1, #vec do\n"
                             "    sum = sum + vec[i]\n"
                             "end\n"
-#ifdef LUACPPB_CONTAINER_PAIRS
+#ifdef LUACPPB_CONTAINER_PAIRS_SUPPORT
                             "psum = 0\n"
                             "for k, v in pairs(vec) do\n"
                             "    psum = psum + k * v\n"
@@ -42,7 +42,7 @@ void test_basic_operations(LuaEnvironment &env) {
   REQUIRE(env["vec"].getType() == LuaType::UserData);
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(env["sum"].get<int>() == 10);
-#ifdef LUACPPB_CONTAINER_PAIRS
+#ifdef LUACPPB_CONTAINER_PAIRS_SUPPORT
   REQUIRE(env["psum"].get<int>() == 30);
   REQUIRE(env["isum"].get<int>() == 55);
 #endif
@@ -140,7 +140,7 @@ void test_map(LuaEnvironment &env) {
   const std::string &CODE = "map[3] = map[1] + map[2]\n"
                             "map[10] = nil\n"
                             "sz = #map\n"
-#ifdef LUACPPB_CONTAINER_PAIRS
+#ifdef LUACPPB_CONTAINER_PAIRS_SUPPORT
                             "psum = 0\n"
                             "for k, v in pairs(map) do\n"
                             "    psum = psum + k*v\n"
@@ -153,7 +153,7 @@ void test_map(LuaEnvironment &env) {
                             ;
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(env["sz"].get<int>() == 3);
-#ifdef LUACPPB_CONTAINER_PAIRS
+#ifdef LUACPPB_CONTAINER_PAIRS_SUPPORT
   int psum = env["psum"].get<int>();
   int isum = env["isum"].get<int>();
   REQUIRE(psum == 140);
@@ -175,7 +175,7 @@ TEST_CASE("Map") {
   }
   SECTION("By const reference") {
    const std::string &CODE = "sz = #map\n"
-#ifdef LUACPPB_CONTAINER_PAIRS
+#ifdef LUACPPB_CONTAINER_PAIRS_SUPPORT
                              "psum = 0\n"
                              "for k, v in pairs(map) do\n"
                              "    psum = psum + k*v\n"
@@ -190,7 +190,7 @@ TEST_CASE("Map") {
     env["map"] = cMap;
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
     REQUIRE(env["sz"].get<int>() == 3);
-#ifdef LUACPPB_CONTAINER_PAIRS
+#ifdef LUACPPB_CONTAINER_PAIRS_SUPPORT
     int psum = env["psum"];
     int isum = env["isum"];
     REQUIRE(psum == 1050);
@@ -228,7 +228,7 @@ void test_set(LuaEnvironment &env) {
   const std::string &CODE = "numbers[10] = true\n"
                             "numbers[1] = nil\n"
                             "sz = #numbers\n"
-#ifdef LUACPPB_CONTAINER_PAIRS
+#ifdef LUACPPB_CONTAINER_PAIRS_SUPPORT
                             "psum = 0\n"
                             "for k, v in pairs(numbers) do\n"
                             "    psum = psum + k\n"
@@ -237,7 +237,7 @@ void test_set(LuaEnvironment &env) {
                             "res = numbers[2] and (numbers[100] or numbers[3])";
   REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
   REQUIRE(env["sz"].get<int>() == 5);
-#ifdef LUACPPB_CONTAINER_PAIRS
+#ifdef LUACPPB_CONTAINER_PAIRS_SUPPORT
   int psum = env["psum"].get<int>();
   REQUIRE(psum == 24);
 #endif
@@ -256,7 +256,7 @@ TEST_CASE("Set") {
   }
   SECTION("By constant reference") {
   const std::string &CODE = "sz = #numbers\n"
-#ifdef LUACPPB_CONTAINER_PAIRS
+#ifdef LUACPPB_CONTAINER_PAIRS_SUPPORT
                             "psum = 0\n"
                             "for k, v in pairs(numbers) do\n"
                             "    psum = psum + k\n"
@@ -267,7 +267,7 @@ TEST_CASE("Set") {
     env["numbers"] = cNumbers;
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
     REQUIRE(env["sz"].get<int>() == 5);
-#ifdef LUACPPB_CONTAINER_PAIRS
+#ifdef LUACPPB_CONTAINER_PAIRS_SUPPORT
     int psum = env["psum"].get<int>();
     REQUIRE(psum == 15);
 #endif

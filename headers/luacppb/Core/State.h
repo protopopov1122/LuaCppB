@@ -50,7 +50,7 @@ namespace LuaCppB {
 		bool isValid() const;
 		lua_State *getState() const;
 		Internal::LuaCppClassRegistry &getClassRegistry();
-#ifdef LUACPPB_GLOBAL_TABLE
+#ifdef LUACPPB_GLOBAL_TABLE_SUPPORT
 		LuaReferenceHandle getGlobals();
 #endif
 		LuaState getMainThread();

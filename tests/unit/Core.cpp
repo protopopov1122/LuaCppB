@@ -346,17 +346,17 @@ TEST_CASE("Garbage collector") {
   SECTION("Empty GC") {
     Internal::LuaGC gc;
     REQUIRE_FALSE(gc.valid());
-    #ifdef LUACPPB_GC_ISRUNNING
+    #ifdef LUACPPB_GC_ISRUNNING_SUPPORT
     REQUIRE_FALSE(gc.isRunning());
     #endif
     REQUIRE(gc.count() == 0);
     REQUIRE(gc.countBytes() == 0);
     REQUIRE_NOTHROW(gc.stop());
-    #ifdef LUACPPB_GC_ISRUNNING
+    #ifdef LUACPPB_GC_ISRUNNING_SUPPORT
     REQUIRE_FALSE(gc.isRunning());
     #endif
     REQUIRE_NOTHROW(gc.restart());
-    #ifdef LUACPPB_GC_ISRUNNING
+    #ifdef LUACPPB_GC_ISRUNNING_SUPPORT
     REQUIRE_FALSE(gc.isRunning());
     #endif
     REQUIRE_NOTHROW(gc.collect());
@@ -371,15 +371,15 @@ TEST_CASE("Garbage collector") {
     LuaEnvironment env;
     Internal::LuaGC gc(env.getState());
     REQUIRE(gc.valid());
-    #ifdef LUACPPB_GC_ISRUNNING
+    #ifdef LUACPPB_GC_ISRUNNING_SUPPORT
     REQUIRE(gc.isRunning());
     #endif
     REQUIRE_NOTHROW(gc.stop());
-    #ifdef LUACPPB_GC_ISRUNNING
+    #ifdef LUACPPB_GC_ISRUNNING_SUPPORT
     REQUIRE_FALSE(gc.isRunning());
     #endif
     REQUIRE_NOTHROW(gc.restart());
-    #ifdef LUACPPB_GC_ISRUNNING
+    #ifdef LUACPPB_GC_ISRUNNING_SUPPORT
     REQUIRE(gc.isRunning());
     #endif
     REQUIRE_NOTHROW(gc.step(0));
@@ -482,7 +482,7 @@ TEST_CASE("Panic handler") {
 }
 #endif
 
-#ifdef LUACPPB_GLOBAL_TABLE
+#ifdef LUACPPB_GLOBAL_TABLE_SUPPORT
 TEST_CASE("Global table") {
   LuaEnvironment env;
   env["a"] = 2;

@@ -69,7 +69,7 @@ namespace LuaCppB {
     return this->debug.nups;
   }
 
-#ifdef LUACPPB_DEBUG_EXTRAS
+#ifdef LUACPPB_DEBUG_EXTRAS_SUPPORT
 
   unsigned char LuaDebugBaseFrame::getParameters() const {
     return this->debug.nparams;

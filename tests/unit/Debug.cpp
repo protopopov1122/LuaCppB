@@ -48,7 +48,7 @@ TEST_CASE("Local variables") {
   REQUIRE(values["b"] == 3);
 }
 
-#ifdef LUACPPB_DEBUG_EXTRAS
+#ifdef LUACPPB_DEBUG_EXTRAS_SUPPORT
 TEST_CASE("Local variable symbols") {
   const std::string &CODE = "function sum(a, b)\n"
                             "  callback()\n"
@@ -79,7 +79,7 @@ TEST_CASE("Upvalues") {
                             "end";
   LuaEnvironment env;
   std::map<std::string, int> values;
-#ifdef LUACPPB_DEBUG_EXTRAS
+#ifdef LUACPPB_DEBUG_EXTRAS_SUPPORT
   std::map<std::string, LuaDebugFrame::UpvalueId> idents;
 #endif
   env["callback"] = [&](LuaReferenceHandle fn) {
@@ -88,7 +88,7 @@ TEST_CASE("Upvalues") {
     std::optional<LuaDebugFrame::Variable> var = debug.getUpvalue(fn, i);
     for (; var.has_value(); var = debug.getUpvalue(fn, ++i)) {
       values[var.value().key] = var.value().value.get<int>();
-#ifdef LUACPPB_DEBUG_EXTRAS
+#ifdef LUACPPB_DEBUG_EXTRAS_SUPPORT
       idents[var.value().key] = debug.getUpvalueId(fn, i);
 #endif
     }
@@ -98,7 +98,7 @@ TEST_CASE("Upvalues") {
   REQUIRE(values.count("a") != 0);
   REQUIRE(values.count("b") != 0);
   REQUIRE(values.count("c") == 0);
-#ifdef LUACPPB_DEBUG_EXTRAS
+#ifdef LUACPPB_DEBUG_EXTRAS_SUPPORT
   REQUIRE(idents["a"] != nullptr);
   REQUIRE(idents["b"] != nullptr);
   REQUIRE(idents["a"] != idents["b"]);
@@ -130,7 +130,7 @@ TEST_CASE("Current function info") {
     REQUIRE(debug.getLineDefined() == -1);
     REQUIRE(debug.getLastLineDefined() == -1);
     REQUIRE(debug.getUpvalues() == 2);
-#ifdef LUACPPB_DEBUG_EXTRAS
+#ifdef LUACPPB_DEBUG_EXTRAS_SUPPORT
     REQUIRE(debug.getParameters() == 0);
     REQUIRE(debug.isVarArg());
     // REQUIRE_FALSE(debug.isTailCall());
@@ -164,7 +164,7 @@ TEST_CASE("Function info") {
     REQUIRE(debug.getLineDefined() == 1);
     REQUIRE(debug.getLastLineDefined() == 4);
     REQUIRE_NOTHROW(debug.getUpvalues());
-#ifdef LUACPPB_DEBUG_EXTRAS
+#ifdef LUACPPB_DEBUG_EXTRAS_SUPPORT
     REQUIRE(debug.getParameters() == 2);
     REQUIRE_FALSE(debug.isVarArg());
     // REQUIRE_FALSE(debug.isTailCall());
@@ -220,7 +220,7 @@ TEST_CASE("Setting upvalues") {
   REQUIRE(res.get<int>() == 100);
 }
 
-#ifdef LUACPPB_DEBUG_EXTRAS
+#ifdef LUACPPB_DEBUG_EXTRAS_SUPPORT
 
 TEST_CASE("Joining upvalues") {
 

@@ -102,7 +102,7 @@ namespace LuaCppB {
     }
   }
 
-#ifdef LUACPPB_DEBUG_EXTRAS
+#ifdef LUACPPB_DEBUG_EXTRAS_SUPPORT
   template <typename Reference, typename ReferenceInternal>
   std::optional<std::string> LuaAbstractDebugFrame<Reference, ReferenceInternal>::getLocal(Reference ref, int index) {
     const char *key = nullptr;

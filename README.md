@@ -34,7 +34,8 @@ Project is meant to be used as a static library (that is - it's not header-only 
 Currently CMake and Meson are supported.
 CMake package is prepared in `cmake` directory, refer to `CMakeLists.txt` (which builds unit tests) as an usage example. \
 It's strongly recommended to obtain Lua source code and cofigure build system to use it. It will be built along with other project code in C++ mode, this allows safe usage of coroutines and error mechanism (in C mode Lua uses longjmp which violates RAII).
-Otherwise corresponding features of the library will be disabled.
+Otherwise corresponding features of the library will be disabled. \
+LuaCppB supports amalgamation using the tool from [vinniefalco](https://github.com/vinniefalco/Amalgamate/), thus providing only two files: `LuaCppB.cpp` and `LuaCppB.h`; see `amalgamate.sh` script.
 
 
 ### Motivation

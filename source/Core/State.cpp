@@ -56,7 +56,11 @@ namespace LuaCppB {
 	}
 
 	lua_Number LuaState::version() const {
+#ifdef LUACPPB_INTERNAL_COMPAT_501
+		return LUA_VERSION_NUM;
+#else
 		return *lua_version(this->state);
+#endif
 	}
 
 #ifdef LUACPPB_GLOBAL_TABLE_SUPPORT

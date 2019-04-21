@@ -15,36 +15,58 @@
   IN THE SOFTWARE.
 */
 
-#ifndef LUACPPB_LUACPPB_H_
-#define LUACPPB_LUACPPB_H_
+#ifndef LUACPPB_CORE_LIBRARY_H_
+#define LUACPPB_CORE_LIBRARY_H_
 
 #include "luacppb/Base.h"
-#include "luacppb/Meta.h"
-#include "luacppb/Core/State.h"
-#include "luacppb/Reference/Base.h"
-#include "luacppb/Reference/Primary.h"
-#include "luacppb/Reference/Field.h"
-#include "luacppb/Reference/Registry.h"
 #include "luacppb/Reference/Handle.h"
-#include "luacppb/Value/Value.h"
-#include "luacppb/Value/Native.h"
-#include "luacppb/Invoke/Callable.h"
-#include "luacppb/Invoke/Continuation.h"
-#include "luacppb/Invoke/Coro.h"
-#include "luacppb/Object/Registry.h"
-#include "luacppb/Object/Object.h"
-#include "luacppb/Object/Class.h"
-#include "luacppb/Object/Bind.h"
-#include "luacppb/Value/UserData.h"
-#include "luacppb/Core/Library.h"
-#include "luacppb/Core/Loader.h"
-#include "luacppb/Core/Status.h"
-#include "luacppb/Core/Throw.h"
-#include "luacppb/Core/StackGuard.h"
-#include "luacppb/Core/Stack.h"
-#include "luacppb/Core/GC.h"
-#include "luacppb/Value/Factory.h"
-#include "luacppb/Value/Iterator.h"
-#include "luacppb/LuaJIT.h"
+#include "luacppb/Core/State.h"
+#include <tuple>
+#include <type_traits>
+
+namespace LuaCppB {
+
+  enum class LuaStdLib {
+    Base,
+    Package,
+#ifndef LUACPPB_INTERNAL_COMPAT_501
+    Coroutine,
+#endif
+    String,
+#ifndef LUACPPB_INTERNAL_COMPAT_502
+    Utf8,
+#endif
+    Table,
+    Math,
+    IO,
+    OS,
+    Debug
+  };
+
+  namespace Internal {
+
+    template <typename ... T>
+    struct LuaStdLibLoader {};
+
+    template <>
+    struct LuaStdLibLoader<> {
+      using ReturnType = std::tuple<>;
+      static ReturnType load(lua_State *, LuaCppRuntime &, bool) {
+        return std::make_tuple();
+      }
+    };
+
+    template <typename A, typename ... B>
+    struct LuaStdLibLoader<A, B...> {
+      using ReturnType = decltype(std::tuple_cat(std::make_tuple(std::declval<LuaReferenceHandle>()), std::declval<typename LuaStdLibLoader<B...>::ReturnType>()));
+      static ReturnType load(lua_State *, LuaCppRuntime &, bool, A, B...);
+    };
+  }
+
+  template <typename ... T>
+  typename Internal::LuaStdLibLoader<T...>::ReturnType LuaLoadStdLibs(LuaState &, bool, T...);
+}
+
+#include "luacppb/Core/Impl/Library.h"
 
 #endif

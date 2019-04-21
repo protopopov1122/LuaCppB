@@ -567,3 +567,17 @@ TEST_CASE("Lua version getter") {
   LuaEnvironment env;
   REQUIRE(env.version() == LUA_VERSION_NUM);
 }
+
+TEST_CASE("Library loading") {
+  const std::string &CODE = "res = tonumber(arg)";
+  LuaEnvironment env(false);
+  auto res = LuaLoadStdLibs(env, true, LuaStdLib::Base);
+  if (std::get<0>(res).valid()) {
+    REQUIRE(std::get<0>(res)["type"](50).get<std::string>() == "number");
+  } else {
+    REQUIRE(env["type"](50).get<std::string>() == "number");
+  }
+  env["arg"] = std::string("100");
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(env["res"].get<int>() == 100);
+}

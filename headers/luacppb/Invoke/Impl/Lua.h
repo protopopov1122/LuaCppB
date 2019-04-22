@@ -68,8 +68,15 @@ namespace LuaCppB::Internal {
     stack.copy(index);
     LuaFunctionArgument<Internal::LuaNativeValue, A...>::push(state, runtime, std::forward<A>(args)...);
     LuaFunctionContinuationHandle *handle = new LuaFunctionContinuationHandle(std::move(cont), runtime, top);
+#ifndef LUACPPB_INTERNAL_COMPAT_502
     lua_KContext ctx = reinterpret_cast<lua_KContext>(handle);
-    LuaFunctionContinuationHandle::fnContinuation(state,
+    LuaFunctionContinuationHandle::fnContinuation(
+#else
+    lua_pushlightuserdata(state, reinterpret_cast<void *>(handle));
+    lua_KContext ctx = luaL_ref(state, LUA_REGISTRYINDEX);
+    LuaFunctionContinuationHandle::fnContinuationImpl(
+#endif
+      state,
       lua_pcallk(state, sizeof...(args), LUA_MULTRET, 0,
                 ctx, &LuaFunctionContinuationHandle::fnContinuation),
       ctx);
@@ -81,8 +88,15 @@ namespace LuaCppB::Internal {
     int top = stack.getTop();
     LuaFunctionArgument<Internal::LuaNativeValue, A...>::push(state, runtime, std::forward<A>(args)...);
     LuaFunctionContinuationHandle *handle = new LuaFunctionContinuationHandle(std::move(cont), runtime, top);
+#ifndef LUACPPB_INTERNAL_COMPAT_502
     lua_KContext ctx = reinterpret_cast<lua_KContext>(handle);
-    LuaFunctionContinuationHandle::fnContinuation(state,
+    LuaFunctionContinuationHandle::fnContinuation(
+#else
+    lua_pushlightuserdata(state, reinterpret_cast<void *>(handle));
+    lua_KContext ctx = luaL_ref(state, LUA_REGISTRYINDEX);
+    LuaFunctionContinuationHandle::fnContinuationImpl(
+#endif
+      state,
       lua_yieldk(state, sizeof...(args),
                 ctx, &LuaFunctionContinuationHandle::fnContinuation),
       ctx);

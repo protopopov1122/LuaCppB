@@ -64,7 +64,12 @@ namespace LuaCppB::Internal {
     void getResult(lua_State *state, std::vector<LuaValue> &);
     std::shared_ptr<LuaRuntimeInfo> &getRuntime();
     LuaFunctionContinuation &getContinuation();
+#ifndef LUACPPB_INTERNAL_COMPAT_502
     static int fnContinuation(lua_State *, int, lua_KContext);
+#else
+    static int fnContinuationImpl(lua_State *, int, lua_KContext);
+    static int fnContinuation(lua_State *);
+#endif
   private:
     std::unique_ptr<LuaFunctionContinuation> cont;
     std::shared_ptr<LuaRuntimeInfo> runtime;

@@ -82,8 +82,21 @@ namespace LuaCppB {
       return *this->cont;
     }
 
+#ifndef LUACPPB_INTERNAL_COMPAT_502
     int LuaFunctionContinuationHandle::fnContinuation(lua_State *state, int statusCode, lua_KContext ctx) {
       std::unique_ptr<LuaFunctionContinuationHandle> handle(reinterpret_cast<LuaFunctionContinuationHandle *>(ctx));
+#else
+    int LuaFunctionContinuationHandle::fnContinuation(lua_State *state) {
+      lua_KContext ctx;
+      int status = lua_getctx(state, &ctx);
+      return LuaFunctionContinuationHandle::fnContinuationImpl(state, status, ctx);
+    }
+
+    int LuaFunctionContinuationHandle::fnContinuationImpl(lua_State *state, int statusCode, lua_KContext ctx) {
+      lua_rawgeti(state, LUA_REGISTRYINDEX, ctx);
+      std::unique_ptr<LuaFunctionContinuationHandle> handle(reinterpret_cast<LuaFunctionContinuationHandle *>(lua_touserdata(state, -1)));
+      luaL_unref(state, LUA_REGISTRYINDEX, ctx);
+#endif
       LuaState luaState(state, handle->getRuntime());
       LuaStatusCode status = static_cast<LuaStatusCode>(statusCode);
       std::vector<LuaValue> result;

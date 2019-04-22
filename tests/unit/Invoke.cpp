@@ -302,4 +302,22 @@ TEST_CASE("Lua function call") {
     REQUIRE(std::get<1>(res) == 5);
     REQUIRE(std::get<2>(res) == 25);
   }
+  SECTION("Getting return value") {
+    const std::string &CODE = "function sum(a, b)\n"
+                              "    return a + b\n"
+                              "end";
+    LuaEnvironment env;
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE((*env["sum"](3, 6)).get<int>() == 9);
+  }
+  SECTION("Getting return values") {
+    const std::string &CODE = "function swap(a, b)\n"
+                              "    return b, a\n"
+                              "end";
+    LuaEnvironment env;
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    std::vector<LuaValue> res(env["swap"](5, "a").values());
+    REQUIRE(res[0].get<std::string>() == "a");
+    REQUIRE(res[1].get<int>() == 5);
+  }
 }

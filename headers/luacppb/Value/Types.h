@@ -92,7 +92,7 @@ namespace LuaCppB {
 		bool hasValue() const;
 		LuaReferenceHandle ref(LuaCppRuntime &);
 
-	protected:
+	 protected:
 		template <typename T>
 		T toPointer() const;
 

@@ -63,10 +63,13 @@ namespace LuaCppB {
 #endif
 	}
 
-#ifdef LUACPPB_GLOBAL_TABLE_SUPPORT
 	LuaReferenceHandle LuaState::getGlobals() {
 		if (this->isValid()) {
+#ifndef LUACPPB_INTERNAL_COMPAT_501
 			lua_pushglobaltable(this->state);
+#else
+			lua_pushvalue(this->state, LUA_GLOBALSINDEX);
+#endif
 			LuaReferenceHandle handle(this->state, std::make_unique<Internal::LuaRegistryReference>(this->state, *this, -1));
 			lua_pop(this->state, 1);
 			return handle;
@@ -74,7 +77,6 @@ namespace LuaCppB {
 			return LuaReferenceHandle();
 		}
 	}
-#endif
 
 	LuaState LuaState::getMainThread() {
 		if (!this->isValid()) {

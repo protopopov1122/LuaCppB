@@ -484,7 +484,6 @@ TEST_CASE("Panic handler") {
 }
 #endif
 
-#ifdef LUACPPB_GLOBAL_TABLE_SUPPORT
 TEST_CASE("Global table") {
   LuaEnvironment env;
   env["a"] = 2;
@@ -495,7 +494,6 @@ TEST_CASE("Global table") {
   REQUIRE(ref["b"].exists());
   REQUIRE(ref["b"].get<bool>());
 }
-#endif
 
 TEST_CASE("Main thread getter") {
   LuaEnvironment env;

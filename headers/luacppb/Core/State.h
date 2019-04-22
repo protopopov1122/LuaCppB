@@ -51,9 +51,7 @@ namespace LuaCppB {
 		lua_State *getState() const;
 		lua_Number version() const;
 		Internal::LuaCppClassRegistry &getClassRegistry();
-#ifdef LUACPPB_GLOBAL_TABLE_SUPPORT
 		LuaReferenceHandle getGlobals();
-#endif
 		LuaState getMainThread();
 #ifdef LUACPPB_DEBUG_SUPPORT
 		LuaDebugFrame getDebugFrame(int = 0);

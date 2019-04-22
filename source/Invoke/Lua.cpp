@@ -60,7 +60,7 @@ namespace LuaCppB {
 
   namespace Internal {
 
-#ifdef LUACPPB_COROUTINE_SUPPORT
+#ifdef LUACPPB_CONTINUATION_SUPPORT
     LuaFunctionContinuationHandle::LuaFunctionContinuationHandle(std::unique_ptr<LuaFunctionContinuation> cont, LuaCppRuntime &runtime, int top)
       : cont(std::move(cont)), runtime(runtime.getRuntimeInfo()), top(top) {}
     

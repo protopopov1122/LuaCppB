@@ -93,6 +93,7 @@ TEST_CASE("Coroutines") {
   }
 }
 
+#ifdef LUACPPB_CONTINUATION_SUPPORT
 #define SHOULD_NOT_HAPPEN REQUIRE(false)
 
 void test_cont(LuaState env, int val) {
@@ -177,5 +178,7 @@ TEST_CASE("Yielding") {
   REQUIRE(env["r2"].get<int>() == 25);
   REQUIRE(env["res"].get<int>() == 30);
 }
+
+#endif
 
 #endif

@@ -59,7 +59,7 @@ namespace LuaCppB::Internal {
     }
   }
 
-#ifdef LUACPPB_COROUTINE_SUPPORT
+#ifdef LUACPPB_CONTINUATION_SUPPORT
 
   template <typename ... A>
   void LuaFunctionCall::callK(lua_State *state, int index, LuaCppRuntime &runtime, std::unique_ptr<LuaFunctionContinuation> cont, A &&... args) {

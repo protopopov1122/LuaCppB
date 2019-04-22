@@ -20,7 +20,7 @@
 
 namespace LuaCppB {
 
-#ifdef LUACPPB_COROUTINE_SUPPORT
+#ifdef LUACPPB_CONTINUATION_SUPPORT
 
   LuaContinuation::LuaContinuation(const LuaReferenceHandle &handle, LuaState &state)
     : handle(handle), state(state) {}

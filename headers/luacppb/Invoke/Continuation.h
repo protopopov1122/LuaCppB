@@ -26,7 +26,7 @@
 #include "luacppb/Value/Native.h"
 #include <functional>
 
-#ifdef LUACPPB_COROUTINE_SUPPORT
+#ifdef LUACPPB_CONTINUATION_SUPPORT
 
 namespace LuaCppB {
 

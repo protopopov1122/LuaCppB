@@ -33,7 +33,11 @@ namespace LuaCppB {
   LuaError LuaCoroutine::call(std::vector<LuaValue> &result, A &&... args) const {
     Internal::LuaStack stack(this->thread.toState());
     Internal::LuaFunctionArgument<Internal::LuaNativeValue, A...>::push(thread.toState(), this->runtime.get(), std::forward<A>(args)...);
+#ifndef LUACPPB_INTERNAL_COMPAT_501
     LuaStatusCode status = static_cast<LuaStatusCode>(lua_resume(thread.toState(), nullptr, sizeof...(args)));
+#else
+    LuaStatusCode status = static_cast<LuaStatusCode>(lua_resume(thread.toState(), sizeof...(args)));
+#endif
     if (status == LuaStatusCode::Ok || status == LuaStatusCode::Yield) {
       int results = stack.getTop();
       while (results-- > 0) {

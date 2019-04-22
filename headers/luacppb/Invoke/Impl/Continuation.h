@@ -20,7 +20,7 @@
 
 #include "luacppb/Invoke/Continuation.h"
 
-#ifdef LUACPPB_COROUTINE_SUPPORT
+#ifdef LUACPPB_CONTINUATION_SUPPORT
 
 namespace LuaCppB {
 

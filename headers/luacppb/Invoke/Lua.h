@@ -55,7 +55,7 @@ namespace LuaCppB::Internal {
     virtual int call(lua_State *, LuaCppRuntime &, LuaError &, std::vector<LuaValue> &) = 0;
   };
 
-#ifdef LUACPPB_COROUTINE_SUPPORT
+#ifdef LUACPPB_CONTINUATION_SUPPORT
 
   class LuaFunctionContinuationHandle {
   public:
@@ -83,7 +83,7 @@ namespace LuaCppB::Internal {
     template <typename ... A>
     static LuaError call(lua_State *, int, LuaCppRuntime &, std::vector<LuaValue> &, A &&...);
 
-#ifdef LUACPPB_COROUTINE_SUPPORT
+#ifdef LUACPPB_CONTINUATION_SUPPORT
     template <typename ... A>
     static void callK(lua_State *, int, LuaCppRuntime &, std::unique_ptr<LuaFunctionContinuation>, A &&...);
 

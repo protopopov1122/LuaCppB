@@ -57,8 +57,8 @@ constexpr const char LUACPPB_RIDX_MAINTHREAD[] = "LuaCppB_Internal_MainThread";
 int lua_isinteger (lua_State *, int);
 int lua_geti(lua_State *, int, lua_Integer);
 void lua_seti(lua_State *, int, lua_Integer);
-#if defined(LUACPPB_COROUTINE_SUPPORT) && defined(LUACPPB_INTERNAL_COMPAT_501)
-#undef LUACPPB_COROUTINE_SUPPORT
+#if defined(LUACPPB_CONTINUATION_SUPPORT) && defined(LUACPPB_INTERNAL_COMPAT_501)
+#undef LUACPPB_CONTINUATION_SUPPORT
 #endif
 
 #ifdef LUACPPB_COROUTINE_SUPPORT

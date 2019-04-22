@@ -72,6 +72,10 @@ extern "C" {
 #define LUACPPB_DEBUG_SUPPORT
 #endif
 
+#ifdef LUACPPB_COROUTINE_SUPPORT
+#define LUACPPB_CONTINUATION_SUPPORT
+#endif
+
 #include <cstddef>
 #include "luacppb/Compat.h"
 

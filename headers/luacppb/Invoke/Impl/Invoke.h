@@ -40,7 +40,7 @@ namespace LuaCppB::Internal {
     return LuaFunctionCallResult(results, std::move(error));
   }
 
-#ifdef LUACPPB_COROUTINE_SUPPORT
+#ifdef LUACPPB_CONTINUATION_SUPPORT
   template <typename T, typename ... A>
   void LuaFunctionInvoke::invokeK(T &ref, lua_State *thread, LuaCppRuntime &runtime, std::unique_ptr<LuaFunctionContinuation> cont, A &&... args) {
     ref.putOnTop([&](lua_State *state) {

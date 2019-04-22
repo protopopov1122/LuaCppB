@@ -22,10 +22,32 @@
 
 namespace LuaCppB {
 
-  template <typename T>
-  LuaReferenceHandle LuaFactory::newTable(T &env) {
+  namespace Internal {
+
+    template <std::size_t I>
+    void LuaFactoryTableSet<I>::set(LuaReferenceHandle &) {}
+
+    template <std::size_t I, typename A, typename ... B>
+    void LuaFactoryTableSet<I, A, B...>::set(LuaReferenceHandle &table, A &&value, B &&... other) {
+      if constexpr (is_instantiation<LuaFactory::Entry, A>::value) {
+        table[value.key] = value.value;
+      } else {
+        table[I] = value;
+      }
+      LuaFactoryTableSet<I + 1, B...>::set(table, std::forward<B>(other)...);
+    }
+  }
+
+  template <typename K, typename V>
+  LuaFactory::Entry<K, V>::Entry(K key, V value)
+    : key(key), value(value) {}
+
+  template <typename T, typename ... A>
+  LuaReferenceHandle LuaFactory::newTable(T &env, A &&... values) {
     LuaTable table = LuaTable::create(env.getState());
-    return table.ref(env);
+    LuaReferenceHandle handle = table.ref(env);
+    Internal::LuaFactoryTableSet<1, A...>::set(handle, std::forward<A>(values)...);
+    return handle;
   }
 
   template <typename T, typename F>

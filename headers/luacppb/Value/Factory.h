@@ -24,11 +24,32 @@
 
 namespace LuaCppB {
 
+  namespace Internal {
+    template <std::size_t I, typename ... A>
+    struct LuaFactoryTableSet {};
+
+    template <std::size_t I>
+    struct LuaFactoryTableSet<I> {
+      static void set(LuaReferenceHandle &);
+    };
+
+    template <std::size_t I, typename A, typename ... B>
+    struct LuaFactoryTableSet<I, A, B...> {
+      static void set(LuaReferenceHandle &, A &&, B &&...);
+    };
+  }
 
   class LuaFactory {
    public:
-    template <typename T>
-    static LuaReferenceHandle newTable(T &);
+    template <typename K, typename V>
+    struct Entry {
+      Entry(K, V);
+      K key;
+      V value;
+    };
+
+    template <typename T, typename ... A>
+    static LuaReferenceHandle newTable(T &, A &&...);
 
     template <typename T, typename F>
     static LuaReferenceHandle newFunction(T &, F &&);

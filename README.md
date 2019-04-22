@@ -14,7 +14,7 @@ This repo contains the implementation of Lua-C++ bindings. Currently it has foll
 * custom user data types
 * support of smart pointers.
 * support of some STL types - vectors, maps, sets, pairs, tuples and optionals.
-* support of coroutines (only for Lua 5.3).
+* support of coroutines.
 * support of std::exception-based exception propagation and handlers.
 * wrappers for Lua stack, garbage collector, panic wrapper and custom memory allocator.
 * debugger interface.

@@ -279,13 +279,12 @@ TEST_CASE("Value types get method") {
 TEST_CASE("Value factory") {
   LuaEnvironment env;
   SECTION("Table factory") {
-    const std::string &CODE = "res = tbl.hello + tbl.world";
-    auto table = LuaFactory::newTable(env);
-    table["hello"] = 123;
+    const std::string &CODE = "res = tbl.hello + tbl.world + tbl[1] + tbl[2] + tbl[3]";
+    auto table = LuaFactory::newTable(env, 100, 200, 300, LuaFactory::Entry { "hello", 123 });
     table["world"] = 321;
     env["tbl"] = *table;
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-    REQUIRE(env["res"].get<int>() == 444);
+    REQUIRE(env["res"].get<int>() == 1044);
   }
   SECTION("Function factory") {
     const std::string &CODE = "res = fun(5)";

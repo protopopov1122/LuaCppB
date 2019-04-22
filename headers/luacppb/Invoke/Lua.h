@@ -92,32 +92,32 @@ namespace LuaCppB::Internal {
 
   template <std::size_t I>
   struct LuaFunctionCallResultTuple_Impl<I> {
-    static std::tuple<> get(std::vector<LuaValue> &);
+    static std::tuple<> get(const std::vector<LuaValue> &);
   };
 
   template <std::size_t I, typename T, typename ... B>
   struct LuaFunctionCallResultTuple_Impl<I, T, B...> {
-    static std::tuple<T, B...> get(std::vector<LuaValue> &);
+    static std::tuple<T, B...> get(const std::vector<LuaValue> &);
   };
 
   template <typename ... T>
   struct LuaFunctionCallResultTuple {
-    static std::tuple<T...> get(std::vector<LuaValue> &);
+    static std::tuple<T...> get(const std::vector<LuaValue> &);
   };
 
   template <typename T>
   struct LuaFunctionCallResultGetter {
-    static T get(std::vector<LuaValue> &);
+    static T get(const std::vector<LuaValue> &);
   };
 
   template <typename ... T>
   struct LuaFunctionCallResultGetter<std::tuple<T...>> {
-    static std::tuple<T...> get(std::vector<LuaValue> &);
+    static std::tuple<T...> get(const std::vector<LuaValue> &);
   };
 
   template <typename A, typename B>
   struct LuaFunctionCallResultGetter<std::pair<A, B>> {
-    static std::pair<A, B> get(std::vector<LuaValue> &);
+    static std::pair<A, B> get(const std::vector<LuaValue> &);
   };
 
   class LuaFunctionCallResult {
@@ -133,12 +133,15 @@ namespace LuaCppB::Internal {
     bool operator==(LuaStatusCode) const;
     bool operator!=(LuaStatusCode) const;
     void push(lua_State *);
+    LuaValue value(std::size_t = 0) const;
+    const std::vector<LuaValue> &values() const;
+    LuaValue operator*() const;
 
     template <typename T>
-    T get();
+    T get() const;
 
     template <typename T>
-    operator T();
+    operator T() const;
   private:
     std::vector<LuaValue> result;
     LuaError errorVal;

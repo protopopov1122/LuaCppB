@@ -16,6 +16,7 @@
 */
 
 #include "luacppb/Invoke/Lua.h"
+#include "luacppb/Value/Factory.h"
 
 namespace LuaCppB {
   
@@ -133,6 +134,22 @@ namespace LuaCppB {
       for (auto &res : this->result) {
         res.push(state);
       }
+    }
+    
+    LuaValue LuaFunctionCallResult::value(std::size_t idx) const {
+      if (idx >= this->result.size()) {
+        return LuaValue();
+      } else {
+        return this->result.at(idx);
+      }
+    }
+
+    const std::vector<LuaValue> &LuaFunctionCallResult::values() const {
+      return this->result;
+    }
+
+    LuaValue LuaFunctionCallResult::operator*() const {
+      return this->value();
     }
   }
 }

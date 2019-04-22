@@ -91,23 +91,23 @@ namespace LuaCppB::Internal {
 #endif
 
   template <std::size_t I>
-  std::tuple<> LuaFunctionCallResultTuple_Impl<I>::get(std::vector<LuaValue> &results) {
+  std::tuple<> LuaFunctionCallResultTuple_Impl<I>::get(const std::vector<LuaValue> &results) {
     return std::make_tuple();
   }
 
   template <std::size_t I, typename T, typename ... B>
-  std::tuple<T, B...> LuaFunctionCallResultTuple_Impl<I, T, B...>::get(std::vector<LuaValue> &results) {
+  std::tuple<T, B...> LuaFunctionCallResultTuple_Impl<I, T, B...>::get(const std::vector<LuaValue> &results) {
     std::tuple<T> begin = std::make_tuple((I < results.size() ? results.at(I) : LuaValue::Nil).get<T>());
     return std::tuple_cat(begin, LuaFunctionCallResultTuple_Impl<I + 1, B...>::get(results));
   }
 
   template <typename ... T>
-  std::tuple<T...> LuaFunctionCallResultTuple<T...>::get(std::vector<LuaValue> &results) {
+  std::tuple<T...> LuaFunctionCallResultTuple<T...>::get(const std::vector<LuaValue> &results) {
     return LuaFunctionCallResultTuple_Impl<0, T...>::get(results);
   }
 
   template <typename T>
-  T LuaFunctionCallResultGetter<T>::get(std::vector<LuaValue> &result) {
+  T LuaFunctionCallResultGetter<T>::get(const std::vector<LuaValue> &result) {
     LuaValue ret;
     if (!result.empty()) {
       ret = result.at(0);
@@ -120,12 +120,12 @@ namespace LuaCppB::Internal {
   }
 
   template <typename ... T>
-  std::tuple<T...> LuaFunctionCallResultGetter<std::tuple<T...>>::get(std::vector<LuaValue> &result) {
+  std::tuple<T...> LuaFunctionCallResultGetter<std::tuple<T...>>::get(const std::vector<LuaValue> &result) {
     return LuaFunctionCallResultTuple<T...>::get(result);
   }
 
   template <typename A, typename B>
-  std::pair<A, B> LuaFunctionCallResultGetter<std::pair<A, B>>::get(std::vector<LuaValue> &result) {
+  std::pair<A, B> LuaFunctionCallResultGetter<std::pair<A, B>>::get(const std::vector<LuaValue> &result) {
     if (result.size() >= 2) {
       return std::make_pair(result.at(0).get<A>(), result.at(1).get<B>());
     } else if (result.size() == 1) {
@@ -136,12 +136,12 @@ namespace LuaCppB::Internal {
   }
 
   template <typename T>
-  T LuaFunctionCallResult::get() {
+  T LuaFunctionCallResult::get() const {
     return LuaFunctionCallResultGetter<T>::get(this->result);
   }
 
   template <typename T>
-  LuaFunctionCallResult::operator T() {
+  LuaFunctionCallResult::operator T() const {
     return this->get<T>();
   }
 

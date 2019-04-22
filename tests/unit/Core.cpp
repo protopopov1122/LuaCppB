@@ -569,15 +569,132 @@ TEST_CASE("Lua version getter") {
 }
 
 TEST_CASE("Library loading") {
-  const std::string &CODE = "res = tonumber(arg)";
   LuaEnvironment env(false);
-  auto res = LuaLoadStdLibs(env, true, LuaStdLib::Base);
-  if (std::get<0>(res).valid()) {
-    REQUIRE(std::get<0>(res)["type"](50).get<std::string>() == "number");
-  } else {
-    REQUIRE(env["type"](50).get<std::string>() == "number");
+  SECTION("Base library") {
+    const std::string &CODE = "res = tonumber(arg)";
+    auto res = LuaLoadStdLibs(env, true, LuaStdLib::Base);
+    if (std::get<0>(res).valid()) {
+      REQUIRE(std::get<0>(res)["type"](50).get<std::string>() == "number");
+    } else {
+      REQUIRE(env["type"](50).get<std::string>() == "number");
+    }
+    env["arg"] = "100";
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["res"].get<int>() == 100);
   }
-  env["arg"] = std::string("100");
-  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
-  REQUIRE(env["res"].get<int>() == 100);
+  SECTION("Package library") {
+    const std::string &CODE = "loaded = package.loaded";
+    auto res = LuaLoadStdLibs(env, true, LuaStdLib::Package);
+    if (std::get<0>(res).valid()) {
+      REQUIRE(std::get<0>(res)["loaded"].getType() == LuaType::Table);
+    } else {
+      REQUIRE(env["package"]["loaded"].getType() == LuaType::Table);
+    }
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["loaded"].getType() == LuaType::Table);
+  }
+  SECTION("String library") {
+    const std::string &CODE = "res = string.reverse(arg)";
+    auto res = LuaLoadStdLibs(env, true, LuaStdLib::String);
+    if (std::get<0>(res).valid()) {
+      REQUIRE(std::get<0>(res)["reverse"]("abc").get<std::string>() == "cba");
+    } else {
+      REQUIRE(env["string"]["reverse"]("abc").get<std::string>() == "cba");
+    }
+    env["arg"] = "Hello";
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["res"].get<std::string>() == "olleH");
+  }
+  SECTION("Table library") {
+    const std::string &CODE = "res = table.concat(arg)";
+    auto tbl = LuaFactory::newTable(env);
+    tbl[1] = 1;
+    tbl[2] = "2";
+    tbl[3] = 3;
+    auto res = LuaLoadStdLibs(env, true, LuaStdLib::Table);
+    if (std::get<0>(res).valid()) {
+      REQUIRE(std::get<0>(res)["concat"](*tbl).get<std::string>() == "123");
+    } else {
+      REQUIRE(env["table"]["concat"](*tbl).get<std::string>() == "123");
+    }
+    env["arg"] = *tbl;
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["res"].get<std::string>() == "123");
+  }
+  SECTION("Math library") {
+    const std::string &CODE = "res = math.abs(arg)";
+    auto res = LuaLoadStdLibs(env, true, LuaStdLib::Math);
+    if (std::get<0>(res).valid()) {
+      REQUIRE(std::get<0>(res)["abs"](-10).get<int>() == 10);
+    } else {
+      REQUIRE(env["math"]["abs"](-10).get<int>() == 10);
+    }
+    env["arg"] = -100;
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["res"].get<int>() == 100);
+  }
+  SECTION("IO library") {
+    const std::string &CODE = "res = io.type(io.stdin)";
+    auto res = LuaLoadStdLibs(env, true, LuaStdLib::IO);
+    if (std::get<0>(res).valid()) {
+      REQUIRE(std::get<0>(res)["type"](*std::get<0>(res)["stdin"]).get<std::string>() == "file");
+    } else {
+      REQUIRE(env["io"]["type"](*env["io"]["stdin"]).get<std::string>() == "file");
+    }
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["res"].get<std::string>() == "file");
+  }
+  SECTION("OS library") {
+    const std::string &CODE = "res = os.time()";
+    auto res = LuaLoadStdLibs(env, true, LuaStdLib::OS);
+    if (std::get<0>(res).valid()) {
+      REQUIRE(std::get<0>(res)["time"]().get<uint64_t>() > 0);
+    } else {
+      REQUIRE(env["os"]["time"]().get<uint64_t>() > 0);
+    }
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["res"].get<uint64_t>() > 0);
+  }
+  SECTION("Debug library") {
+    const std::string &CODE = "res = debug.getregistry()";
+    auto res = LuaLoadStdLibs(env, true, LuaStdLib::Debug);
+    if (std::get<0>(res).valid()) {
+      auto val = std::get<0>(res)["getregistry"]().get<LuaValue>();
+      REQUIRE(val.getType() == LuaType::Table);
+    } else {
+      auto val = env["debug"]["getregistry"]().get<LuaValue>();
+      REQUIRE(val.getType() == LuaType::Table);
+    }
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["res"].getType()== LuaType::Table);
+  }
+#ifndef LUACPPB_INTERNAL_COMPAT_501
+  SECTION("Coroutine library") {
+    const std::string &CODE = "res = coroutine.running()";
+    auto res = LuaLoadStdLibs(env, true, LuaStdLib::Coroutine);
+    if (std::get<0>(res).valid()) {
+      LuaValue val = std::get<0>(res)["running"]();
+      REQUIRE(val.getType() == LuaType::Thread);
+    } else {
+      LuaValue val = env["coroutine"]["running"]();
+      REQUIRE(val.getType() == LuaType::Thread);
+    }
+    REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+    REQUIRE(env["res"].getType()== LuaType::Thread);
+  }
+#endif
+#ifndef LUACPPB_INTERNAL_COMPAT_502
+    SECTION("Utf8 library") {
+      const std::string &CODE = "res = utf8.len(arg)";
+      auto res = LuaLoadStdLibs(env, true, LuaStdLib::Utf8);
+      if (std::get<0>(res).valid()) {
+        REQUIRE(std::get<0>(res)["len"]("Hello").get<int>() == 5);
+      } else {
+        REQUIRE(env["utf8"]["len"]("Hello").get<int>() == 5);
+      }
+      env["arg"] = "world!";
+      REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+      REQUIRE(env["res"].get<int>() == 6);
+    }
+#endif
 }

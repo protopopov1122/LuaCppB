@@ -20,7 +20,18 @@ This repo contains the implementation of Lua-C++ bindings. Currently it has foll
 * debugger interface.
 * `lua_dump` and `lua_load` wrappers.
 
-Supported platforms: Windows (MS Visual C++ and MinGW), Linux (GCC and Clang), macOS(Clang), FreeBSD (Clang and GCC) & OpenBSD (Clang) on x86_64; Raspbian (experimental, meson-only, tested on armv6l) \
+#### Supported architectures & platforms
+| Processor arhitecture | Operating system | Compilers            | Notes |
+|-----------------------|------------------|----------------------|-------|
+| amd64                 | Windows 10 1809  | MS Visual C++, MinGW ||
+| amd64                 | Arch Linux       | GCC, Clang           ||
+| amd64                 | FreeBSD 12       | GCC, Clang           ||
+| amd64                 | OpenBSD 6.4      | Clang                ||
+| amd64                 | macOS            | Clang                ||
+| i386                  | Debian Stretch   | GCC                  ||
+| armv7l                | Raspbian         | GCC                  | Custom GCC build |
+| armv6l                | Raspbian         | GCC                  | Tested on emulator, custom GCC build |
+| riscv64               | Fedora RISC-V    | GCC                  | Tested on emulator |
 Project requires C++17-compliant compiler version. It uses RTTI and exceptions.
 
 ### Documentation & examples

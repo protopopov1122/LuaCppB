@@ -71,13 +71,13 @@ namespace LuaCppB::Internal {
   }
 
   template <class P>
-  template <typename V>
+  template <typename V, typename D>
   typename std::enable_if<is_instantiation<std::vector, V>::value>::type
-    LuaCppVector<P>::push(lua_State *state, LuaCppRuntime &runtime, std::unique_ptr<V> &vec) {
+    LuaCppVector<P>::push(lua_State *state, LuaCppRuntime &runtime, std::unique_ptr<V, D> &vec) {
     Internal::LuaStack stack(state);
-    LuaCppObjectWrapper<V> *handle = stack.push<LuaCppObjectWrapper<V>>();
-    new(handle) LuaCppObjectWrapper<V>(std::move(vec));
-    LuaCppVector<P>::set_vector_meta<V>(state, runtime);
+    LuaCppObjectWrapper<V, D> *handle = stack.push<LuaCppObjectWrapper<V, D>>();
+    new(handle) LuaCppObjectWrapper<V, D>(std::move(vec));
+    LuaCppVector<P>::set_vector_meta<V, D>(state, runtime);
   }
 
   template <class P>
@@ -91,7 +91,7 @@ namespace LuaCppB::Internal {
   }
   
   template <class P>
-  template <typename V>
+  template <typename V, typename D>
   void LuaCppVector<P>::set_vector_meta(lua_State *state, LuaCppRuntime &runtime) {
     using T = typename V::value_type;
     using A = typename V::allocator_type;
@@ -113,7 +113,7 @@ namespace LuaCppB::Internal {
       stack.setField(-2, "__pairs");
       stack.push(&LuaCppVector<P>::vector_length<V>);
       stack.setField(-2, "__len");
-      stack.push(&LuaCppVector::vector_gc<V>);
+      stack.push(&LuaCppVector::vector_gc<V, D>);
       stack.setField(-2, "__gc");
       stack.pushTable();
       stack.setField(-2, "__metatable");
@@ -150,10 +150,10 @@ namespace LuaCppB::Internal {
   }
 
   template <class P>
-  template <typename V>
+  template <typename V, typename D>
   int LuaCppVector<P>::vector_gc(lua_State *state) {
     Internal::LuaStack stack(state);
-    using Handle = LuaCppObjectWrapper<V>;
+    using Handle = LuaCppObjectWrapper<V, D>;
     Handle *handle = stack.toPointer<Handle *>(1);
     if (handle) {
       handle->~LuaCppObjectWrapper();

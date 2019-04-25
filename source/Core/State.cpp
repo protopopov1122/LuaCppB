@@ -212,9 +212,7 @@ namespace LuaCppB {
 	}
 
 	LuaUniqueState::~LuaUniqueState() {
-		if (this->state) {
-			lua_close(this->state);
-		}
+		this->close();
 	}
 
 	LuaUniqueState &LuaUniqueState::operator=(LuaUniqueState &&state) {
@@ -229,6 +227,13 @@ namespace LuaCppB {
 		this->luaJit = std::move(state.luaJit);
 #endif
 		return *this;
+	}
+
+	void LuaUniqueState::close() {
+		if (this->state) {
+			lua_close(this->state);
+			this->state = nullptr;
+		}
 	}
 
 	LuaEnvironment::LuaEnvironment(bool openLibs)

@@ -36,15 +36,15 @@ namespace LuaCppB::Internal {
     static typename std::enable_if<is_instantiation<std::set, S>::value>::type
       push(lua_State *, LuaCppRuntime &, const S &);
 
-    template <typename S>
+    template <typename S, typename D>
     static typename std::enable_if<is_instantiation<std::set, S>::value>::type
-      push(lua_State *, LuaCppRuntime &, std::unique_ptr<S> &);
+      push(lua_State *, LuaCppRuntime &, std::unique_ptr<S, D> &);
 
     template <typename S>
     static typename std::enable_if<is_instantiation<std::set, S>::value>::type
       push(lua_State *, LuaCppRuntime &, std::shared_ptr<S> &);
    private:
-    template <typename S>
+    template <typename S, typename D = std::default_delete<S>>
     static void set_set_meta(lua_State *, LuaCppRuntime &);
 
     template <typename S>
@@ -62,7 +62,7 @@ namespace LuaCppB::Internal {
     template <typename S>
     static int set_iter(lua_State *);
 
-    template <typename S>
+    template <typename S, typename D>
     static int set_gc(lua_State *);
 	
 	template <class T1, typename T2>

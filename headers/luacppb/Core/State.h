@@ -95,6 +95,8 @@ namespace LuaCppB {
 		virtual ~LuaUniqueState();
 		LuaUniqueState &operator=(const LuaUniqueState &) = delete;
 		LuaUniqueState &operator=(LuaUniqueState &&);
+
+		void close();
 	 private:
 		Internal::LuaPanicUnbind panicUnbind;
 	};

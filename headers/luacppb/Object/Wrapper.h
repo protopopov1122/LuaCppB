@@ -29,10 +29,10 @@
 
 namespace LuaCppB {
 
-	template <typename C>
+	template <typename C, typename D = std::default_delete<C>>
 	class LuaCppObjectWrapper {
 		using Raw = C *;
-		using Unique = std::unique_ptr<C>;
+		using Unique = std::unique_ptr<C, D>;
 		using Shared = std::shared_ptr<C>;
 	 public:
 	 	LuaCppObjectWrapper();

@@ -58,11 +58,11 @@ namespace LuaCppB::Internal {
     }
   }
 
-  template <typename T>
-  void LuaCppObjectBoxerRegistry::wrap(lua_State *state, std::unique_ptr<T> object) {
+  template <typename T, typename D>
+  void LuaCppObjectBoxerRegistry::wrap(lua_State *state, std::unique_ptr<T, D> object) {
     if (this->canWrap<T>()) {
       T *pointer = object.release();
-      this->wrappers[typeid(T)]->wrapUnique(state, reinterpret_cast<void *>(pointer));
+      this->wrappers[typeid(T)]->wrapUnique(state, reinterpret_cast<void *>(pointer), std::make_unique<LuaCppObjectParameterizedDeleter<T, D>>(object.get_deleter()));
     }
   }
 

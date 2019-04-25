@@ -35,16 +35,16 @@ namespace LuaCppB::Internal {
     static typename std::enable_if<is_instantiation<std::map, M>::value>::type
       push(lua_State *, LuaCppRuntime &, const M &);
 
-    template <typename M>
+    template <typename M, typename D>
     static typename std::enable_if<is_instantiation<std::map, M>::value>::type
-      push(lua_State *, LuaCppRuntime &, std::unique_ptr<M> &);
+      push(lua_State *, LuaCppRuntime &, std::unique_ptr<M, D> &);
 
     template <typename M>
     static typename std::enable_if<is_instantiation<std::map, M>::value>::type
       push(lua_State *, LuaCppRuntime &, std::shared_ptr<M> &);
     
    private:
-    template <typename M>
+    template <typename M, typename D = std::default_delete<M>>
     static void set_map_meta(lua_State *, LuaCppRuntime &);
 
     template <typename M>
@@ -56,7 +56,7 @@ namespace LuaCppB::Internal {
     template <typename M>
     static int map_size(lua_State *);
 
-    template <typename M>
+    template <typename M, typename D>
     static int map_gc(lua_State *);
 
     template <typename M>

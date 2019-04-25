@@ -48,15 +48,15 @@ namespace LuaCppB::Internal {
     static typename std::enable_if<is_instantiation<std::vector, V>::value>::type
       push(lua_State *, LuaCppRuntime &, const V &);
 
-    template <typename V>
+    template <typename V, typename D>
     static typename std::enable_if<is_instantiation<std::vector, V>::value>::type
-      push(lua_State *, LuaCppRuntime &, std::unique_ptr<V> &);
+      push(lua_State *, LuaCppRuntime &, std::unique_ptr<V, D> &);
 
     template <typename V>
     static typename std::enable_if<is_instantiation<std::vector, V>::value>::type
       push(lua_State *, LuaCppRuntime &, std::shared_ptr<V> &);
    private:
-    template <typename V>
+    template <typename V, typename D = std::default_delete<V>>
     static void set_vector_meta(lua_State *, LuaCppRuntime &);
 
     template <typename V>
@@ -65,7 +65,7 @@ namespace LuaCppB::Internal {
     template <typename V>
     static int vector_length(lua_State *);
 
-    template <typename V>
+    template <typename V, typename D>
     static int vector_gc(lua_State *);
 
     template <typename V>

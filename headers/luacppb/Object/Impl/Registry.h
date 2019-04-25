@@ -52,9 +52,12 @@ namespace LuaCppB::Internal {
   }
 
   template <typename T, typename P>
-  void LuaCppClassObjectBoxer<T, P>::wrapUnique(lua_State *state, void *raw_ptr) {
+  void LuaCppClassObjectBoxer<T, P>::wrapUnique(lua_State *state, void *raw_ptr, std::unique_ptr<LuaCppObjectDeleter> deleter) {
     Internal::LuaStack stack(state);
-    std::unique_ptr<T> object = std::unique_ptr<T>(reinterpret_cast<T *>(raw_ptr));
+    std::function<void(T *)> deleterFn = [deleter = std::shared_ptr<LuaCppObjectDeleter>(std::move(deleter))](T *ptr) {
+      deleter->deleteObject(reinterpret_cast<void *>(ptr));
+    };
+    auto object = std::unique_ptr<T, decltype(deleterFn)>(reinterpret_cast<T *>(raw_ptr), deleterFn);
     LuaCppObjectWrapper<T> *wrapper = stack.push<LuaCppObjectWrapper<T>>();
     new(wrapper) LuaCppObjectWrapper<T>(std::move(object));
     if constexpr (!std::is_void<P>::value) {

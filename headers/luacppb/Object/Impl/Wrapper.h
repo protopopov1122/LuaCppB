@@ -22,39 +22,39 @@
 
 namespace LuaCppB {
 
-	template <typename C>
-	LuaCppObjectWrapper<C>::LuaCppObjectWrapper(Raw obj)
+	template <typename C, typename D>
+	LuaCppObjectWrapper<C, D>::LuaCppObjectWrapper(Raw obj)
     : object(obj), objectType({ typeid(C) }), constant(std::is_const<C>::value) {}
 
-	template <typename C>
-	LuaCppObjectWrapper<C>::LuaCppObjectWrapper(C &obj)
+	template <typename C, typename D>
+	LuaCppObjectWrapper<C, D>::LuaCppObjectWrapper(C &obj)
     : object(&obj), objectType({ typeid(C) }), constant(std::is_const<C>::value) {}
 
-	template <typename C>
-	LuaCppObjectWrapper<C>::LuaCppObjectWrapper() : objectType({ typeid(C) }), constant(std::is_const<C>::value) {
+	template <typename C, typename D>
+	LuaCppObjectWrapper<C, D>::LuaCppObjectWrapper() : objectType({ typeid(C) }), constant(std::is_const<C>::value) {
     this->object = std::unique_ptr<C>(reinterpret_cast<C *>(::operator new(sizeof(C))));
   }
 
-	template <typename C>
-  LuaCppObjectWrapper<C>::LuaCppObjectWrapper(Unique obj)
+	template <typename C, typename D>
+  LuaCppObjectWrapper<C, D>::LuaCppObjectWrapper(Unique obj)
     : object(std::move(obj)), objectType({ typeid(C) }), constant(std::is_const<C>::value) {}
 
-	template <typename C>
-  LuaCppObjectWrapper<C>::LuaCppObjectWrapper(Shared obj)
+	template <typename C, typename D>
+  LuaCppObjectWrapper<C, D>::LuaCppObjectWrapper(Shared obj)
     : object(obj), objectType({ typeid(C) }), constant(std::is_const<C>::value) {}
 	
-	template <typename C>
-  LuaCppObjectWrapper<C>::~LuaCppObjectWrapper() {
+	template <typename C, typename D>
+  LuaCppObjectWrapper<C, D>::~LuaCppObjectWrapper() {
     this->object = nullptr;
   }
 
-	template <typename C>
-  void LuaCppObjectWrapper<C>::addParentType(std::type_index idx) {
+	template <typename C, typename D>
+  void LuaCppObjectWrapper<C, D>::addParentType(std::type_index idx) {
     this->objectType.insert(idx);
   }
 
-	template <typename C>
-  C *LuaCppObjectWrapper<C>::get() {
+	template <typename C, typename D>
+  C *LuaCppObjectWrapper<C, D>::get() {
     if (this->objectType.count(std::type_index(typeid(C))) == 0 ||
       (!std::is_const<C>::value && this->constant)) {
       throw LuaCppBError("Type mismatch", LuaCppBErrorCode::IncorrectTypeCast);

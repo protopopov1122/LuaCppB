@@ -43,12 +43,12 @@ namespace LuaCppB::Internal {
   }
 
   template <typename P>
-  template <typename S>
+  template <typename S, typename D>
   typename std::enable_if<is_instantiation<std::set, S>::value>::type
-    LuaCppSet<P>::push(lua_State *state, LuaCppRuntime &runtime, std::unique_ptr<S> &set) {
+    LuaCppSet<P>::push(lua_State *state, LuaCppRuntime &runtime, std::unique_ptr<S, D> &set) {
     Internal::LuaStack stack(state);
-    LuaCppObjectWrapper<S> *handle = stack.push<LuaCppObjectWrapper<S>>();
-    new(handle) LuaCppObjectWrapper<S>(std::move(set));
+    LuaCppObjectWrapper<S, D> *handle = stack.push<LuaCppObjectWrapper<S, D>>();
+    new(handle) LuaCppObjectWrapper<S, D>(std::move(set));
     LuaCppSet<P>::set_set_meta<S>(state, runtime);
   }
 
@@ -68,7 +68,7 @@ namespace LuaCppB::Internal {
   }
   
   template <typename P>
-  template <typename S>
+  template <typename S, typename D>
   void LuaCppSet<P>::set_set_meta(lua_State *state, LuaCppRuntime &runtime) {
     Internal::LuaStack stack(state);
     std::string typeName = typeid(S).name();
@@ -84,7 +84,7 @@ namespace LuaCppB::Internal {
       stack.push(&runtime);
       stack.push(&LuaCppSet<P>::set_pairs<S>, 1);
       stack.setField(-2, "__pairs");
-      stack.push(&LuaCppSet<P>::set_gc<S>);
+      stack.push(&LuaCppSet<P>::set_gc<S, D>);
       stack.setField(-2, "__gc");
       stack.pushTable();
       stack.setField(-2, "__metatable");
@@ -183,10 +183,10 @@ namespace LuaCppB::Internal {
   }
 
   template <typename P>
-  template <typename S>
+  template <typename S, typename D>
   int LuaCppSet<P>::set_gc(lua_State *state) {
     Internal::LuaStack stack(state);
-    using Handle = LuaCppObjectWrapper<S>;
+    using Handle = LuaCppObjectWrapper<S, D>;
     Handle *handle = stack.toPointer<Handle *>(1);
     if (handle) {
       handle->~LuaCppObjectWrapper();

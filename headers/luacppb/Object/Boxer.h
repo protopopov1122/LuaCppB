@@ -28,12 +28,31 @@ namespace LuaCppB::Internal {
 
   class LuaCppObjectFieldPusher;
 
+  class LuaCppObjectDeleter {
+   public:
+    virtual ~LuaCppObjectDeleter() = default;
+    virtual void deleteObject(void *) = 0;
+  };
+
+  template <typename T, typename D>
+  class LuaCppObjectParameterizedDeleter : public LuaCppObjectDeleter {
+   public:
+    LuaCppObjectParameterizedDeleter(D &deleter) : deleter(deleter) {}
+
+    void deleteObject(void *ptr) {
+      T *object = reinterpret_cast<T *>(ptr);
+      this->deleter(object);
+    }
+   private:
+    D deleter;
+  };
+
   class LuaCppObjectBoxer {
   public:
     virtual ~LuaCppObjectBoxer() = default;
     virtual void wrap(lua_State *, void *) = 0;
     virtual void wrap(lua_State *, const void *) = 0;
-    virtual void wrapUnique(lua_State *, void *) = 0;
+    virtual void wrapUnique(lua_State *, void *, std::unique_ptr<LuaCppObjectDeleter>) = 0;
     virtual void wrapShared(lua_State *, std::shared_ptr<void>) = 0;
     virtual const std::string &getClassName() = 0;
     virtual void copyFields(std::map<std::string, std::shared_ptr<LuaCppObjectFieldPusher>> &) = 0;
@@ -56,8 +75,8 @@ namespace LuaCppB::Internal {
     template <typename T>
     void wrap(lua_State *, T *);
 
-    template <typename T>
-    void wrap(lua_State *, std::unique_ptr<T>);
+    template <typename T, typename D>
+    void wrap(lua_State *, std::unique_ptr<T, D>);
 
     template <typename T>
     void wrap(lua_State *, std::shared_ptr<T>);

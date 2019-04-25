@@ -388,3 +388,19 @@ TEST_CASE("Class binder") {
   REQUIRE(env["r2"].get<int>() == 95);
   REQUIRE(env["r3"].get<int>() == 335);
 }
+
+class CustomTestClass {};
+
+TEST_CASE("Custom deleters") {
+  LuaEnvironment env;
+  bool deleted = false;
+  ClassBinder<CustomTestClass>::bind(env);
+  std::function<void(CustomTestClass*)> deleter = [&](CustomTestClass *ptr) {
+    delete ptr;
+    deleted = true;
+  };
+  env["obj"] = std::unique_ptr<CustomTestClass, decltype(deleter)>(new CustomTestClass(), deleter);
+  REQUIRE_FALSE(deleted);
+  env.close();
+  REQUIRE(deleted);
+}

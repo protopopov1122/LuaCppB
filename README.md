@@ -28,10 +28,13 @@ This repo contains the implementation of Lua-C++ bindings. Currently it has foll
 | amd64                 | FreeBSD 12       | GCC, Clang           ||
 | amd64                 | OpenBSD 6.4      | Clang                ||
 | amd64                 | macOS            | Clang                ||
+| amd64                 | HaikuOS          | GCC 7.3              | Hybrid image |
 | i386                  | Debian Stretch   | GCC                  ||
 | armv7l                | Raspbian         | GCC                  | Custom GCC build |
 | armv6l                | Raspbian         | GCC                  | Tested on emulator, custom GCC build |
 | riscv64               | Fedora RISC-V    | GCC                  | Tested on emulator |
+| WebAssembly           | Browser          | Emscripten           ||
+
 Project requires C++17-compliant compiler version. It uses RTTI and exceptions.
 
 ### Documentation & examples

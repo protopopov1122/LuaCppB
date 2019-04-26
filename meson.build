@@ -9,3 +9,4 @@ endif
 subdir('lua-source')
 subdir('source')
 subdir('tests/unit')
+subdir('benchmarks')

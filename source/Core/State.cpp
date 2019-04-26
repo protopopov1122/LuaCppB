@@ -44,7 +44,9 @@ namespace LuaCppB {
 		this->exception_handler = [](std::exception &ex) {
 			throw ex;
 		};
+#ifdef LUACPPB_DEBUG_SUPPORT
 		this->debug = std::make_shared<LuaDebugHooks>(this->state, *this);
+#endif
 	}
 
 	bool LuaState::isValid() const {

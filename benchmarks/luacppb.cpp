@@ -75,9 +75,64 @@ static void luacppb_table_get(benchmark::State &state) {
     }
 }
 
+static void luacppb_object_binding(benchmark::State &state) {
+    class TestClass {
+     public:
+      TestClass(int x) : value(x) {}
+
+      int sum(int x) const {
+        return x + this->value;
+      }
+
+      void setValue(int x) {
+        this->value = x;
+      }
+     private:
+      int value;
+    };
+    LuaEnvironment env(false);
+    TestClass obj(10);
+    ClassBinder<TestClass>::bind(env, "sum", &TestClass::sum, "set", &TestClass::setValue);
+    env["obj"] = obj;
+    const std::string &CODE = "obj:set(obj:sum(1))";
+    for (auto _ : state) {
+      env.execute(CODE);
+    }
+}
+
+struct temp {
+  temp(int v) : value(v) {}
+
+  int value;
+};
+
+static void luacppb_userdata_binding(benchmark::State &state) {
+  LuaEnvironment env(false);
+  env["void"] = [&]() {};
+  CustomUserDataClass<temp> ud(env);
+  ud.setDefaultConstructor([](temp &arr) {
+    new(&arr) temp(100);
+  });
+  ud.bind(LuaMetamethod::GC, [](temp &arr) {
+    arr.~temp();
+    ::operator delete(&arr, &arr);
+  });
+  ud.bind(LuaMetamethod::Add, [](temp &arr, int idx) {
+    arr.value += idx;
+    return arr.value;
+  });
+
+  env["i"] = ud.create(env);
+  for (auto _ : state) {
+    env.execute("void(i + 1)");
+  }
+}
+
 BENCHMARK(luacppb_state_initialisation);
 BENCHMARK(luacppb_variable_assignment);
 BENCHMARK(luacppb_variable_access);
 BENCHMARK(luacppb_function_call);
 BENCHMARK(luacppb_lua_function_call);
 BENCHMARK(luacppb_table_get);
+BENCHMARK(luacppb_object_binding);
+BENCHMARK(luacppb_userdata_binding);

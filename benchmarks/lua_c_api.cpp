@@ -97,9 +97,94 @@ static void lua_table_get(benchmark::State &state) {
     lua_close(L);
 }
 
+class LuaTestClass {
+    public:
+    LuaTestClass(int x) : value(x) {}
+
+    int sum(int x) const {
+    return x + this->value;
+    }
+
+    void setValue(int x) {
+        this->value = x;
+    }
+    private:
+    int value;
+};
+
+static int lua_testobj_sum(lua_State *L) {
+    LuaTestClass *obj = reinterpret_cast<LuaTestClass *>(lua_touserdata(L, 1));
+    int x = lua_tointeger(L, 2);
+    lua_pushinteger(L, obj->sum(x));
+    return 1;
+}
+
+static int lua_testobj_set(lua_State *L) {
+    LuaTestClass *obj = reinterpret_cast<LuaTestClass *>(lua_touserdata(L, 1));
+    int x = lua_tointeger(L, 2);
+    obj->setValue(x);
+    return 0;
+}
+
+static void lua_object_binding(benchmark::State &state) {
+    lua_State *L = luaL_newstate();
+    LuaTestClass obj(10);
+    lua_pushlightuserdata(L, &obj);
+    lua_newtable(L);
+    lua_newtable(L);
+    lua_pushcfunction(L, lua_testobj_sum);
+    lua_setfield(L, -2, "sum");
+    lua_pushcfunction(L, lua_testobj_set);
+    lua_setfield(L, -2, "set");
+    lua_setfield(L, -2, "__index");
+    lua_setmetatable(L, -2);
+    lua_setglobal(L, "obj");
+    const char *CODE = "obj:set(obj:sum(1))";
+    for (auto _ : state) {
+      luaL_dostring(L, CODE);
+    }
+    lua_close(L);
+}
+
+struct temp {
+    int value;
+};
+
+static int lua_udata_add(lua_State *L) {
+    temp *i = reinterpret_cast<temp *>(lua_touserdata(L, 1));
+    int x = lua_tointeger(L, 2);
+    i->value += x;
+    lua_pushinteger(L, i->value);
+    return 1;
+}
+
+static int lua_void(lua_State *state) {
+    return 0;
+}
+
+static void lua_userdata_binding(benchmark::State &state) {
+    lua_State *L = luaL_newstate();
+    temp *i = reinterpret_cast<temp *>(lua_newuserdata(L, sizeof(temp)));
+    i->value = 10;
+    lua_newtable(L);
+    lua_pushcfunction(L, lua_udata_add);
+    lua_setfield(L, -2, "__add");
+    lua_setmetatable(L, -2);
+    lua_setglobal(L, "i");
+    lua_pushcfunction(L, lua_void);
+    lua_setglobal(L, "void");
+    const char *CODE = "void(i + 1)";
+    for (auto _ : state) {
+      luaL_dostring(L, CODE);
+    }
+    lua_close(L);
+}
+
 BENCHMARK(lua_state_initialisation);
 BENCHMARK(lua_variable_assignment);
 BENCHMARK(lua_variable_access);
 BENCHMARK(lua_c_function_call);
 BENCHMARK(lua_lua_function_call);
 BENCHMARK(lua_table_get);
+BENCHMARK(lua_object_binding);
+BENCHMARK(lua_userdata_binding);

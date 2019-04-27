@@ -74,9 +74,57 @@ static void sol_table_get(benchmark::State &state) {
     }
 }
 
+static void sol_object_binding(benchmark::State &state) {
+    class TestClass {
+     public:
+      TestClass(int x) : value(x) {}
+
+      int sum(int x) const {
+        return x + this->value;
+      }
+
+      void setValue(int x) {
+        this->value = x;
+      }
+     private:
+      int value;
+    };
+    
+    sol::state env;
+    env.new_usertype<TestClass>("testClass", "sum", &TestClass::sum, "set", &TestClass::setValue);
+    TestClass obj(10);
+    env["obj"] = obj;
+    const std::string &CODE = "obj:set(obj:sum(1))";
+    for (auto _ : state) {
+      env.do_string(CODE);
+    }
+}
+
+struct temp {
+    int add(int x) {
+        this->value += x;
+        return this->value;
+    }
+
+    int value;
+};
+
+static void sol_userdata_binding(benchmark::State &state) {
+  sol::state env;
+  env["void"] = [&]() {};
+  auto type = env.new_usertype<temp>("integer", "add", &temp::add);
+  env.do_string("i = integer.new()");
+  for (auto _ : state) {
+    env.do_string("void(i:add(1))");
+  }
+}
+
+
 BENCHMARK(sol_state_initialisation);
 BENCHMARK(sol_variable_assignment);
 BENCHMARK(sol_variable_access);
 BENCHMARK(sol_function_call);
 BENCHMARK(sol_lua_function_call);
 BENCHMARK(sol_table_get);
+BENCHMARK(sol_object_binding);
+BENCHMARK(sol_userdata_binding);

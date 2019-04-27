@@ -28,8 +28,8 @@ namespace LuaCppB::Internal {
     return this->toValue();
   }
 
-  template <typename T>
-  typename std::enable_if<Internal::LuaValueFastPath::isSupported<T>(), T>::type LuaReference::get() {
+  template <typename T, typename E>
+  T LuaReference::get() {
     T value {};
     lua_State *state = this->putOnTop();
     if (state) {

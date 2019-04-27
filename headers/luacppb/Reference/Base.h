@@ -61,8 +61,8 @@ namespace LuaCppB::Internal {
 		template <typename T>
 		typename std::enable_if<std::is_same<T, LuaValue>::value, T>::type get();
 		
-		template <typename T>
-		typename std::enable_if<Internal::LuaValueFastPath::isSupported<T>(), T>::type get();
+		template <typename T, typename E = typename std::enable_if<Internal::LuaValueFastPath::isSupported<T>(), T>::type>
+		T get();
 #ifdef LUACPPB_COROUTINE_SUPPORT
 		template <typename T>
 		typename std::enable_if<std::is_convertible<LuaValue, T>::value && !std::is_same<T, LuaValue>::value && !Internal::LuaValueFastPath::isSupported<T>() && !LuaReferenceIsCoroutine<T>::value, T>::type

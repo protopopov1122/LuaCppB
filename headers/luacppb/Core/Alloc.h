@@ -2,10 +2,9 @@
 #define LUACPPB_CORE_ALLOC_H_
 
 #include "luacppb/Base.h"
+#include "luacppb/Value/Types.h"
 
 #ifdef LUACPPB_CUSTOM_ALLOCATOR_SUPPORT
-
-#include "luacppb/Value/Types.h"
 
 namespace LuaCppB {
 

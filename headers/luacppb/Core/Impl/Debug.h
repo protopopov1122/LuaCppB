@@ -19,7 +19,6 @@
 #define LUACPPB_CORE_IMPL_DEBUG_H_
 
 #include "luacppb/Core/Debug.h"
-#include "luacppb/Core/StackGuard.h"
 
 namespace LuaCppB {
 

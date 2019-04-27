@@ -19,11 +19,12 @@
 #define LUACPPB_CORE_DEBUG_H_
 
 #include "luacppb/Base.h"
+#include "luacppb/Core/Runtime.h"
+#include "luacppb/Core/Stack.h"
+#include "luacppb/Core/StackGuard.h"
 
 #ifdef LUACPPB_DEBUG_SUPPORT
 
-#include "luacppb/Core/Runtime.h"
-#include "luacppb/Core/Stack.h"
 #include <string>
 #include <optional>
 #include <memory>

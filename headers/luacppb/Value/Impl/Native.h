@@ -29,13 +29,19 @@ namespace LuaCppB::Internal {
   }
   
   template <typename T>
-  typename std::enable_if<LuaValue::is_constructible<T>()>::type
+  typename std::enable_if<LuaValueFastPath::isSupported<T>()>::type
+    LuaNativeValue::push(lua_State *state, LuaCppRuntime &runtime, T value) {
+    LuaValueFastPath::push(state, value);
+  }
+  
+  template <typename T>
+  typename std::enable_if<LuaValue::is_constructible<T>() && !LuaValueFastPath::isSupported<T>()>::type
     LuaNativeValue::push(lua_State *state, LuaCppRuntime &runtime, T &value) {
     LuaValue::create<T>(value).push(state);
   }
 
   template <typename T>
-  typename std::enable_if<LuaValue::is_constructible<T>()>::type
+  typename std::enable_if<LuaValue::is_constructible<T>() && !LuaValueFastPath::isSupported<T>()>::type
     LuaNativeValue::push(lua_State *state, LuaCppRuntime &runtime, T &&value) {
     LuaValue::create<T>(value).push(state);
   }

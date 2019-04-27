@@ -26,3 +26,4 @@ You can also forcefully disable some LuaCppB features in `Config.h` by uncomment
 * `LUACPPB_DISABLE_COROUTINE_SUPPORT`
 * `LUACPPB_DISABLE_CUSTOM_ALLOCATOR`
 * `LUACPPB_DISABLE_DEBUG`
+  

@@ -31,7 +31,7 @@ namespace LuaCppB {
     using Image = std::vector<std::byte>;
     LuaLoader(LuaState &);
 
-    std::optional<Image> dump(LuaReferenceHandle, bool = true);
+    std::optional<Image> dump(const LuaReferenceHandle &, bool = true);
     std::optional<LuaReferenceHandle> load(const Image &, const std::string &);
     std::optional<LuaReferenceHandle> load(std::istream &, const std::string &);
    private:

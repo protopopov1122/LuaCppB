@@ -1,3 +1,20 @@
+/*
+  SPDX short identifier: MIT
+
+  Copyright 2018-2019 Jevgēnijs Protopopovs
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+*/
+
 #include <benchmark/benchmark.h>
 #include "luacppb/LuaCppB.h"
 
@@ -63,8 +80,26 @@ static void lua_lua_function_call(benchmark::State &state) {
     lua_close(L);
 }
 
+
+static void lua_table_get(benchmark::State &state) {
+    lua_State *L = luaL_newstate();
+    lua_newtable(L);
+    lua_pushinteger(L, 42);
+    lua_setfield(L, -2, "field");
+    lua_setglobal(L, "tbl");
+    volatile int value;
+    for (auto _ : state) {
+        lua_getglobal(L, "tbl");
+        lua_getfield(L, -1, "field");
+        value = lua_tointeger(L, -1);
+        lua_pop(L, 2);
+    }
+    lua_close(L);
+}
+
 BENCHMARK(lua_state_initialisation);
 BENCHMARK(lua_variable_assignment);
 BENCHMARK(lua_variable_access);
 BENCHMARK(lua_c_function_call);
 BENCHMARK(lua_lua_function_call);
+BENCHMARK(lua_table_get);

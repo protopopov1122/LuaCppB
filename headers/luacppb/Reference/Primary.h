@@ -30,6 +30,9 @@ namespace LuaCppB::Internal {
 	
 		bool putOnTop(std::function<void (lua_State *)>) override;
 		bool setValue(std::function<void (lua_State *)>) override;
+		lua_State *putOnTop() override;
+		std::unique_ptr<LuaReference> clone(LuaCppRuntime &) override;
+
 	 private:
 		lua_State *state;
 		std::string name;
@@ -38,9 +41,13 @@ namespace LuaCppB::Internal {
 	class LuaStackReference : public LuaReference {
 	 public:
 		LuaStackReference(LuaState &, int);
+		LuaStackReference(const LuaStackReference &) = default;
 
 		bool putOnTop(std::function<void (lua_State *)>) override;
 		bool setValue(std::function<void (lua_State *)> gen) override;
+		lua_State *putOnTop() override;
+		std::unique_ptr<LuaReference> clone(LuaCppRuntime &) override;
+
 	 private:
 		lua_State *state;
 		int index;
@@ -53,6 +60,9 @@ namespace LuaCppB::Internal {
 
 		bool putOnTop(std::function<void (lua_State *)>) override;
 		bool setValue(std::function<void (lua_State *)>) override;
+		lua_State *putOnTop() override;
+		std::unique_ptr<LuaReference> clone(LuaCppRuntime &) override;
+
 	 protected:
 		LuaValue toValue() override;
 	 private:

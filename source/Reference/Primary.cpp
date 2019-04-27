@@ -43,6 +43,15 @@ namespace LuaCppB::Internal {
     return true;
   }
 
+  lua_State *LuaGlobalVariable::putOnTop() {
+    lua_getglobal(this->state, this->name.c_str());
+    return this->state;
+  }
+
+  std::unique_ptr<LuaReference> LuaGlobalVariable::clone(LuaCppRuntime &runtime) {
+    return std::make_unique<LuaGlobalVariable>(*this);
+  }
+
   LuaStackReference::LuaStackReference(LuaState &state, int index)
     : LuaReference(state), state(state.getState()), index(index) {}
 
@@ -60,6 +69,17 @@ namespace LuaCppB::Internal {
 
   bool LuaStackReference::setValue(std::function<void (lua_State *)> gen) {
     return false;
+  }
+  
+  lua_State *LuaStackReference::putOnTop() {
+    Internal::LuaStackGuard guard(this->state);
+    guard.assumeIndex(this->index);
+    lua_pushvalue(this->state, this->index);
+    return this->state;
+  }
+
+  std::unique_ptr<LuaReference> LuaStackReference::clone(LuaCppRuntime &runtime) {
+    return std::make_unique<LuaStackReference>(*this);
   }
 
   LuaRegistryReference::LuaRegistryReference(lua_State *state, LuaCppRuntime &runtime, int index)
@@ -79,8 +99,16 @@ namespace LuaCppB::Internal {
   bool LuaRegistryReference::setValue(std::function<void (lua_State *)> gen) {
     return this->handle.set(gen);
   }
+  
+  lua_State *LuaRegistryReference::putOnTop() {
+    return this->handle.get();
+  }
 
   LuaValue LuaRegistryReference::toValue() {
     return LuaValue::fromRegistry(this->handle).value_or(LuaValue::Nil);
+  }
+
+  std::unique_ptr<LuaReference> LuaRegistryReference::clone(LuaCppRuntime &runtime) {
+    return std::make_unique<LuaRegistryReference>(runtime, this->handle);
   }
 }

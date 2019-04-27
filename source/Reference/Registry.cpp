@@ -36,27 +36,38 @@ namespace LuaCppB::Internal {
   LuaUniqueRegistryHandle::LuaUniqueRegistryHandle()
     : state(nullptr), ref(0) {}
 
-  LuaUniqueRegistryHandle::LuaUniqueRegistryHandle(lua_State *state, int index)
-    : state(nullptr), ref(0) {
+  LuaUniqueRegistryHandle::LuaUniqueRegistryHandle(lua_State *state, int index) {
     if (state) {
-      Internal::LuaStack originalStack(state);
-#ifndef LUACPPB_INTERNAL_EMULATED_MAINTHREAD
-      originalStack.getIndex<true>(LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
-#else
-      originalStack.push(std::string(LUACPPB_RIDX_MAINTHREAD));
-      originalStack.getField<true>(LUA_REGISTRYINDEX);
-#endif
-      this->state = originalStack.toThread();
-      originalStack.pop();
-      Internal::LuaStack mainStack(this->state);
-
-      originalStack.copy(index);
-      if (state == this->state) {
-        this->ref = mainStack.ref();
+      bool main_thread = lua_pushthread(state);
+      lua_pop(state, 1);
+      if (main_thread) {
+        this->state = state;
+        Internal::LuaStack stack(this->state);
+        stack.copy(index);
+        this->ref = stack.ref();
       } else {
-        originalStack.move(this->state, 1);
-        this->ref = mainStack.ref();
+        Internal::LuaStack originalStack(state);
+  #ifndef LUACPPB_INTERNAL_EMULATED_MAINTHREAD
+        originalStack.getIndex<true>(LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
+  #else
+        originalStack.push(std::string(LUACPPB_RIDX_MAINTHREAD));
+        originalStack.getField<true>(LUA_REGISTRYINDEX);
+  #endif
+        this->state = originalStack.toThread();
+        originalStack.pop();
+        Internal::LuaStack mainStack(this->state);
+
+        originalStack.copy(index);
+        if (state == this->state) {
+          this->ref = mainStack.ref();
+        } else {
+          originalStack.move(this->state, 1);
+          this->ref = mainStack.ref();
+        }
       }
+    } else {
+      this->state = nullptr;
+      this->ref = 0;
     }
   }
 
@@ -116,6 +127,16 @@ namespace LuaCppB::Internal {
     return this->state != nullptr;
   }
 
+  lua_State *LuaUniqueRegistryHandle::get() const {
+    if (this->state) {
+      Internal::LuaStack stack(this->state);
+      stack.getIndex<true>(LUA_REGISTRYINDEX, this->ref);
+      return this->state;
+    } else {
+      return nullptr;
+    }
+  }
+
   LuaSharedRegistryHandle::LuaSharedRegistryHandle()
     : handle(nullptr) {}
   
@@ -158,6 +179,14 @@ namespace LuaCppB::Internal {
       return this->handle->set(gen);
     } else {
       return false;
+    }
+  }
+
+  lua_State *LuaSharedRegistryHandle::get() const {
+    if (this->handle) {
+      return this->handle->get();
+    } else {
+      return nullptr;
     }
   }
 }

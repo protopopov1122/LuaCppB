@@ -26,10 +26,13 @@ namespace LuaCppB::Internal {
   }
 
   LuaValue LuaReference::toValue() {
-    std::optional<LuaValue> value;
+    LuaValue value;
     this->putOnTop([&](lua_State *state) {
-      value = LuaValue::peek(state);
+      std::optional<LuaValue> tmp(LuaValue::peek(state));
+      if (tmp.has_value()) {
+        value = std::move(tmp.value());
+      }
     });
-    return value.value_or(LuaValue::Nil);
+    return value;
   }
 }

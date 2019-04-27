@@ -20,6 +20,7 @@
 
 #include "luacppb/Base.h"
 #include "luacppb/Value/Value.h"
+#include "luacppb/Value/FastPath.h"
 #include "luacppb/Invoke/Native.h"
 #include "luacppb/Core/Runtime.h"
 #include "luacppb/Object/Native.h"
@@ -86,11 +87,15 @@ namespace LuaCppB::Internal {
       push(lua_State *, LuaCppRuntime &, T &);
     
     template <typename T>
-    static typename std::enable_if<LuaValue::is_constructible<T>()>::type
+    static typename std::enable_if<LuaValueFastPath::isSupported<T>()>::type
+      push(lua_State *, LuaCppRuntime &, T);
+
+    template <typename T>
+    static typename std::enable_if<LuaValue::is_constructible<T>() && !LuaValueFastPath::isSupported<T>()>::type
       push(lua_State *, LuaCppRuntime &, T &);
 
     template <typename T>
-    static typename std::enable_if<LuaValue::is_constructible<T>()>::type
+    static typename std::enable_if<LuaValue::is_constructible<T>() && !LuaValueFastPath::isSupported<T>()>::type
       push(lua_State *, LuaCppRuntime &, T &&);
     
     template <typename T>

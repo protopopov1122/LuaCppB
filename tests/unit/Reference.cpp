@@ -237,3 +237,11 @@ TEST_CASE("Reference comparison") {
   REQUIRE(env["a"] != LuaReferenceHandle());
   REQUIRE(LuaReferenceHandle() == LuaReferenceHandle());
 }
+
+TEST_CASE("Persistent references") {
+  LuaEnvironment env;
+  env["a"] = 10;
+  auto ref1 = env["a"];
+  auto ref2 = ref1.persistent();
+  REQUIRE(ref1 == ref2);
+}

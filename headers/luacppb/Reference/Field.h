@@ -28,9 +28,26 @@ namespace LuaCppB::Internal {
 		
 		bool putOnTop(std::function<void (lua_State *)>) override;
 		bool setValue(std::function<void (lua_State *)>) override;
+		lua_State *putOnTop() override;
+		std::unique_ptr<LuaReference> clone(LuaCppRuntime &) override;
+
 	 private:
 		LuaReferenceHandle ref;
 		LuaValue index;
+	};
+
+	class LuaStringField : public LuaReference {
+	 public:
+		LuaStringField(LuaReferenceHandle, LuaCppRuntime &, const std::string &);
+		
+		bool putOnTop(std::function<void (lua_State *)>) override;
+		bool setValue(std::function<void (lua_State *)>) override;
+		lua_State *putOnTop() override;
+		std::unique_ptr<LuaReference> clone(LuaCppRuntime &) override;
+
+	 private:
+		LuaReferenceHandle ref;
+		std::string index;
 	};
 }
 

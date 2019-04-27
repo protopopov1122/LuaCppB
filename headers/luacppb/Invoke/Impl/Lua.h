@@ -43,6 +43,7 @@ namespace LuaCppB::Internal {
     stack.copy(index);
     LuaFunctionArgument<Internal::LuaNativeValue, A...>::push(state, runtime, std::forward<A>(args)...);
     int status = lua_pcall(state, sizeof...(args), LUA_MULTRET, 0);
+    result.reserve(sizeof...(args));
     if (status == static_cast<int>(LuaStatusCode::Ok)) {
       int results = stack.getTop() - top;
       while (results-- > 0) {

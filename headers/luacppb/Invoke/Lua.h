@@ -127,7 +127,7 @@ namespace LuaCppB::Internal {
 
   class LuaFunctionCallResult {
   public:
-    LuaFunctionCallResult(std::vector<LuaValue> &, LuaError && = LuaError());
+    LuaFunctionCallResult(std::vector<LuaValue>, LuaError && = LuaError());
     LuaFunctionCallResult(LuaError &&);
     LuaFunctionCallResult(const LuaFunctionCallResult &) = delete;
     LuaFunctionCallResult &operator=(const LuaFunctionCallResult &) = delete;

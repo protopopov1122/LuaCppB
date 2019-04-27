@@ -23,6 +23,7 @@
 #include "luacppb/Value/Native.h"
 #include "luacppb/Invoke/Coro.h"
 #include "luacppb/Core/Runtime.h"
+#include "luacppb/Value/FastPath.h"
 #include <optional>
 #include <type_traits>
 #include <functional>
@@ -54,12 +55,17 @@ namespace LuaCppB::Internal {
 
 		virtual bool putOnTop(std::function<void (lua_State *)>) = 0;
 		virtual bool setValue(std::function<void (lua_State *)>) = 0;
+		virtual lua_State *putOnTop() = 0;
+		virtual std::unique_ptr<LuaReference> clone(LuaCppRuntime &) = 0;
 
 		template <typename T>
 		typename std::enable_if<std::is_same<T, LuaValue>::value, T>::type get();
+		
+		template <typename T>
+		typename std::enable_if<Internal::LuaValueFastPath::isSupported<T>(), T>::type get();
 #ifdef LUACPPB_COROUTINE_SUPPORT
 		template <typename T>
-		typename std::enable_if<std::is_convertible<LuaValue, T>::value && !std::is_same<T, LuaValue>::value && !LuaReferenceIsCoroutine<T>::value, T>::type
+		typename std::enable_if<std::is_convertible<LuaValue, T>::value && !std::is_same<T, LuaValue>::value && !Internal::LuaValueFastPath::isSupported<T>() && !LuaReferenceIsCoroutine<T>::value, T>::type
 			get();
 
 		template <typename T>
@@ -67,7 +73,7 @@ namespace LuaCppB::Internal {
 			get();
 #else
 		template <typename T>
-		typename std::enable_if<std::is_convertible<LuaValue, T>::value && !std::is_same<T, LuaValue>::value, T>::type
+		typename std::enable_if<std::is_convertible<LuaValue, T>::value && !std::is_same<T, LuaValue>::value && !Internal::LuaValueFastPath::isSupported<T>(), T>::type
 			get();
 #endif
 

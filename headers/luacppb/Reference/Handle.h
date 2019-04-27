@@ -43,8 +43,10 @@ namespace LuaCppB {
 		bool valid() const;
 		bool exists() const;
 		LuaType getType() const;
+		LuaReferenceHandle persistent() const;
 
 		LuaReferenceHandle &operator=(const LuaReferenceHandle &);
+		LuaReferenceHandle &operator=(LuaReferenceHandle &&);
 		LuaValue operator*() const;
 		bool operator==(const LuaReferenceHandle &) const;
 		bool operator!=(const LuaReferenceHandle &) const;

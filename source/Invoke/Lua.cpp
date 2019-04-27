@@ -115,11 +115,11 @@ namespace LuaCppB {
     }
 #endif
 
-    LuaFunctionCallResult::LuaFunctionCallResult(std::vector<LuaValue> &result, LuaError &&err)
-      : result(result), errorVal(err) {}
+    LuaFunctionCallResult::LuaFunctionCallResult(std::vector<LuaValue> result, LuaError &&err)
+      : result(std::move(result)), errorVal(std::forward<LuaError>(err)) {}
     
     LuaFunctionCallResult::LuaFunctionCallResult(LuaError &&err)
-      : result(), errorVal(err) {}
+      : result(), errorVal(std::forward<LuaError>(err)) {}
     
     LuaFunctionCallResult &LuaFunctionCallResult::status(LuaStatusCode &status) {
       status = this->errorVal.getStatus();

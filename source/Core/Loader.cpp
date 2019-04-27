@@ -68,7 +68,7 @@ namespace LuaCppB {
   LuaLoader::LuaLoader(LuaState &state)
     : state(state) {}
 
-  std::optional<LuaLoader::Image> LuaLoader::dump(LuaReferenceHandle ref, bool strip) {
+  std::optional<LuaLoader::Image> LuaLoader::dump(const LuaReferenceHandle &ref, bool strip) {
     if (!ref.valid() || ref.getType() != LuaType::Function) {
       return std::optional<Image>();
     }

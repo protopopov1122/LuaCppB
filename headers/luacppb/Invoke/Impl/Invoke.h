@@ -26,7 +26,8 @@ namespace LuaCppB::Internal {
   LuaFunctionCallResult LuaFunctionInvoke::invoke(T &ref, LuaCppRuntime &runtime, A &&... args) {
     std::vector<LuaValue> results;
     LuaError error;
-    ref.putOnTop([&](lua_State *state) {
+    lua_State *state = ref.putOnTop();
+    if (state) {
       Internal::LuaStack stack(state);
       if (stack.is<LuaType::Function>(-1)) {
         error = LuaFunctionCall::call<A...>(state, -1, runtime, results, std::forward<A>(args)...);
@@ -36,7 +37,8 @@ namespace LuaCppB::Internal {
         error = coro.call(results, args...);
 #endif
       }
-    });
+      stack.pop(1);
+    }
     return LuaFunctionCallResult(results, std::move(error));
   }
 

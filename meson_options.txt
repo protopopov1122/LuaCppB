@@ -1,4 +1,5 @@
 
 option('system_lua', type: 'boolean', value: 'true')
 option('luajit', type: 'boolean', value: 'false')
+option('benchmarks', type: 'boolean', value: 'false')
 option('custom_lua_version', type: 'string', value: '')

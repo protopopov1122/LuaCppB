@@ -28,9 +28,20 @@ namespace LuaCppB::Internal {
     return this->toValue();
   }
 
+  template <typename T>
+  typename std::enable_if<Internal::LuaValueFastPath::isSupported<T>(), T>::type LuaReference::get() {
+    T value {};
+    lua_State *state = this->putOnTop();
+    if (state) {
+      value = LuaValueFastPath::peek<T>(state);
+      lua_pop(state, 1);
+    }
+    return value;
+  }
+
 #ifdef LUACPPB_COROUTINE_SUPPORT
   template <typename T>
-  typename std::enable_if<std::is_convertible<LuaValue, T>::value && !std::is_same<T, LuaValue>::value && !LuaReferenceIsCoroutine<T>::value, T>::type
+  typename std::enable_if<std::is_convertible<LuaValue, T>::value && !std::is_same<T, LuaValue>::value && !Internal::LuaValueFastPath::isSupported<T>() && !LuaReferenceIsCoroutine<T>::value, T>::type
     LuaReference::get() {
     return this->get<LuaValue>().get<T>();
   }
@@ -51,7 +62,7 @@ namespace LuaCppB::Internal {
   }
 #else
   template <typename T>
-  typename std::enable_if<std::is_convertible<LuaValue, T>::value && !std::is_same<T, LuaValue>::value, T>::type
+  typename std::enable_if<std::is_convertible<LuaValue, T>::value && !std::is_same<T, LuaValue>::value && !Internal::LuaValueFastPath::isSupported<T>(), T>::type
     LuaReference::get() {
     return this->get<LuaValue>().get<T>();
   }

@@ -29,24 +29,26 @@ namespace LuaCppB {
   LuaReferenceHandle::LuaReferenceHandle(lua_State *state, std::unique_ptr<Internal::LuaReference> ref)
     : state(state), ref(std::move(ref)) {
     if (this->state) {
-      Internal::LuaStack stack(this->state);
-#ifndef LUACPPB_INTERNAL_EMULATED_MAINTHREAD
-      stack.getIndex<true>(LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
-#else
-      stack.push(std::string(LUACPPB_RIDX_MAINTHREAD));
-      stack.getField<true>(LUA_REGISTRYINDEX);
-#endif
-      this->state = stack.toThread();
-      stack.pop();
+      bool main_thread = lua_pushthread(this->state);
+      lua_pop(this->state, 1);
+      if (!main_thread) {
+        Internal::LuaStack stack(this->state);
+  #ifndef LUACPPB_INTERNAL_EMULATED_MAINTHREAD
+        stack.getIndex<true>(LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
+  #else
+        stack.push(std::string(LUACPPB_RIDX_MAINTHREAD));
+        stack.getField<true>(LUA_REGISTRYINDEX);
+  #endif
+        this->state = stack.toThread();
+        stack.pop();
+      }
     }
   }
 
   LuaReferenceHandle::LuaReferenceHandle(const LuaReferenceHandle &handle) : state(handle.state) {
     this->state = handle.state;
     if (this->state) {
-      handle.getReference().putOnTop([&](lua_State *state) {
-        this->ref = std::make_unique<Internal::LuaRegistryReference>(state, handle.getRuntime(), -1);
-      });
+      this->ref = handle.getReference().clone(handle.getRuntime());
     } else {
       this->ref = nullptr;
     }
@@ -56,17 +58,6 @@ namespace LuaCppB {
     : state(handle.state), ref(std::move(handle.ref)) {
     handle.state = nullptr;
     handle.ref = nullptr;
-    if (this->state) {
-      Internal::LuaStack stack(this->state);
-#ifndef LUACPPB_INTERNAL_EMULATED_MAINTHREAD
-      stack.getIndex<true>(LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
-#else
-      stack.push(std::string(LUACPPB_RIDX_MAINTHREAD));
-      stack.getField<true>(LUA_REGISTRYINDEX);
-#endif
-      this->state = stack.toThread();
-      stack.pop();
-    }
   }
 
   Internal::LuaReference &LuaReferenceHandle::getReference() const {
@@ -106,15 +97,25 @@ namespace LuaCppB {
     return type;
   }
 
+  LuaReferenceHandle LuaReferenceHandle::persistent() const {
+    return LuaReferenceHandle(*this);
+  }
+
   LuaReferenceHandle &LuaReferenceHandle::operator=(const LuaReferenceHandle &handle) {
     this->state = handle.state;
     if (handle.valid()) {
-      handle.getReference().putOnTop([&](lua_State *state) {
-        this->ref = std::make_unique<Internal::LuaRegistryReference>(state, handle.getRuntime(), -1);
-      });
+      this->ref = handle.getReference().clone(handle.getRuntime());
     } else {
       this->ref = nullptr;
     }
+    return *this;
+  }
+
+  LuaReferenceHandle &LuaReferenceHandle::operator=(LuaReferenceHandle &&handle) {
+    this->state = handle.state;
+    this->ref = std::move(handle.ref);
+    handle.state = nullptr;
+    handle.ref = nullptr;
     return *this;
   }
 

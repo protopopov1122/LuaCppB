@@ -5,7 +5,6 @@ if meson.get_compiler('cpp').get_id() == 'gcc' or meson.get_compiler('cpp').get_
   add_project_arguments('-x', 'c++', language : 'c')
 endif
 
-
 subdir('lua-source')
 subdir('source')
 subdir('tests/unit')

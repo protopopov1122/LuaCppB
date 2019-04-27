@@ -11,7 +11,7 @@ lib_benchmark = cpp.find_library('benchmark',
   dirs : [meson.current_source_dir() + '/benchmark/build/src'],
   required : false)
 
-if lib_benchmark.found()
+if lib_benchmark.found() and get_option('benchmarks')
   inc_benchmark = include_directories('benchmark/include')
   thread_dep = dependency('threads')
   lcppbbench = executable('lcppbbench', luacppb_bench_source,

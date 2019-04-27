@@ -41,6 +41,8 @@ Project requires C++17-compliant compiler version. It uses RTTI and exceptions.
 
 You can read the [manual](MANUAL.md). \
 Example preparation is in progress. You can also consult the unit tests. See `*.cpp` files in `tests/unit` directory. LuaCppB compatibility issues are briefly discussed [there](COMPAT.md).
+Project also includes some benchmarks, comparing it to plain Lua C API and [Sol2](https://github.com/ThePhD/sol2), but the benchmarks are not comprehensive and cover only some basic APIs.
+Benchmarks are meant for internal use only, so corresponding code is disabled by default and tested only on x64-bit Linux.
 
 ### Building
 

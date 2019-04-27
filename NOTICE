@@ -1,4 +1,6 @@
 This product uses software developed as part of:
-* Lua <https://www.lua.org>
-* Catch2 <https://github.com/catchorg/Catch2>
-* lua-compat-5.3 <https://github.com/keplerproject/lua-compat-5.3>
+* Lua <https://www.lua.org> - Lua language implementation, the only required dependency.
+* Catch2 <https://github.com/catchorg/Catch2> - used for unit tests. Optional, enabled by default.
+* lua-compat-5.3 <https://github.com/keplerproject/lua-compat-5.3> - some compatibility code is borrowed from Kepler Project. Integrated into project source.
+* Google Benchmark <https://github.com/google/benchmark> - used for microbenchmarks. Optional, disabled by default.
+* Sol2 <https://github.com/ThePhD/sol2> - used for microbenchmarks as LuaCppB competitor. Optional, disabled by default.

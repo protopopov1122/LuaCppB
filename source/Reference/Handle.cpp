@@ -98,7 +98,11 @@ namespace LuaCppB {
   }
 
   LuaReferenceHandle LuaReferenceHandle::persistent() const {
-    return LuaReferenceHandle(*this);
+    LuaReferenceHandle handle;
+    this->ref->putOnTop([this, &handle](lua_State *state) {
+      handle = LuaReferenceHandle(state, std::make_unique<Internal::LuaRegistryReference>(state, this->getRuntime(), -1));
+    });
+    return handle;
   }
 
   LuaReferenceHandle &LuaReferenceHandle::operator=(const LuaReferenceHandle &handle) {

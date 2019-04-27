@@ -245,3 +245,19 @@ TEST_CASE("Persistent references") {
   auto ref2 = ref1.persistent();
   REQUIRE(ref1 == ref2);
 }
+
+TEST_CASE("Reference copying") {
+  LuaEnvironment env;
+  auto ref = env["a"];
+  ref = 5;
+  auto ref2 = ref;
+  auto ref3 = ref.persistent();
+  REQUIRE(env["a"].get<int>() == 5);
+  REQUIRE(ref2.get<int>() == 5);
+  REQUIRE(ref3.get<int>() == 5);
+  ref2 = 10;
+  REQUIRE(env["a"].get<int>() == 10);
+  REQUIRE(ref.get<int>() == 10);
+  REQUIRE(ref2.get<int>() == 10);
+  REQUIRE(ref3.get<int>() == 5);
+}

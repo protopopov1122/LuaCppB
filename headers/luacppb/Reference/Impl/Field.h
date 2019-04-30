@@ -25,7 +25,7 @@ namespace LuaCppB {
   template <typename T>
   typename std::enable_if<Internal::LuaValueWrapper<T>::Conversible, LuaReferenceHandle>::type LuaReferenceHandle::operator[](T index) {
     if (this->ref) {
-      if constexpr (std::is_pointer<T>::value && std::is_same<char, typename std::remove_cv<typename std::remove_pointer<T>::type>::type>::value) {
+      if constexpr (std::is_pointer<T>::value && std::is_same<char, typename std::decay<typename std::remove_pointer<T>::type>::type>::value) {
         std::string idx(index);
         return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaStringField>(*this, this->ref->getRuntime(), idx));
       } else {

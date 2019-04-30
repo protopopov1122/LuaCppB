@@ -33,7 +33,7 @@ namespace LuaCppB {
 	namespace Internal {
 		template <typename T>
 		struct LuaValueGetSpecialCase {
-			using T2 = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
+			using T2 = typename std::decay<T>::type;
 			static constexpr bool value = std::is_same<T, std::string>::value ||
 																		std::is_same<T2, LuaTable>::value ||
 																		std::is_same<T2, LuaUserData>::value ||
@@ -45,7 +45,7 @@ namespace LuaCppB {
 		template <typename T, typename E = typename std::enable_if<std::is_reference<T>::value>::type>
 		struct LuaValueGetSpecialRef {
 			using V = typename std::remove_reference<T>::type;
-			static constexpr bool value = std::is_const<V>::value && std::is_same<typename std::remove_cv<V>::type, std::string>::value;
+			static constexpr bool value = std::is_const<V>::value && std::is_same<typename std::decay<T>::type, std::string>::value;
 		};
 	}
 
@@ -86,8 +86,8 @@ namespace LuaCppB {
 		template <typename T>
 		typename std::enable_if<std::is_same<T, std::string>::value, T>::type get(const T & = "") const;
 
-		template <typename T, typename V = typename std::remove_reference<T>::type>
-		typename std::enable_if<std::is_reference<T>::value && std::is_same<V, const std::string>::value, T>::type get(const T & = "") const;
+		template <typename T>
+		typename std::enable_if<std::is_reference<T>::value && std::is_same<typename std::decay<T>::type, std::string>::value, T>::type get(const T & = "") const;
 
 		template <typename T>
 		typename std::enable_if<std::is_same<T, LuaCFunction>::value, T>::type get(T = nullptr) const;
@@ -102,7 +102,7 @@ namespace LuaCppB {
 		typename std::enable_if<std::is_pointer<T>::value && std::is_class<typename std::remove_pointer<T>::type>::value, T>::type get(T defaultValue = nullptr) const;
 
 		template <typename T>
-		typename std::enable_if<std::is_reference<T>::value && std::is_class<typename std::remove_reference<T>::type>::value && !Internal::LuaValueGetSpecialRef<T>::value, T>::type get() const;
+		typename std::enable_if<std::is_reference<T>::value && std::is_class<typename std::decay<T>::type>::value && !Internal::LuaValueGetSpecialRef<T>::value, T>::type get() const;
 
 		template <typename T>
 		typename std::enable_if<std::is_class<T>::value && !Internal::LuaValueGetSpecialCase<T>::value, T>::type get() const;
@@ -138,14 +138,11 @@ namespace LuaCppB {
 		static typename std::enable_if<std::is_same<T, LuaCFunction>::value, LuaValue>::type create(T) noexcept;
 
 		template <typename T>
-		static typename std::enable_if<std::is_same<T, const char *>::value, LuaValue>::type create(T) noexcept;
-
-		template <typename T>
-		static typename std::enable_if<std::is_array<typename std::remove_reference<T>::type>::value && std::is_same<typename std::remove_extent<typename std::remove_reference<T>::type>::type, const char>::value, LuaValue>::type
+		static typename std::enable_if<std::is_same<typename std::decay<T>::type, const char *>::value, LuaValue>::type
 			create(T) noexcept;
 
 		template <typename T>
-		static typename std::enable_if<std::is_same<typename std::remove_cv<typename std::remove_reference<T>::type>::type, std::string>::value, LuaValue>::type
+		static typename std::enable_if<std::is_same<typename std::decay<T>::type, std::string>::value, LuaValue>::type
 			create(T) noexcept;
 
 		template <typename T>
@@ -154,9 +151,8 @@ namespace LuaCppB {
 				std::is_floating_point<T>::value ||
 				std::is_same<T, bool>::value ||
 				std::is_same<T, LuaCFunction>::value ||
-				std::is_same<T, const char *>::value ||
-				(std::is_same<typename std::remove_cv<typename std::remove_reference<T>::type>::type, std::string>::value) ||
-				(std::is_array<typename std::remove_reference<T>::type>::value && std::is_same<typename std::remove_extent<typename std::remove_reference<T>::type>::type, const char>::value);
+				std::is_same<typename std::decay<T>::type, const char *>::value ||
+				std::is_same<typename std::decay<T>::type, std::string>::value;
 		}
 	 private:
 		LuaType type;

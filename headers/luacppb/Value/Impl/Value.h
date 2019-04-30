@@ -74,8 +74,8 @@ namespace LuaCppB {
     }
   }
 
-  template <typename T, typename V>
-  typename std::enable_if<std::is_reference<T>::value && std::is_same<V, const std::string>::value, T>::type
+  template <typename T>
+  typename std::enable_if<std::is_reference<T>::value && std::is_same<typename std::decay<T>::type, std::string>::value, T>::type
     LuaValue::get(const T &defaultValue) const {
     if (this->type == LuaType::String) {
       assert(this->value.index() == 3);
@@ -142,9 +142,9 @@ namespace LuaCppB {
   }
 
   template <typename T>
-  typename std::enable_if<std::is_reference<T>::value && std::is_class<typename std::remove_reference<T>::type>::value && !Internal::LuaValueGetSpecialRef<T>::value, T>::type
+  typename std::enable_if<std::is_reference<T>::value && std::is_class<typename std::decay<T>::type>::value && !Internal::LuaValueGetSpecialRef<T>::value, T>::type
     LuaValue::get() const {
-    using V = typename std::remove_reference<T>::type;
+    using V = typename std::decay<T>::type;
     if (this->type == LuaType::UserData) {
       assert(this->value.index() == 7);
       const LuaUserData &data = std::get<LuaUserData>(this->value);
@@ -251,19 +251,13 @@ namespace LuaCppB {
   }
 
   template <typename T>
-  typename std::enable_if<std::is_same<T, const char *>::value, LuaValue>::type
+  typename std::enable_if<std::is_same<typename std::decay<T>::type, const char *>::value, LuaValue>::type
     LuaValue::create(T s) noexcept {
     return LuaValue(LuaString(s));
   }
 
   template <typename T>
-  typename std::enable_if<std::is_array<typename std::remove_reference<T>::type>::value && std::is_same<typename std::remove_extent<typename std::remove_reference<T>::type>::type, const char>::value, LuaValue>::type
-    LuaValue::create(T s) noexcept {
-    return LuaValue(LuaString(s));
-  }
-
-  template <typename T>
-  typename std::enable_if<std::is_same<typename std::remove_cv<typename std::remove_reference<T>::type>::type, std::string>::value, LuaValue>::type
+  typename std::enable_if<std::is_same<typename std::decay<T>::type, std::string>::value, LuaValue>::type
     LuaValue::create(T s) noexcept {
     return LuaValue(LuaString(s));
   }

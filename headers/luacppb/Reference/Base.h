@@ -33,7 +33,7 @@ namespace LuaCppB::Internal {
 #ifdef LUACPPB_COROUTINE_SUPPORT
 	template <typename T>
 	struct LuaReferenceIsCoroutine {
-		using T2 = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
+		using T2 = typename std::decay<T>::type;
 		static constexpr bool value = std::is_same<T2, LuaCoroutine>::value;
 	};
 

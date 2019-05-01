@@ -214,7 +214,7 @@ TEST_CASE("Table iterator") {
     int value = env["tbl"][entry.first];
     sum += value;
   }
-  for (TableIterator it(std::move(env["tbl"].begin())); !(it == env["tbl"].end()); it++) {
+  for (TableIterator it(env["tbl"].begin()); !(it == env["tbl"].end()); it++) {
     auto entry = *it;
     line.append(entry.first.get<const std::string &>());
     sum += entry.second.get<int>();

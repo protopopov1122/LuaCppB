@@ -12,11 +12,16 @@ lib_benchmark = cpp.find_library('benchmark',
   required : false)
 
 if lib_benchmark.found() and get_option('benchmarks')
+  if meson.get_compiler('cpp').get_id() == 'gcc'
+    benchmark_cpp_args = [LUACPPB_CXX_FLAGS, '-Wno-unused-but-set-variable']
+  else
+    benchmark_cpp_args = LUACPPB_CXX_FLAGS
+  endif
   inc_benchmark = include_directories('benchmark/include')
   thread_dep = dependency('threads')
   lcppbbench = executable('lcppbbench', luacppb_bench_source,
     dependencies : [LUACPPB_DEPENDENCY, lib_benchmark, thread_dep],
     include_directories: [inc_benchmark],
-    cpp_args : LUACPPB_CXX_FLAGS)
+    cpp_args : benchmark_cpp_args)
 endif
 

@@ -21,27 +21,27 @@
 using namespace LuaCppB;
 
 static void luacppb_state_initialisation(benchmark::State &state) {
-    for (auto _ : state) {
-        LuaEnvironment env(false);
-        env.close();
-    }
+  for (auto _ : state) {
+    LuaEnvironment env(false);
+    env.close();
+  }
 }
 
 static void luacppb_variable_assignment(benchmark::State &state) {
-    LuaEnvironment env(false);
-    const int value = 42;
-    for (auto _ : state) {
-        env["variable"] = value; 
-    }
+  LuaEnvironment env(false);
+  const int value = 42;
+  for (auto _ : state) {
+    env["variable"] = value; 
+  }
 }
 
 static void luacppb_variable_access(benchmark::State &state) {
-    LuaEnvironment env(false);
-    env["variable"] = 42;
-    volatile int value;
-    for (auto _ : state) {
-        value = env["variable"];
-    }
+  LuaEnvironment env(false);
+  env["variable"] = 42;
+  volatile int value;
+  for (auto _ : state) {
+    value = env["variable"];
+  }
 }
 
 static int c_function(int x, int y) {
@@ -49,55 +49,55 @@ static int c_function(int x, int y) {
 }
 
 static void luacppb_function_call(benchmark::State &state) {
-    LuaEnvironment env(false);
-    env["mult"] = c_function;
-    for (auto _ : state) {
-        env.execute("mult(4, 5)");
-    }
+  LuaEnvironment env(false);
+  env["mult"] = c_function;
+  for (auto _ : state) {
+      env.execute("mult(4, 5)");
+  }
 }
 
 static void luacppb_lua_function_call(benchmark::State &state) {
-    LuaEnvironment env(false);
-    env.execute("function mult(x, y)\n    return x * y\nend");
-    volatile int value;
-    for (auto _ : state) {
-        value = env["mult"](4, 5);
-    }
+  LuaEnvironment env(false);
+  env.execute("function mult(x, y)\n    return x * y\nend");
+  volatile int value;
+  for (auto _ : state) {
+      value = env["mult"](4, 5);
+  }
 }
 
 static void luacppb_table_get(benchmark::State &state) {
-    LuaEnvironment env(false);
-    env["tbl"] = *LuaFactory::newTable(env, "field", 5);
-    auto tbl = env["tbl"];
-    volatile int value;
-    for (auto _ : state) {
-        value = tbl["field"].get<int>();
-    }
+  LuaEnvironment env(false);
+  env["tbl"] = *LuaFactory::newTable(env, "field", 5);
+  auto tbl = env["tbl"];
+  volatile int value;
+  for (auto _ : state) {
+      value = tbl["field"].get<int>();
+  }
 }
 
 static void luacppb_object_binding(benchmark::State &state) {
-    class TestClass {
-     public:
-      TestClass(int x) : value(x) {}
+  class TestClass {
+    public:
+    TestClass(int x) : value(x) {}
 
-      int sum(int x) const {
-        return x + this->value;
-      }
-
-      void setValue(int x) {
-        this->value = x;
-      }
-     private:
-      int value;
-    };
-    LuaEnvironment env(false);
-    TestClass obj(10);
-    ClassBinder<TestClass>::bind(env, "sum", &TestClass::sum, "set", &TestClass::setValue);
-    env["obj"] = obj;
-    const std::string &CODE = "obj:set(obj:sum(1))";
-    for (auto _ : state) {
-      env.execute(CODE);
+    int sum(int x) const {
+      return x + this->value;
     }
+
+    void setValue(int x) {
+      this->value = x;
+    }
+    private:
+    int value;
+  };
+  LuaEnvironment env(false);
+  TestClass obj(10);
+  ClassBinder<TestClass>::bind(env, "sum", &TestClass::sum, "set", &TestClass::setValue);
+  env["obj"] = obj;
+  const std::string &CODE = "obj:set(obj:sum(1))";
+  for (auto _ : state) {
+    env.execute(CODE);
+  }
 }
 
 struct temp {
@@ -128,6 +128,19 @@ static void luacppb_userdata_binding(benchmark::State &state) {
   }
 }
 
+static void luacppb_stateful_functions(benchmark::State &state) {
+  LuaEnvironment env(false);
+  constexpr float C = 3.14f;
+  std::function<float(float, float)> fn = [&](float x, float y) {
+    return (x + y) * C;
+  };
+  env["fn"] = fn;
+  env["a"] = 1;
+  for (auto _ : state) {
+    env.execute("a = fn(a, 10)");
+  }
+}
+
 BENCHMARK(luacppb_state_initialisation);
 BENCHMARK(luacppb_variable_assignment);
 BENCHMARK(luacppb_variable_access);
@@ -136,3 +149,4 @@ BENCHMARK(luacppb_lua_function_call);
 BENCHMARK(luacppb_table_get);
 BENCHMARK(luacppb_object_binding);
 BENCHMARK(luacppb_userdata_binding);
+BENCHMARK(luacppb_stateful_functions);

@@ -19,94 +19,94 @@
 #include "sol.hpp"
 
 static void sol_state_initialisation(benchmark::State &state) {
-    for (auto _ : state) {
-        sol::state env;
-    }
+  for (auto _ : state) {
+    sol::state env;
+  }
 }
 
 static void sol_variable_assignment(benchmark::State &state) {
-    sol::state env;
-    const int value = 42;
-    for (auto _ : state) {
-        env.set("variable", value);
-    }
+  sol::state env;
+  const int value = 42;
+  for (auto _ : state) {
+    env.set("variable", value);
+  }
 }
 
 static void sol_variable_access(benchmark::State &state) {
-    sol::state env;
-    env.set("variable", 42);
-    volatile int value;
-    for (auto _ : state) {
-        value = env["variable"];
-    }
+  sol::state env;
+  env.set("variable", 42);
+  volatile int value;
+  for (auto _ : state) {
+    value = env["variable"];
+  }
 }
 
 static int c_function(int x, int y) {
-    return x + y;
+  return x + y;
 }
 
 static void sol_function_call(benchmark::State &state) {
-    sol::state env;
-    env.set("mult", c_function);
-    for (auto _ : state) {
-        env.do_string("mult(4, 5)");
-    }
+  sol::state env;
+  env.set("mult", c_function);
+  for (auto _ : state) {
+    env.do_string("mult(4, 5)");
+  }
 }
 
 static void sol_lua_function_call(benchmark::State &state) {
-    sol::state env;
-    env.do_string("function mult(x, y)\n    return x * y\nend");
-    volatile int value;
-    for (auto _ : state) {
-        value = env["mult"](4, 5);
-    }
+  sol::state env;
+  env.do_string("function mult(x, y)\n    return x * y\nend");
+  volatile int value;
+  for (auto _ : state) {
+    value = env["mult"](4, 5);
+  }
 }
 
 static void sol_table_get(benchmark::State &state) {
-    sol::state env;
-    env["tbl"] = env.create_table_with(
-        "field", 5
-    );
-    auto tbl = env["tbl"];
-    volatile int value;
-    for (auto _ : state) {
-        value = tbl["field"];
-    }
+  sol::state env;
+  env["tbl"] = env.create_table_with(
+    "field", 5
+  );
+  auto tbl = env["tbl"];
+  volatile int value;
+  for (auto _ : state) {
+    value = tbl["field"];
+  }
 }
 
 static void sol_object_binding(benchmark::State &state) {
-    class TestClass {
-     public:
-      TestClass(int x) : value(x) {}
+  class TestClass {
+   public:
+    TestClass(int x) : value(x) {}
 
-      int sum(int x) const {
-        return x + this->value;
-      }
-
-      void setValue(int x) {
-        this->value = x;
-      }
-     private:
-      int value;
-    };
-    
-    sol::state env;
-    env.new_usertype<TestClass>("testClass", "sum", &TestClass::sum, "set", &TestClass::setValue);
-    TestClass obj(10);
-    env["obj"] = obj;
-    const std::string &CODE = "obj:set(obj:sum(1))";
-    for (auto _ : state) {
-      env.do_string(CODE);
+    int sum(int x) const {
+      return x + this->value;
     }
+
+    void setValue(int x) {
+      this->value = x;
+    }
+    private:
+    int value;
+  };
+  
+  sol::state env;
+  env.new_usertype<TestClass>("testClass", "sum", &TestClass::sum, "set", &TestClass::setValue);
+  TestClass obj(10);
+  env["obj"] = obj;
+  const std::string &CODE = "obj:set(obj:sum(1))";
+  for (auto _ : state) {
+    env.do_string(CODE);
+  }
 }
 
 struct temp {
-    int add(int x) {
-        this->value += x;
-        return this->value;
-    }
+  int add(int x) {
+    this->value += x;
+    return this->value;
+  }
 
-    int value;
+  int value;
 };
 
 static void sol_userdata_binding(benchmark::State &state) {
@@ -119,6 +119,19 @@ static void sol_userdata_binding(benchmark::State &state) {
   }
 }
 
+static void sol_stateful_functions(benchmark::State &state) {
+  sol::state env;
+  constexpr float C = 3.14f;
+  std::function<float(float, float)> fn = [&](float x, float y) {
+    return (x + y) * C;
+  };
+  env["fn"] = fn;
+  env["a"] = 1;
+  for (auto _ : state) {
+    env.do_string("a = fn(a, 10)");
+  }
+}
+
 
 BENCHMARK(sol_state_initialisation);
 BENCHMARK(sol_variable_assignment);
@@ -128,3 +141,4 @@ BENCHMARK(sol_lua_function_call);
 BENCHMARK(sol_table_get);
 BENCHMARK(sol_object_binding);
 BENCHMARK(sol_userdata_binding);
+BENCHMARK(sol_stateful_functions);

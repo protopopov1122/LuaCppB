@@ -19,165 +19,202 @@
 #include "luacppb/LuaCppB.h"
 
 static void lua_state_initialisation(benchmark::State &state) {
-    for (auto _ : state) {
-        lua_State *L = luaL_newstate();
-        lua_close(L);
-    }
+  for (auto _ : state) {
+    lua_State *L = luaL_newstate();
+    lua_close(L);
+  }
 }
 
 static void lua_variable_assignment(benchmark::State &state) {
-    lua_State *L = luaL_newstate();
-    const int value = 42;
-    for (auto _ : state) {
-        lua_pushinteger(L, value);
-        lua_setglobal(L, "variable");
-    }
-    lua_close(L);
+  lua_State *L = luaL_newstate();
+  const int value = 42;
+  for (auto _ : state) {
+    lua_pushinteger(L, value);
+    lua_setglobal(L, "variable");
+  }
+  lua_close(L);
 }
 
 static void lua_variable_access(benchmark::State &state) {
-    lua_State *L = luaL_newstate();
-    lua_pushinteger(L, 42);
-    lua_setglobal(L, "variable");
-    volatile int value;
-    for (auto _ : state) {
-        lua_getglobal(L, "variable");
-        value = lua_tointeger(L, -1);
-        lua_pop(L, 1);
-    }
-    lua_close(L);
+  lua_State *L = luaL_newstate();
+  lua_pushinteger(L, 42);
+  lua_setglobal(L, "variable");
+  volatile int value;
+  for (auto _ : state) {
+    lua_getglobal(L, "variable");
+    value = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+  }
+  lua_close(L);
 }
 
 static int c_function(lua_State *L) {
-    int x = lua_tointeger(L, 1);
-    int y = lua_tointeger(L, 2);
-    lua_pushinteger(L, x * y);
-    return 1;
+  int x = lua_tointeger(L, 1);
+  int y = lua_tointeger(L, 2);
+  lua_pushinteger(L, x * y);
+  return 1;
 }
 
 static void lua_c_function_call(benchmark::State &state) {
-    lua_State *L = luaL_newstate();
-    lua_pushcfunction(L, c_function);
-    lua_setglobal(L, "mult");
-    for (auto _ : state) {
-        luaL_dostring(L, "mult(4, 5)");
-    }
-    lua_close(L);
+  lua_State *L = luaL_newstate();
+  lua_pushcfunction(L, c_function);
+  lua_setglobal(L, "mult");
+  for (auto _ : state) {
+    luaL_dostring(L, "mult(4, 5)");
+  }
+  lua_close(L);
 }
 
 static void lua_lua_function_call(benchmark::State &state) {
-    lua_State *L = luaL_newstate();
-    luaL_dostring(L, "function mult(x, y)\n    return x * y\nend");
-    volatile int value;
-    for (auto _ : state) {
-        lua_getglobal(L, "mult");
-        lua_pushinteger(L, 4);
-        lua_pushinteger(L, 5);
-        lua_pcall(L, 2, 1, 0);
-        value = lua_tointeger(L, -1);
-        lua_pop(L, 1);
-    }
-    lua_close(L);
+  lua_State *L = luaL_newstate();
+  luaL_dostring(L, "function mult(x, y)\n    return x * y\nend");
+  volatile int value;
+  for (auto _ : state) {
+    lua_getglobal(L, "mult");
+    lua_pushinteger(L, 4);
+    lua_pushinteger(L, 5);
+    lua_pcall(L, 2, 1, 0);
+    value = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+  }
+  lua_close(L);
 }
 
 
 static void lua_table_get(benchmark::State &state) {
-    lua_State *L = luaL_newstate();
-    lua_newtable(L);
-    lua_pushinteger(L, 42);
-    lua_setfield(L, -2, "field");
-    lua_setglobal(L, "tbl");
-    volatile int value;
-    for (auto _ : state) {
-        lua_getglobal(L, "tbl");
-        lua_getfield(L, -1, "field");
-        value = lua_tointeger(L, -1);
-        lua_pop(L, 2);
-    }
-    lua_close(L);
+  lua_State *L = luaL_newstate();
+  lua_newtable(L);
+  lua_pushinteger(L, 42);
+  lua_setfield(L, -2, "field");
+  lua_setglobal(L, "tbl");
+  volatile int value;
+  for (auto _ : state) {
+    lua_getglobal(L, "tbl");
+    lua_getfield(L, -1, "field");
+    value = lua_tointeger(L, -1);
+    lua_pop(L, 2);
+  }
+  lua_close(L);
 }
 
 class LuaTestClass {
-    public:
-    LuaTestClass(int x) : value(x) {}
+ public:
+  LuaTestClass(int x) : value(x) {}
 
-    int sum(int x) const {
+  int sum(int x) const {
     return x + this->value;
-    }
+  }
 
-    void setValue(int x) {
-        this->value = x;
-    }
-    private:
-    int value;
+  void setValue(int x) {
+    this->value = x;
+  }
+  private:
+  int value;
 };
 
 static int lua_testobj_sum(lua_State *L) {
-    LuaTestClass *obj = reinterpret_cast<LuaTestClass *>(lua_touserdata(L, 1));
-    int x = lua_tointeger(L, 2);
-    lua_pushinteger(L, obj->sum(x));
-    return 1;
+  LuaTestClass *obj = reinterpret_cast<LuaTestClass *>(lua_touserdata(L, 1));
+  int x = lua_tointeger(L, 2);
+  lua_pushinteger(L, obj->sum(x));
+  return 1;
 }
 
 static int lua_testobj_set(lua_State *L) {
-    LuaTestClass *obj = reinterpret_cast<LuaTestClass *>(lua_touserdata(L, 1));
-    int x = lua_tointeger(L, 2);
-    obj->setValue(x);
-    return 0;
+  LuaTestClass *obj = reinterpret_cast<LuaTestClass *>(lua_touserdata(L, 1));
+  int x = lua_tointeger(L, 2);
+  obj->setValue(x);
+  return 0;
 }
 
 static void lua_object_binding(benchmark::State &state) {
-    lua_State *L = luaL_newstate();
-    LuaTestClass obj(10);
-    lua_pushlightuserdata(L, &obj);
-    lua_newtable(L);
-    lua_newtable(L);
-    lua_pushcfunction(L, lua_testobj_sum);
-    lua_setfield(L, -2, "sum");
-    lua_pushcfunction(L, lua_testobj_set);
-    lua_setfield(L, -2, "set");
-    lua_setfield(L, -2, "__index");
-    lua_setmetatable(L, -2);
-    lua_setglobal(L, "obj");
-    const char *CODE = "obj:set(obj:sum(1))";
-    for (auto _ : state) {
-      luaL_dostring(L, CODE);
-    }
-    lua_close(L);
+  lua_State *L = luaL_newstate();
+  LuaTestClass obj(10);
+  lua_pushlightuserdata(L, &obj);
+  lua_newtable(L);
+  lua_newtable(L);
+  lua_pushcfunction(L, lua_testobj_sum);
+  lua_setfield(L, -2, "sum");
+  lua_pushcfunction(L, lua_testobj_set);
+  lua_setfield(L, -2, "set");
+  lua_setfield(L, -2, "__index");
+  lua_setmetatable(L, -2);
+  lua_setglobal(L, "obj");
+  const char *CODE = "obj:set(obj:sum(1))";
+  for (auto _ : state) {
+    luaL_dostring(L, CODE);
+  }
+  lua_close(L);
 }
 
 struct temp {
-    int value;
+  int value;
 };
 
 static int lua_udata_add(lua_State *L) {
-    temp *i = reinterpret_cast<temp *>(lua_touserdata(L, 1));
-    int x = lua_tointeger(L, 2);
-    i->value += x;
-    lua_pushinteger(L, i->value);
-    return 1;
+  temp *i = reinterpret_cast<temp *>(lua_touserdata(L, 1));
+  int x = lua_tointeger(L, 2);
+  i->value += x;
+  lua_pushinteger(L, i->value);
+  return 1;
 }
 
 static int lua_void(lua_State *state) {
-    return 0;
+  return 0;
 }
 
 static void lua_userdata_binding(benchmark::State &state) {
-    lua_State *L = luaL_newstate();
-    temp *i = reinterpret_cast<temp *>(lua_newuserdata(L, sizeof(temp)));
-    i->value = 10;
-    lua_newtable(L);
-    lua_pushcfunction(L, lua_udata_add);
-    lua_setfield(L, -2, "__add");
-    lua_setmetatable(L, -2);
-    lua_setglobal(L, "i");
-    lua_pushcfunction(L, lua_void);
-    lua_setglobal(L, "void");
-    const char *CODE = "void(i + 1)";
-    for (auto _ : state) {
-      luaL_dostring(L, CODE);
-    }
-    lua_close(L);
+  lua_State *L = luaL_newstate();
+  temp *i = reinterpret_cast<temp *>(lua_newuserdata(L, sizeof(temp)));
+  i->value = 10;
+  lua_newtable(L);
+  lua_pushcfunction(L, lua_udata_add);
+  lua_setfield(L, -2, "__add");
+  lua_setmetatable(L, -2);
+  lua_setglobal(L, "i");
+  lua_pushcfunction(L, lua_void);
+  lua_setglobal(L, "void");
+  const char *CODE = "void(i + 1)";
+  for (auto _ : state) {
+    luaL_dostring(L, CODE);
+  }
+  lua_close(L);
+}
+
+static int lua_fn_gc(lua_State *L) {
+  std::function<float(float, float)> *fn = static_cast<std::function<float(float, float)> *>(lua_touserdata(L, 1));
+  delete fn;
+  return 0;
+}
+
+static int lua_fn_call(lua_State *L) {
+  std::function<float(float, float)> *fn = static_cast<std::function<float(float, float)> *>(lua_touserdata(L, 1));
+  float x = lua_tonumber(L, 2);
+  float y = lua_tonumber(L, 3);
+  float res = (*fn)(x, y);
+  lua_pushnumber(L, res);
+  return 1;
+}
+
+static void lua_stateful_functions(benchmark::State &state) {
+  lua_State *L = luaL_newstate();
+  constexpr float C = 3.14f;
+  std::function<float(float, float)> *fn = new std::function<float(float, float)>([&](float x, float y) {
+    return (x + y) * C;
+  });
+  lua_pushlightuserdata(L, fn);
+  lua_newtable(L);
+  lua_pushcfunction(L, lua_fn_gc);
+  lua_setfield(L, -2, "__gc");
+  lua_pushcfunction(L, lua_fn_call);
+  lua_setfield(L, -2, "__call");
+  lua_setmetatable(L, -2);
+  lua_setglobal(L, "fn");
+  lua_pushinteger(L, 1);
+  lua_setglobal(L, "a");
+  for (auto _ : state) {
+    luaL_dostring(L, "a = fn(a, 10)");
+  }
+  lua_close(L);
 }
 
 BENCHMARK(lua_state_initialisation);
@@ -188,3 +225,4 @@ BENCHMARK(lua_lua_function_call);
 BENCHMARK(lua_table_get);
 BENCHMARK(lua_object_binding);
 BENCHMARK(lua_userdata_binding);
+BENCHMARK(lua_stateful_functions);

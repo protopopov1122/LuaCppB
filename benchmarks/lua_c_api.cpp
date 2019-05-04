@@ -55,7 +55,7 @@ static int c_function(lua_State *L) {
   return 1;
 }
 
-static void lua_c_function_call(benchmark::State &state) {
+static void lua_function_call(benchmark::State &state) {
   lua_State *L = luaL_newstate();
   lua_pushcfunction(L, c_function);
   lua_setglobal(L, "mult");
@@ -220,7 +220,7 @@ static void lua_stateful_functions(benchmark::State &state) {
 BENCHMARK(lua_state_initialisation);
 BENCHMARK(lua_variable_assignment);
 BENCHMARK(lua_variable_access);
-BENCHMARK(lua_c_function_call);
+BENCHMARK(lua_function_call);
 BENCHMARK(lua_lua_function_call);
 BENCHMARK(lua_table_get);
 BENCHMARK(lua_object_binding);

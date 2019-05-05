@@ -90,6 +90,9 @@ namespace LuaCppB {
 	class LuaUniqueState : public LuaState {
 	 public:
 		LuaUniqueState(lua_State * = nullptr);
+#ifdef LUACPPB_CUSTOM_ALLOCATOR_SUPPORT
+		LuaUniqueState(std::shared_ptr<LuaAllocator>);
+#endif
 		LuaUniqueState(const LuaUniqueState &) = delete;
 		LuaUniqueState(LuaUniqueState &&);
 		virtual ~LuaUniqueState();
@@ -104,6 +107,9 @@ namespace LuaCppB {
 	class LuaEnvironment : public LuaUniqueState {
 	 public:
 		LuaEnvironment(bool = true);
+#ifdef LUACPPB_CUSTOM_ALLOCATOR_SUPPORT
+		LuaEnvironment(std::shared_ptr<LuaAllocator>, bool = true);
+#endif
 		Internal::LuaFunctionCallResult load(const std::string &);
 		Internal::LuaFunctionCallResult execute(const std::string &);
 	 private:

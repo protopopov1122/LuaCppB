@@ -16,6 +16,7 @@ namespace LuaCppB {
     virtual void deallocate(void *, std::size_t) = 0;
 
     static void bind(lua_State *, LuaAllocator &);
+    static lua_State *create(LuaAllocator &);
   };
 }
 

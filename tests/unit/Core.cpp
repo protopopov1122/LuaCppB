@@ -437,6 +437,19 @@ TEST_CASE("Allocator") {
   LuaEnvironment env;
   auto alloc = std::make_shared<TestLuaAllocator>();
   env.setCustomAllocator(alloc);
+  REQUIRE(alloc->getMaxAllocation() == 0);
+  const std::string &CODE = "tbl = {}\n"
+                            "for i = 1,100 do\n"
+                            "    tbl[i] = 'Hello, ' .. i\n"
+                            "end";
+  REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
+  REQUIRE(alloc->getMaxAllocation() > 0);
+}
+
+TEST_CASE("Constructing with allocator") {
+  auto alloc = std::make_shared<TestLuaAllocator>();
+  LuaEnvironment env(alloc);
+  REQUIRE(alloc->getMaxAllocation() > 0);
   const std::string &CODE = "tbl = {}\n"
                             "for i = 1,100 do\n"
                             "    tbl[i] = 'Hello, ' .. i\n"

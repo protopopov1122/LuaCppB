@@ -201,6 +201,13 @@ namespace LuaCppB {
 #endif
 	}
 
+#ifdef LUACPPB_CUSTOM_ALLOCATOR_SUPPORT
+		LuaUniqueState::LuaUniqueState(std::shared_ptr<LuaAllocator> alloc)
+			: LuaUniqueState(LuaAllocator::create(*alloc)) {
+			this->allocator = alloc;
+		}
+#endif
+
 	LuaUniqueState::LuaUniqueState(LuaUniqueState &&state)
 		: LuaState(state.state, std::move(state.runtime)), panicUnbind(std::move(state.panicUnbind)) {
 		state.state = nullptr;
@@ -244,6 +251,15 @@ namespace LuaCppB {
 			luaL_openlibs(this->state);
 		}
 	}
+
+#ifdef LUACPPB_CUSTOM_ALLOCATOR_SUPPORT
+		LuaEnvironment::LuaEnvironment(std::shared_ptr<LuaAllocator> alloc, bool openLibs)
+			: LuaUniqueState(alloc) {	
+			if (openLibs) {
+				luaL_openlibs(this->state);
+			}
+		}
+#endif
 
 	Internal::LuaFunctionCallResult LuaEnvironment::load(const std::string &path) {
 		if (!this->isValid()) {

@@ -32,6 +32,10 @@ namespace LuaCppB {
   void LuaAllocator::bind(lua_State *state, LuaAllocator &alloc) {
     lua_setallocf(state, LuaAllocator_alloc, reinterpret_cast<void *>(&alloc));
   }
+
+  lua_State *LuaAllocator::create(LuaAllocator &alloc) {
+    return lua_newstate(LuaAllocator_alloc, reinterpret_cast<void *>(&alloc));
+  }
 }
 
 #endif

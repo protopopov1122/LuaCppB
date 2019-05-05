@@ -52,14 +52,20 @@ namespace LuaCppB::Internal {
         origStack.copy(-1);
         origStack.move(thread, 1);
       }
+      std::function<void (A &&...)> callback;
       if (origStack.is<LuaType::Function>(-1)) {
-        LuaFunctionCall::callK<A...>(thread, -1, runtime, std::move(cont), std::forward<A>(args)...);
+        callback = [&](A &&... args) {
+          LuaFunctionCall::callK(thread, -1, runtime, std::move(cont), std::forward<A>(args)...);
+        };
       } else if (origStack.is<LuaType::Thread>(-1)) {
-        std::vector<LuaValue> results;
-        LuaCoroutine coro(LuaThread(state, -1), runtime);
-        LuaError error = coro.call(results, args...);
-        cont->call(state, runtime, error, results);
+        callback = [&](A &&... args) {
+          std::vector<LuaValue> results;
+          LuaCoroutine coro(LuaThread(state, -1), runtime);
+          LuaError error = coro.call(results, args...);
+          cont->call(state, runtime, error, results);
+        };
       }
+      callback(std::forward<A>(args)...);
     });
   }
 

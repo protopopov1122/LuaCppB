@@ -19,7 +19,7 @@ if [[ -x "$amalgamate" ]] ; then
 	echo "Install amalgamate from https://github.com/vinniefalco/Amalgamate/"
 fi
 
-find "$LUA_DIR/src" -name "*.c" -not -name "lua.c" -not -name "luac.c" -exec cat {} \; > "$DEST_DIR/lua.raw.c"
+find "$LUA_DIR/src" -name "*.c" -not -name "lua.c" -not -name "luac.c" -exec cat {} \; -exec printf "\n" \; > "$DEST_DIR/lua.raw.c"
 $amalgamate -i "$LUA_DIR/src" "$DEST_DIR/lua.raw.c" "$DEST_DIR/lua.c"
 $amalgamate -i "$LUA_DIR/src" "$LUA_DIR/src/lua.h" "$DEST_DIR/lua.h"
 $amalgamate -i "$LUA_DIR/src" "$LUA_DIR/src/lualib.h" "$DEST_DIR/lualib.h"

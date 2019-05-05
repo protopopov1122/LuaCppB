@@ -19,7 +19,7 @@ if [[ -x "$amalgamate" ]] ; then
 	echo "Install amalgamate from https://github.com/vinniefalco/Amalgamate/"
 fi
 
-find "$LUACPPB_DIR/source" -name "*.cpp" -exec cat {} \; > "$DEST_DIR/LuaCppB.raw.cpp"
+find "$LUACPPB_DIR/source" -name "*.cpp" -exec cat {} \; -exec printf "\n" \; > "$DEST_DIR/LuaCppB.raw.cpp"
 $amalgamate -i "$LUACPPB_DIR/headers" "$DEST_DIR/LuaCppB.raw.cpp" "$DEST_DIR/LuaCppB.cpp"
 $amalgamate -i "$LUACPPB_DIR/headers" "$LUACPPB_DIR/headers/luacppb/LuaCppB.h" "$DEST_DIR/LuaCppB.h"
 rm "$DEST_DIR/LuaCppB.raw.cpp"

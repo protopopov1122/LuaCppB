@@ -102,18 +102,18 @@ namespace LuaCppB::Internal {
     Internal::LuaStack stack(state);
     if (stack.metatable(typeName)) {
       stack.push(&runtime);
-      stack.push(&LuaCppVector<P>::vector_index<V>, 1);
+      stack.push(&LuaCppVector<P>::template vector_index<V>, 1);
       stack.setField(-2, "__index");
       if constexpr (!std::is_const<V>::value) {
         stack.push(&cpp_vector_newindex<T, A>::newindex);
         stack.setField(-2, "__newindex");
       }
       stack.push(&runtime);
-      stack.push(&LuaCppVector<P>::vector_pairs<V>, 1);
+      stack.push(&LuaCppVector<P>::template vector_pairs<V>, 1);
       stack.setField(-2, "__pairs");
-      stack.push(&LuaCppVector<P>::vector_length<V>);
+      stack.push(&LuaCppVector<P>::template vector_length<V>);
       stack.setField(-2, "__len");
-      stack.push(&LuaCppVector::vector_gc<V, D>);
+      stack.push(&LuaCppVector::template vector_gc<V, D>);
       stack.setField(-2, "__gc");
       stack.pushTable();
       stack.setField(-2, "__metatable");

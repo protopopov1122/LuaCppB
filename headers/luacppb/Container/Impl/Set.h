@@ -73,18 +73,18 @@ namespace LuaCppB::Internal {
     Internal::LuaStack stack(state);
     std::string typeName = typeid(S).name();
     if (stack.metatable(typeName)) {
-      stack.push(&LuaCppSet<P>::set_get<S>);
+      stack.push(&LuaCppSet<P>::template set_get<S>);
       stack.setField(-2, "__index");
       if constexpr (!std::is_const<S>::value) {
         stack.push(&LuaCppSet_put<P, S>);
         stack.setField(-2, "__newindex");
       }
-      stack.push(&LuaCppSet<P>::set_size<S>);
+      stack.push(&LuaCppSet<P>::template set_size<S>);
       stack.setField(-2, "__len");
       stack.push(&runtime);
-      stack.push(&LuaCppSet<P>::set_pairs<S>, 1);
+      stack.push(&LuaCppSet<P>::template set_pairs<S>, 1);
       stack.setField(-2, "__pairs");
-      stack.push(&LuaCppSet<P>::set_gc<S, D>);
+      stack.push(&LuaCppSet<P>::template set_gc<S, D>);
       stack.setField(-2, "__gc");
       stack.pushTable();
       stack.setField(-2, "__metatable");

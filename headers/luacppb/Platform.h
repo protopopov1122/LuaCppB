@@ -35,6 +35,10 @@
 
 #endif
 
+#if defined(__arm__) || defined(_M_ARM)
+#define LUACPPB_ARCH_ARM
+#endif
+
 #ifdef LUACPPB_COMPILER_UNSUPPORTED
 #warning "Build using your compiler is not tested and may fail"
 #endif

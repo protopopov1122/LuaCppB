@@ -76,6 +76,10 @@
   #define LUACPPB_DEBUG_SUPPORT
 #endif
 
+#if defined(LUACPPB_ARCH_ARM) && !defined(LUACPPB_CXX_MODE)
+  #define LUACPPB_NO_EXCEPTION_PASSTHROUGH
+#endif
+
 #include <cstddef>
 #include "luacppb/Compat.h"
 

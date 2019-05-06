@@ -58,7 +58,7 @@ if get_option('system_lua')
     LUA = dependency('lua')
   endif
 else
-  LUACPPB_CXX_FLAGS = '-DLUACPPB_CXX_MODE'
+  LUACPPB_CXX_FLAGS = ['-DLUACPPB_CXX_MODE']
   LUA_HEADERS = include_directories(custom_lua_source_dir)
   lua = static_library('lua-cpp', custom_lua_source,
     include_directories : LUA_HEADERS)

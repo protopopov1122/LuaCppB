@@ -238,6 +238,7 @@ TEST_CASE("Lambda wrapping") {
   REQUIRE(tostr(sum(2, mul(2, 2))).compare("=6") == 0);
 }
 
+#ifndef LUACPPB_NO_EXCEPTION_PASSTHROUGH
 TEST_CASE("Invocation with exception ignoring") {
   LuaEnvironment env;
   Factor factor(10);
@@ -249,6 +250,7 @@ TEST_CASE("Invocation with exception ignoring") {
   REQUIRE(env["fn"](factor).hasError());
   REQUIRE(env["fn"](factor) == LuaStatusCode::RuntimeError);
 }
+#endif
 
 TEST_CASE("Lua function call") {
   LuaEnvironment env;

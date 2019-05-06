@@ -21,59 +21,59 @@
 #include "luacppb/Config.h"
 #include "luacppb/Platform.h"
 
+#ifdef LUA_VERSION_NUM
+  #define LUACPPB_CUSTOM_LUA_INCLUDES
+#else
+  #ifdef LUACPPB_CXX_MODE
+    #include "lua.h"
+    #include "lualib.h"
+    #include "lauxlib.h"
+  #else
+    #ifdef LUACPPB_LUAJIT
+      #if __has_include(<luajit-2.0/lua.hpp>)
+        #include <luajit-2.0/lua.hpp>
+      #else
+        #include <lua.hpp>
+      #endif
+    #else
+      extern "C" {
+      #include <lua.h>
+      #include <lualib.h>
+      #include <lauxlib.h>
+      }
+    #endif
+  #endif
+#endif
+
 #ifdef LUACPPB_CXX_MODE
+  #ifndef LUACPPB_DISABLE_COROUTINE_SUPPORT
+    #define LUACPPB_COROUTINE_SUPPORT
+  #endif
 
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
+  #if !defined(LUACPPB_DISABLE_CONTINUATION_SUPPORT) && !defined(LUACPPB_DISABLE_COROUTINE_SUPPORT)
+    #define LUACPPB_CONTINUATION_SUPPORT
+  #endif
 
-#ifndef LUACPPB_DISABLE_COROUTINE_SUPPORT
-#define LUACPPB_COROUTINE_SUPPORT
-#endif
+  #ifndef LUACPPB_DISABLE_ERROR_SUPPORT
+    #define LUACPPB_ERROR_SUPPORT
+  #endif
 
-#if !defined(LUACPPB_DISABLE_CONTINUATION_SUPPORT) && !defined(LUACPPB_DISABLE_COROUTINE_SUPPORT)
-#define LUACPPB_CONTINUATION_SUPPORT
-#endif
-
-#ifndef LUACPPB_DISABLE_ERROR_SUPPORT
-#define LUACPPB_ERROR_SUPPORT
-#endif
-
-#ifndef LUACPPB_DISABLE_EXCEPTION_PROPAGATION
-#define LUACPPB_EXCEPTION_PROPAGATION_SUPPORT
-#endif
-
-#else
-
-#ifdef LUACPPB_LUAJIT
-
-#if __has_include(<luajit-2.0/lua.hpp>)
-#include <luajit-2.0/lua.hpp>
-#else
-#include <lua.hpp>
-#endif
-
-#else
-extern "C" {
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
-#endif
-
+  #ifndef LUACPPB_DISABLE_EXCEPTION_PROPAGATION
+    #define LUACPPB_EXCEPTION_PROPAGATION_SUPPORT
+  #endif
 #endif
 
 #ifdef LUAJIT_VERSION_NUM
-#define LUACPPB_HAS_JIT
-#define LUACPPB_DISABLE_CUSTOM_ALLOCATOR
+  #define LUACPPB_HAS_JIT
+  #define LUACPPB_DISABLE_CUSTOM_ALLOCATOR
 #endif
 
 #ifndef LUACPPB_DISABLE_CUSTOM_ALLOCATOR
-#define LUACPPB_CUSTOM_ALLOCATOR_SUPPORT
+  #define LUACPPB_CUSTOM_ALLOCATOR_SUPPORT
 #endif
 
 #ifndef LUACPPB_DISABLE_DEBUG
-#define LUACPPB_DEBUG_SUPPORT
+  #define LUACPPB_DEBUG_SUPPORT
 #endif
 
 #include <cstddef>

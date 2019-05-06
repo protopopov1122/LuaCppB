@@ -18,11 +18,21 @@
 #ifndef LUACPPB_CONFIG_H_
 #define LUACPPB_CONFIG_H_
 
+// You can use this file to configure your LuaCppB
+
+// Uncomment these defines to explicitly disable some features
 // #define LUACPPB_DISABLE_EXCEPTION_PROPAGATION
 // #define LUACPPB_DISABLE_ERROR_SUPPORT
 // #define LUACPPB_DISABLE_COROUTINE_SUPPORT
 // #define LUACPPB_DISABLE_CONTINUATION_SUPPORT
 // #define LUACPPB_DISABLE_CUSTOM_ALLOCATOR
 // #define LUACPPB_DISABLE_DEBUG
+
+// Place there your Lua includes, if they use non-standard include paths. E.g.
+// #include <lua5.3/lua.h>
+// #include <lua5.3/lualib.h>
+// #include <lua5.3/lauxlib.h>
+// If your custom build is compiled by C++ compiler, uncomment line below
+// #define LUACPPB_CXX_MODE
 
 #endif

@@ -169,9 +169,10 @@ TEST_CASE("Map") {
     { 10, 100 }
   };
   SECTION("By reference") {
-    env["map"] = map;
+    auto nmap = map;
+    env["map"] = nmap;
     test_map(env);
-    REQUIRE(map[3] == 30);
+    REQUIRE(nmap[3] == 30);
   }
   SECTION("By const reference") {
    const std::string &CODE = "sz = #map\n"
@@ -186,15 +187,20 @@ TEST_CASE("Map") {
                              "end"
 #endif
                              ;
-    const auto &cMap = map;
+    std::map<int, int> nmap = {
+      { 1, 10 },
+      { 2, 20 },
+      { 3, 30 }
+    };
+    const auto &cMap = nmap;
     env["map"] = cMap;
     REQUIRE(env.execute(CODE) == LuaStatusCode::Ok);
     REQUIRE(env["sz"].get<int>() == 3);
 #ifdef LUACPPB_CONTAINER_PAIRS_SUPPORT
     int psum = env["psum"];
     int isum = env["isum"];
-    REQUIRE(psum == 1050);
-    REQUIRE(isum == 50);
+    REQUIRE(psum == 140);
+    REQUIRE(isum == 140);
 #endif
   }
   SECTION("Unique pointer") {

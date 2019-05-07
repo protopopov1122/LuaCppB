@@ -15,10 +15,10 @@ compatibility is not an aim, so LuaCppB reduces it's functionality according to 
 
 LuaCppB also disables some minor functions if they're not available:
 * `LUACPPB_GC_ISRUNNING_SUPPORT` - existence of `LuaGC::isRunning` method, disabled for Lua 5.1.
-* `LUACPPB_CONTAINER_PAIRS_SUPPORT` - `pairs` and `ipairs` functions for C++ container wrappers, enabled
-  only for Lua 5.3.
+* `LUACPPB_CONTAINER_PAIRS_SUPPORT` - `pairs` and `ipairs` functions for C++ container wrappers, disabled for Lua 5.1.
 * `LUACPPB_DEBUG_EXTRAS_SUPPORT` - some extra debugging methods, disabled for Lua 5.1.
 * `LUACPPB_GLOBAL_TABLE_SUPPORT` - `LuaState::getGlobals` method is disabled for Lua 5.1.
+* `LUACPPB_NO_EXCEPTION_PASSTHROUGH` - C++ exception passing through C code is disabled on ARMs.
 
 You can also forcefully disable some LuaCppB features in `Config.h` by uncommenting macro definitions:
 * `LUACPPB_DISABLE_EXCEPTION_PROPAGATION`

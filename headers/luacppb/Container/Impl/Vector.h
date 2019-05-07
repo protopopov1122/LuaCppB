@@ -111,6 +111,9 @@ namespace LuaCppB::Internal {
       stack.push(&runtime);
       stack.push(&LuaCppVector<P>::template vector_pairs<V>, 1);
       stack.setField(-2, "__pairs");
+      stack.push(&runtime);
+      stack.push(&LuaCppVector<P>::template vector_ipairs<V>, 1);
+      stack.setField(-2, "__ipairs");
       stack.push(&LuaCppVector<P>::template vector_length<V>);
       stack.setField(-2, "__len");
       stack.push(&LuaCppVector::template vector_gc<V, D>);
@@ -196,6 +199,37 @@ namespace LuaCppB::Internal {
     if (iter != vec->end()) {
       P::push(state, runtime, index + 1);
       P::push(state, runtime, *iter);
+      return 2;
+    } else {
+      return 0;
+    }
+  }
+
+  template <typename P>
+  template <typename V>
+  int LuaCppVector<P>::vector_ipairs(lua_State *state) {
+    lua_pushvalue(state, lua_upvalueindex(1));
+    lua_pushcclosure(state, &LuaCppVector<P>::vector_iiter<V>, 1);
+    lua_pushvalue(state, 1);
+    lua_pushinteger(state, 0);
+    return 3;
+  }
+
+  template <typename P>
+  template <typename V>
+  int LuaCppVector<P>::vector_iiter(lua_State *state) {
+    using Handle = LuaCppObjectWrapper<V>;
+    LuaStack stack(state);
+    LuaCppRuntime &runtime = *stack.toPointer<LuaCppRuntime *>(lua_upvalueindex(1));
+    Handle *handle = stack.toPointer<Handle *>(1);
+    V *vector = handle->get();
+    if (vector == nullptr) {
+      return 0;
+    }
+    std::size_t index = stack.toInteger(2);
+    if (index < vector->size()) {
+      P::push(state, runtime, index + 1);
+      P::push(state, runtime, vector->at(index));
       return 2;
     } else {
       return 0;

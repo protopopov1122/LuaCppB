@@ -73,6 +73,12 @@ namespace LuaCppB::Internal {
 
     template <typename V>
     static int vector_iter(lua_State *);
+
+    template <typename V>
+    static int vector_ipairs(lua_State *);
+
+    template <typename V>
+    static int vector_iiter(lua_State *);
   };
 }
 

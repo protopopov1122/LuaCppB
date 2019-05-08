@@ -24,6 +24,7 @@
 #include "luacppb/Invoke/Lua.h"
 #include "luacppb/Invoke/Native.h"
 #include "luacppb/Core/Impl/Debug.h"
+#include "luacppb/Value/Impl/Value.h"
 #include <cassert>
 #include <memory>
 

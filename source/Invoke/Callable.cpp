@@ -16,6 +16,7 @@
 */
 
 #include "luacppb/Invoke/Callable.h"
+#include "luacppb/Invoke/Impl/Lua.h"
 
 namespace LuaCppB {
 

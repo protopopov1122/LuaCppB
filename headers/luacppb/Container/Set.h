@@ -70,6 +70,4 @@ namespace LuaCppB::Internal {
   };
 }
 
-#include "luacppb/Container/Impl/Set.h"
-
 #endif

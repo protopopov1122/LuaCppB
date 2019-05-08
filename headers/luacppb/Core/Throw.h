@@ -30,6 +30,4 @@ namespace LuaCppB {
 
 #endif
 
-#include "luacppb/Core/Impl/Throw.h"
-
 #endif

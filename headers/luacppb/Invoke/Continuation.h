@@ -108,8 +108,6 @@ namespace LuaCppB {
   };
 }
 
-#include "luacppb/Invoke/Impl/Continuation.h"
-
 #endif
 
 #endif

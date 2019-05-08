@@ -46,6 +46,4 @@ namespace LuaCppB::Internal {
 	};
 }
 
-#include "luacppb/Object/Impl/Method.h"
-
 #endif

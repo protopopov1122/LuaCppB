@@ -76,6 +76,4 @@ namespace LuaCppB::Internal {
   };
 }
 
-#include "luacppb/Container/Impl/Map.h"
-
 #endif

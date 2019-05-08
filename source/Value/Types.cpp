@@ -21,6 +21,8 @@
 #include "luacppb/Reference/Handle.h"
 #include "luacppb/Core/Error.h"
 #include "luacppb/Core/Stack.h"
+#include "luacppb/Core/Impl/Stack.h"
+#include "luacppb/Value/Impl/Types.h"
 
 namespace LuaCppB {
 

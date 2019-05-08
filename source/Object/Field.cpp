@@ -16,6 +16,7 @@
 */
 
 #include "luacppb/Object/Field.h"
+#include "luacppb/Core/Impl/Stack.h"
 
 namespace LuaCppB::Internal {
 

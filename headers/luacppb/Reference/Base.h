@@ -89,6 +89,4 @@ namespace LuaCppB::Internal {
 	};
 }
 
-#include "luacppb/Reference/Impl/Base.h"
-
 #endif

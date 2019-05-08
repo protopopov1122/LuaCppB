@@ -46,6 +46,4 @@ namespace LuaCppB::Internal {
 	};
 }
 
-#include "luacppb/Invoke/Impl/Descriptor.h"
-
 #endif

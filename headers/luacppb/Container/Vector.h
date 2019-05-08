@@ -82,6 +82,4 @@ namespace LuaCppB::Internal {
   };
 }
 
-#include "luacppb/Container/Impl/Vector.h"
-
 #endif

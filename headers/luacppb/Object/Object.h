@@ -68,6 +68,4 @@ namespace LuaCppB {
   };
 }
 
-#include "luacppb/Object/Impl/Object.h"
-
 #endif

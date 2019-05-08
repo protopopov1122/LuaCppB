@@ -17,6 +17,7 @@
 
 #include "luacppb/Base.h"
 #include "luacppb/Invoke/Native.h"
+#include "luacppb/Core/Impl/Stack.h"
 
 namespace LuaCppB::Internal {
 

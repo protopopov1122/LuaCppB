@@ -18,6 +18,8 @@
 #include "luacppb/Value/Value.h"
 #include "luacppb/Core/Error.h"
 #include "luacppb/Core/Stack.h"
+#include "luacppb/Core/Impl/Stack.h"
+#include "luacppb/Value/Impl/Value.h"
 
 namespace LuaCppB {
 

@@ -20,6 +20,8 @@
 
 #include "luacppb/Core/Debug.h"
 
+#ifdef LUACPPB_DEBUG_SUPPORT
+
 namespace LuaCppB {
 
   namespace Internal {
@@ -332,5 +334,7 @@ namespace LuaCppB {
     }
   }
 }
+
+#endif
 
 #endif

@@ -132,6 +132,4 @@ namespace LuaCppB::Internal {
   };
 }
 
-#include "luacppb/Value/Impl/Native.h"
-
 #endif

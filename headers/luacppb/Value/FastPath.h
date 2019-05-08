@@ -52,6 +52,4 @@ namespace LuaCppB::Internal {
   };
 }
 
-#include "luacppb/Value/Impl/FastPath.h"
-
 #endif

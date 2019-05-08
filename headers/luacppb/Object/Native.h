@@ -44,6 +44,4 @@ namespace LuaCppB::Internal {
   };
 }
 
-#include "luacppb/Object/Impl/Native.h"
-
 #endif

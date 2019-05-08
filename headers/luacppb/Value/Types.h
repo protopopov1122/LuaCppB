@@ -141,6 +141,4 @@ namespace LuaCppB {
 	};
 }
 
-#include "luacppb/Value/Impl/Types.h"
-
 #endif 

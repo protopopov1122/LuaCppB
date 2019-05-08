@@ -49,6 +49,4 @@ namespace LuaCppB {
   Internal::LuaLambdaHandle<LuaReferenceHandle> LuaLambda(LuaReferenceHandle &&);
 }
 
-#include "luacppb/Invoke/Impl/Callable.h"
-
 #endif

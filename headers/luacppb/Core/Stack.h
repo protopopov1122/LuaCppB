@@ -118,6 +118,4 @@ namespace LuaCppB::Internal {
   };
 }
 
-#include "luacppb/Core/Impl/Stack.h"
-
 #endif

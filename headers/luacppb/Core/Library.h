@@ -67,6 +67,4 @@ namespace LuaCppB {
   typename Internal::LuaStdLibLoader<T...>::ReturnType LuaLoadStdLibs(LuaState &, bool, T...);
 }
 
-#include "luacppb/Core/Impl/Library.h"
-
 #endif

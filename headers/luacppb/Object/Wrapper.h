@@ -51,6 +51,4 @@ namespace LuaCppB {
 	};
 }
 
-#include "luacppb/Object/Impl/Wrapper.h"
-
 #endif

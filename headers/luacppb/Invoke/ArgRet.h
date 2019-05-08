@@ -109,6 +109,4 @@ namespace LuaCppB::Internal {
 	};
 }
 
-#include "luacppb/Invoke/Impl/ArgRet.h"
-
 #endif

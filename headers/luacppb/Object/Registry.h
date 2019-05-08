@@ -52,6 +52,4 @@ namespace LuaCppB::Internal {
   };
 }
 
-#include "luacppb/Object/Impl/Registry.h"
-
 #endif

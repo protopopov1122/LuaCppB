@@ -23,6 +23,7 @@
 #include "luacppb/Core/StackGuard.h"
 #include "luacppb/Invoke/Lua.h"
 #include "luacppb/Invoke/Native.h"
+#include "luacppb/Core/Impl/Debug.h"
 #include <cassert>
 #include <memory>
 

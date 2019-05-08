@@ -41,6 +41,4 @@ namespace LuaCppB::Internal {
   };
 }
 
-#include "luacppb/Invoke/Impl/Invoke.h"
-
 #endif

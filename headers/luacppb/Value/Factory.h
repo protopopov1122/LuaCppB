@@ -70,6 +70,4 @@ namespace LuaCppB {
   };
 }
 
-#include "luacppb/Value/Impl/Factory.h"
-
 #endif

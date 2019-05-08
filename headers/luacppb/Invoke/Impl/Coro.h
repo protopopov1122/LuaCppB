@@ -20,6 +20,8 @@
 
 #include "luacppb/Invoke/Coro.h"
 
+#ifdef LUACPPB_COROUTINE_SUPPORT
+
 namespace LuaCppB {
 
   template <typename ... A>
@@ -53,5 +55,7 @@ namespace LuaCppB {
     }
   }
 }
+
+#endif
 
 #endif

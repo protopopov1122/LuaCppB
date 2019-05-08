@@ -152,6 +152,4 @@ namespace LuaCppB {
   };
 }
 
-#include "luacppb/Value/Impl/UserData.h"
-
 #endif

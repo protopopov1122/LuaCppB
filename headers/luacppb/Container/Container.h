@@ -88,6 +88,4 @@ namespace LuaCppB::Internal {
   };
 }
 
-#include "luacppb/Container/Impl/Container.h"
-
 #endif

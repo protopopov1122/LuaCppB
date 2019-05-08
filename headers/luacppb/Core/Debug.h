@@ -199,8 +199,6 @@ namespace LuaCppB {
   };
 }
 
-#include "luacppb/Core/Impl/Debug.h"
-
 #endif
 
 #endif

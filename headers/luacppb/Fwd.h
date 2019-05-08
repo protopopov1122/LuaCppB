@@ -15,47 +15,36 @@
   IN THE SOFTWARE.
 */
 
-#ifndef LUACPPB_CONTAINER_TUPLE_H_
-#define LUACPPB_CONTAINER_TUPLE_H_
+#ifndef LUACPPB_LUACPPB_FWD_H_
+#define LUACPPB_LUACPPB_FWD_H_
 
 #include "luacppb/Base.h"
 #include "luacppb/Meta.h"
-#include "luacppb/Core/Runtime.h"
+#include "luacppb/Core/State.h"
+#include "luacppb/Reference/Base.h"
+#include "luacppb/Reference/Primary.h"
+#include "luacppb/Reference/Field.h"
+#include "luacppb/Reference/Registry.h"
+#include "luacppb/Reference/Handle.h"
+#include "luacppb/Value/Value.h"
+#include "luacppb/Value/Native.h"
+#include "luacppb/Invoke/Callable.h"
+#include "luacppb/Invoke/Continuation.h"
+#include "luacppb/Invoke/Coro.h"
+#include "luacppb/Object/Registry.h"
+#include "luacppb/Object/Object.h"
+#include "luacppb/Object/Class.h"
+#include "luacppb/Object/Bind.h"
+#include "luacppb/Value/UserData.h"
+#include "luacppb/Core/Library.h"
+#include "luacppb/Core/Loader.h"
+#include "luacppb/Core/Status.h"
+#include "luacppb/Core/Throw.h"
+#include "luacppb/Core/StackGuard.h"
 #include "luacppb/Core/Stack.h"
-#include <utility>
-#include <tuple>
-
-namespace LuaCppB::Internal {
-
-  template <std::size_t I, class P, typename ... A>
-  struct LuaCppTuplePush_Impl {
-    using T = std::tuple<A...>;
-    static void push(lua_State *, LuaCppRuntime &, T &);
-  };
-
-  template <class P>
-  struct LuaCppTuplePush {
-    template <typename ... A>
-    static void push(lua_State *, LuaCppRuntime &, std::tuple<A...> &);
-  };
-
-  class LuaCppTuple {
-   public:
-    template <typename T, class P>
-    static typename std::enable_if<is_instantiation<std::pair, T>::value>::type push(lua_State *, LuaCppRuntime &, T &);
-
-    template <typename T, class P>
-    static typename std::enable_if<is_instantiation<std::tuple, T>::value>::type push(lua_State *, LuaCppRuntime &, T &);
-
-    template <typename T>
-    static constexpr bool is_tuple() {
-      return is_instantiation<std::pair, T>::value ||
-             is_instantiation<std::tuple, T>::value;
-    }
-   private:
-    template <typename A, typename B, class P>
-    static void pushPair(lua_State *, LuaCppRuntime &, std::pair<A, B> &);
-  };
-}
+#include "luacppb/Core/GC.h"
+#include "luacppb/Value/Factory.h"
+#include "luacppb/Value/Iterator.h"
+#include "luacppb/LuaJIT.h"
 
 #endif

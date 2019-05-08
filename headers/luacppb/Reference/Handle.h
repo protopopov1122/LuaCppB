@@ -84,6 +84,4 @@ namespace LuaCppB {
 	};
 }
 
-#include "luacppb/Reference/Impl/Handle.h"
-
 #endif

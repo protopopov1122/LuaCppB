@@ -71,6 +71,4 @@ namespace LuaCppB {
   };
 }
 
-#include "luacppb/Object/Impl/Bind.h"
-
 #endif

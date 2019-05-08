@@ -186,6 +186,4 @@ namespace LuaCppB {
 	}
 }
 
-#include "luacppb/Value/Impl/Value.h"
-
 #endif

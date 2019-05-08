@@ -51,6 +51,4 @@ namespace LuaCppB::Internal {
 	};
 }
 
-#include "luacppb/Reference/Impl/Field.h"
-
 #endif

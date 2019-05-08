@@ -193,6 +193,4 @@ namespace LuaCppB::Internal {
   };
 }
 
-#include "luacppb/Invoke/Impl/Lua.h"
-
 #endif

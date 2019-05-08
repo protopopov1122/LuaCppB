@@ -90,6 +90,4 @@ namespace LuaCppB::Internal {
   };
 }
 
-#include "luacppb/Object/Impl/Boxer.h"
-
 #endif

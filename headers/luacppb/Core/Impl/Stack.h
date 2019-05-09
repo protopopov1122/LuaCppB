@@ -22,26 +22,6 @@
 
 namespace LuaCppB::Internal {
 
-  template <bool R>
-  void LuaStack::setIndex(int index, int idx) {
-    lua_seti(this->state, index, idx);
-  }
-
-  template <bool R>
-  void LuaStack::getIndex(int index, int idx) {
-    lua_geti(this->state, index, idx);
-  }
-
-  template <bool R>
-  void LuaStack::setField(int index) {
-    lua_settable(this->state, index);
-  }
-
-  template <bool R>
-  void LuaStack::getField(int index) {
-    lua_gettable(this->state, index);
-  }
-
   template <typename T>
   T LuaStack::toPointer(int index) {
     return reinterpret_cast<T>(const_cast<void *>(lua_topointer(this->state, index)));
@@ -85,35 +65,94 @@ namespace LuaCppB::Internal {
   }
 
   template <>
-  void LuaStack::setField<true>(int);
-  template <>
-  void LuaStack::getField<true>(int);
+  inline void LuaStack::setField<true>(int index) {
+    lua_rawset(this->state, index);
+  }
 
   template <>
-  void LuaStack::setIndex<true>(int, int);
+  inline void LuaStack::getField<true>(int index) {
+    lua_rawget(this->state, index);
+  }
+
   template <>
-  void LuaStack::getIndex<true>(int, int);
-  
+  inline void LuaStack::setIndex<true>(int index, int idx) {
+    lua_rawseti(this->state, index, idx);
+  }
+
   template <>
-  bool LuaStack::is<LuaType::None>(int);
+  inline void LuaStack::getIndex<true>(int index, int idx) {
+    lua_rawgeti(this->state, index, idx);
+  }
+
   template <>
-  bool LuaStack::is<LuaType::Nil>(int);
+  inline void LuaStack::setIndex<false>(int index, int idx) {
+    lua_seti(this->state, index, idx);
+  }
+
   template <>
-  bool LuaStack::is<LuaType::Number>(int);
+  inline void LuaStack::getIndex<false>(int index, int idx) {
+    lua_geti(this->state, index, idx);
+  }
+
   template <>
-  bool LuaStack::is<LuaType::Boolean>(int);
+  inline void LuaStack::setField<false>(int index) {
+    lua_settable(this->state, index);
+  }
+
   template <>
-  bool LuaStack::is<LuaType::String>(int);
+  inline void LuaStack::getField<false>(int index) {
+    lua_gettable(this->state, index);
+  }  
+
   template <>
-  bool LuaStack::is<LuaType::Function>(int);
+  inline bool LuaStack::is<LuaType::None>(int index) {
+    return static_cast<bool>(lua_isnone(this->state, index));
+  }
+
   template <>
-  bool LuaStack::is<LuaType::Table>(int);
+  inline bool LuaStack::is<LuaType::Nil>(int index) {
+    return static_cast<bool>(lua_isnil(this->state, index));
+  }
+
   template <>
-  bool LuaStack::is<LuaType::LightUserData>(int);
+  inline bool LuaStack::is<LuaType::Number>(int index) {
+    return static_cast<bool>(lua_isnumber(this->state, index));
+  }
+
   template <>
-  bool LuaStack::is<LuaType::UserData>(int);
+  inline bool LuaStack::is<LuaType::Boolean>(int index) {
+    return static_cast<bool>(lua_isboolean(this->state, index));
+  }
+
   template <>
-  bool LuaStack::is<LuaType::Thread>(int);
+  inline bool LuaStack::is<LuaType::String>(int index) {
+    return static_cast<bool>(lua_isstring(this->state, index));
+  }
+
+  template <>
+  inline bool LuaStack::is<LuaType::Function>(int index) {
+    return static_cast<bool>(lua_isfunction(this->state, index));
+  }
+
+  template <>
+  inline bool LuaStack::is<LuaType::Table>(int index) {
+    return static_cast<bool>(lua_istable(this->state, index));
+  }
+
+  template <>
+  inline bool LuaStack::is<LuaType::LightUserData>(int index) {
+    return static_cast<bool>(lua_islightuserdata(this->state, index));
+  }
+
+  template <>
+  inline bool LuaStack::is<LuaType::UserData>(int index) {
+    return static_cast<bool>(lua_isuserdata(this->state, index));
+  }
+
+  template <>
+  inline bool LuaStack::is<LuaType::Thread>(int index) {
+    return static_cast<bool>(lua_isthread(this->state, index));
+  }
 }
 
 #endif

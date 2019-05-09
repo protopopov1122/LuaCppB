@@ -18,15 +18,16 @@
 #ifndef LUACPPB_LUACPPB_IMPL_H_
 #define LUACPPB_LUACPPB_IMPL_H_
 
+#include "luacppb/Fwd.h"
+#include "luacppb/Core/Impl/Stack.h"
+#include "luacppb/Core/Impl/Debug.h"
+#include "luacppb/Core/Impl/Library.h"
+#include "luacppb/Core/Impl/Throw.h"
 #include "luacppb/Container/Impl/Container.h"
 #include "luacppb/Container/Impl/Map.h"
 #include "luacppb/Container/Impl/Set.h"
 #include "luacppb/Container/Impl/Tuple.h"
 #include "luacppb/Container/Impl/Vector.h"
-#include "luacppb/Core/Impl/Debug.h"
-#include "luacppb/Core/Impl/Library.h"
-#include "luacppb/Core/Impl/Stack.h"
-#include "luacppb/Core/Impl/Throw.h"
 #include "luacppb/Invoke/Impl/ArgRet.h"
 #include "luacppb/Invoke/Impl/Callable.h"
 #include "luacppb/Invoke/Impl/Continuation.h"

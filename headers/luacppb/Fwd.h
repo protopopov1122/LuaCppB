@@ -20,6 +20,7 @@
 
 #include "luacppb/Base.h"
 #include "luacppb/Meta.h"
+#include "luacppb/Core/Stack.h"
 #include "luacppb/Core/State.h"
 #include "luacppb/Reference/Base.h"
 #include "luacppb/Reference/Primary.h"
@@ -41,7 +42,6 @@
 #include "luacppb/Core/Status.h"
 #include "luacppb/Core/Throw.h"
 #include "luacppb/Core/StackGuard.h"
-#include "luacppb/Core/Stack.h"
 #include "luacppb/Core/GC.h"
 #include "luacppb/Value/Factory.h"
 #include "luacppb/Value/Iterator.h"

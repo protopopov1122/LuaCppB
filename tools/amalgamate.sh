@@ -15,8 +15,9 @@ if [[ "$3" == "" ]]; then
 fi
 
 amalgamate=$(which "$AMALGAMATE")
-if [[ -x "$amalgamate" ]] ; then
+if [[ ! -f "$amalgamate" ]] ; then
 	echo "Install amalgamate from https://github.com/vinniefalco/Amalgamate/"
+	exit
 fi
 
 find "$LUACPPB_DIR/source" -name "*.cpp" -exec cat {} \; -exec printf "\n" \; > "$DEST_DIR/LuaCppB.raw.cpp"

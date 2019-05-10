@@ -19,7 +19,7 @@
 #include "luacppb/Reference/Primary.h"
 #include "luacppb/Reference/Field.h"
 #include "luacppb/Value/Iterator.h"
-#include "luacppb/Core/Stack.h"
+#include "luacppb/Core/Impl/Stack.h"
 
 namespace LuaCppB {
 

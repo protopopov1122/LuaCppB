@@ -20,6 +20,8 @@
 #include "luacppb/Reference/Field.h"
 #include "luacppb/Value/Iterator.h"
 #include "luacppb/Core/Impl/Stack.h"
+#include "luacppb/Reference/Impl/Handle.h"
+#include "luacppb/Reference/Impl/Base.h"
 
 namespace LuaCppB {
 

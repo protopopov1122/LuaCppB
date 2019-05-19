@@ -49,7 +49,11 @@ namespace LuaCppB {
   template <typename T, typename Type>
     LuaReferenceHandle::operator T () {
     try {
-      return this->ref->get<T>();
+      if (this->ref) {
+        return this->ref->get<T>();
+      } else {
+        throw LuaCppBError("Null dereferencing");
+      }
     } catch (std::exception &ex) {
       if constexpr (std::is_default_constructible<T>::value) {
         this->getRuntime().getExceptionHandler()(ex);
@@ -62,7 +66,17 @@ namespace LuaCppB {
 
   template <typename T, typename Type>
     LuaReferenceHandle::operator T& () {
-    return this->ref->get<T &>();
+    if (this->ref) {
+      return this->ref->get<T &>();
+    } else {
+      LuaCppBError ex("Null dereferencing");
+      if constexpr (std::is_default_constructible<T>::value) {
+        this->getRuntime().getExceptionHandler()(ex);
+        return T{};
+      } else {
+        throw ex;
+      }
+    }
   }
 
   template <typename T>

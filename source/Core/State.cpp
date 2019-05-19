@@ -29,6 +29,7 @@
 #include "luacppb/Reference/Impl/Handle.h"
 #include "luacppb/Invoke/Impl/Invoke.h"
 #include "luacppb/Invoke/Impl/Lua.h"
+#include "luacppb/Reference/Impl/FastPath.h"
 #include <cassert>
 #include <memory>
 
@@ -155,6 +156,15 @@ namespace LuaCppB {
 
 #endif
 
+#ifdef LUACPPB_FAST_REFERENCE_SUPPORT
+	Internal::LuaVariableRef LuaState::operator[](const std::string &name) {
+		if (this->isValid()) {
+			return Internal::LuaVariableRef(*this, name);
+		} else {
+			return Internal::LuaVariableRef(*this, "");
+		}
+	}
+#else
 	LuaReferenceHandle LuaState::operator[](const std::string &name) {
 		if (this->isValid()) {
 			return LuaReferenceHandle(this->state, std::make_unique<Internal::LuaGlobalVariable>(*this, name));
@@ -162,6 +172,7 @@ namespace LuaCppB {
 			return LuaReferenceHandle();
 		}
 	}
+#endif
 
 
 	LuaReferenceHandle LuaState::operator[](lua_Integer index) {

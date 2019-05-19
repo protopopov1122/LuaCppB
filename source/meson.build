@@ -18,6 +18,7 @@ luacppb_source = [
   'LuaJIT.cpp',
   'Object/Field.cpp',
   'Reference/Base.cpp',
+  'Reference/FastPath.cpp',
   'Reference/Field.cpp',
   'Reference/Handle.cpp',
   'Reference/Primary.cpp',

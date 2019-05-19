@@ -27,6 +27,7 @@
 // #define LUACPPB_DISABLE_CONTINUATION_SUPPORT
 // #define LUACPPB_DISABLE_CUSTOM_ALLOCATOR
 // #define LUACPPB_DISABLE_DEBUG
+// #define LUACPPB_DISABLE_FAST_REFERENCES
 
 // Place there your Lua includes, if they use non-standard include paths. E.g.
 // #include <lua5.3/lua.h>

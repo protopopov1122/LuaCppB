@@ -24,6 +24,7 @@
 #include "luacppb/Core/State.h"
 #include "luacppb/Reference/Base.h"
 #include "luacppb/Reference/Primary.h"
+#include "luacppb/Reference/FastPath.h"
 #include "luacppb/Reference/Field.h"
 #include "luacppb/Reference/Registry.h"
 #include "luacppb/Reference/Handle.h"

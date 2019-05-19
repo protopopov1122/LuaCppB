@@ -11,6 +11,7 @@ compatibility is not an aim, so LuaCppB reduces it's functionality according to 
   to C++ mode.
 * `LUACPPB_CUSTOM_ALLOCATOR_SUPPORT` - custom allocators are disabled for LuaJIT.
 * `LUACPPB_DEBUG_SUPPORT` - debugging may be disabled for better performance.
+* `LUACPPB_FAST_REFERENCE_SUPPORT` - faster access to variables using static polymorphism with fallback to default behaviour.
 * `LUACPPB_HAS_JIT` - presence of LuaJIT specific APIs.
 
 LuaCppB also disables some minor functions if they're not available:
@@ -26,4 +27,5 @@ You can also forcefully disable some LuaCppB features in `Config.h` by uncomment
 * `LUACPPB_DISABLE_COROUTINE_SUPPORT`
 * `LUACPPB_DISABLE_CUSTOM_ALLOCATOR`
 * `LUACPPB_DISABLE_DEBUG`
+* `LUACPPB_DISABLE_FAST_REFERENCES`
   

@@ -49,6 +49,7 @@
 #include "luacppb/Reference/Impl/Base.h"
 #include "luacppb/Reference/Impl/Field.h"
 #include "luacppb/Reference/Impl/Handle.h"
+#include "luacppb/Reference/Impl/FastPath.h"
 #include "luacppb/Value/Impl/Factory.h"
 #include "luacppb/Value/Impl/FastPath.h"
 #include "luacppb/Value/Impl/Native.h"

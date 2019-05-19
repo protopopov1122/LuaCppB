@@ -36,6 +36,7 @@ namespace LuaCppB {
 		class LuaCppClassRegistry;
 		class LuaFunctionCallResult;
 		class LuaRegistryReference;
+		class LuaVariableRef;
 	}
 
 #ifdef LUACPPB_DEBUG_SUPPORT
@@ -69,7 +70,11 @@ namespace LuaCppB {
     void setExceptionHandler(std::function<void(std::exception &)>) override;
     std::function<void(std::exception &)> getExceptionHandler() override;
 		
+#ifdef LUACPPB_FAST_REFERENCE_SUPPORT
+		Internal::LuaVariableRef operator[](const std::string &);
+#else
 		LuaReferenceHandle operator[](const std::string &);
+#endif
 		LuaReferenceHandle operator[](lua_Integer);
 		Internal::LuaFunctionCallResult operator()(const std::string &, bool = true);
 	 protected:
